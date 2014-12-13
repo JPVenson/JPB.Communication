@@ -41,11 +41,12 @@ namespace JPB.Communication.Example.Chat
             //Maybe multible network Adapters ... on what do we want to Recieve?
 
 
-            NetworkInfoBase.ResolveIp += NetworkInfoBaseOnResolveIp;
+            NetworkInfoBase.ResolveOwnIp += NetworkInfoBaseOnResolveOwnIp;
             Console.Title = string.Format("This: {0}", NetworkInfoBase.IpAddress.ToString());
             Console.Clear();
             //Create an Instance that observe a Port
             ushort port = 1337; //LEED
+
             var tcpNetworkReceiver
 
                 //The complete access to Sender and Recieiver are done bei the Network Factory
@@ -77,7 +78,7 @@ namespace JPB.Communication.Example.Chat
                 try
                 {
                     var hostAddresses = Dns.GetHostAddresses(input);
-                    server = NetworkInfoBaseOnResolveIp(hostAddresses).ToString();
+                    server = NetworkInfoBaseOnResolveOwnIp(hostAddresses).ToString();
                     serverOnline = true;
                 }
                 catch (Exception)
@@ -115,7 +116,7 @@ namespace JPB.Communication.Example.Chat
             } while (!input.ToLower().Equals("exit"));
         }
 
-        private static IPAddress NetworkInfoBaseOnResolveIp(IPAddress[] ipAddresses)
+        private static IPAddress NetworkInfoBaseOnResolveOwnIp(IPAddress[] ipAddresses)
         {
             Console.WriteLine("Multible Addresses detected choose one");
             Console.WriteLine("ID | IP");

@@ -47,7 +47,7 @@ namespace JPB.Communication.ComBase
                     //.AddressList.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork);
                 if (firstOrDefault.AddressList.Length > 1)
                 {
-                    _ip = RaiseResolveIp(firstOrDefault.AddressList);
+                    _ip = RaiseResolveOwnIp(firstOrDefault.AddressList);
                 }
                 else
                 {
@@ -57,11 +57,21 @@ namespace JPB.Communication.ComBase
             }
         }
 
-        public static event Func<IPAddress[], IPAddress> ResolveIp;
+        public static event Func<IPAddress[], IPAddress> ResolveOwnIp;
 
-        private static IPAddress RaiseResolveIp(IPAddress[] addresses)
+        internal static IPAddress RaiseResolveOwnIp(IPAddress[] addresses)
         {
-            var handler = ResolveIp;
+            var handler = ResolveOwnIp;
+            if (handler != null)
+                return handler(addresses);
+            return ResolveAddressByMySelf____Again____IfYouNeedSomethingToBeDoneRightDoItByYourSelf(addresses);
+        }
+
+        public static event Func<IPAddress[], IPAddress> ResolveDistantIp;
+
+        internal static IPAddress RaiseResolveDistantIp(IPAddress[] addresses)
+        {
+            var handler = ResolveDistantIp;
             if (handler != null)
                 return handler(addresses);
             return ResolveAddressByMySelf____Again____IfYouNeedSomethingToBeDoneRightDoItByYourSelf(addresses);
