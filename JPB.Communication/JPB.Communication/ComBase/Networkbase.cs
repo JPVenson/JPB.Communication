@@ -19,17 +19,11 @@
  */
 
 using System;
-using System.IO;
-using System.Runtime.Serialization.Formatters;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Security;
-using System.Text;
-using System.Xml.Serialization;
 using JPB.Communication.ComBase.Messages;
 
 namespace JPB.Communication.ComBase
 {
-    public delegate void MessageDelegate(MessageBase mess, short port);
+    public delegate void MessageDelegate(MessageBase mess, ushort port);
 
     public abstract class Networkbase
     {
@@ -38,7 +32,7 @@ namespace JPB.Communication.ComBase
             Serlilizer = DefaultMessageSerializer;
         }
 
-        public abstract short Port { get; internal set; }
+        public abstract ushort Port { get; internal set; }
 
         public IMessageSerializer Serlilizer { get; set; }
 

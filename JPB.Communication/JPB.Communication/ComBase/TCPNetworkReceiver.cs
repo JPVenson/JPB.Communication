@@ -21,7 +21,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -33,7 +32,7 @@ namespace JPB.Communication.ComBase
 {
     public sealed class TCPNetworkReceiver : Networkbase, IDisposable
     {
-        internal TCPNetworkReceiver(short port)
+        internal TCPNetworkReceiver(ushort port)
         {
             OnNewItemLoadedSuccess += TcpConnectionOnOnNewItemLoadedSuccess;
             Port = port;
@@ -54,7 +53,7 @@ namespace JPB.Communication.ComBase
             _sock.BeginAccept(OnConnectRequest, _sock);
         }
 
-        private void TcpConnectionOnOnNewItemLoadedSuccess(MessageBase mess, short port)
+        private void TcpConnectionOnOnNewItemLoadedSuccess(MessageBase mess, ushort port)
         {
             if (port == Port)
             {
@@ -276,6 +275,6 @@ namespace JPB.Communication.ComBase
             _sock.BeginAccept(OnConnectRequest, sock);
         }
 
-        public override short Port { get; internal set; }
+        public override ushort Port { get; internal set; }
     }
 }

@@ -23,7 +23,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
 
-namespace JPB.Communication.ComBase
+namespace JPB.Communication.ComBase 
 {
     internal class TcpConnection : ConnectionBase, IDisposable
     {
@@ -119,6 +119,6 @@ namespace JPB.Communication.ComBase
 
         #endregion
 
-        public override short Port { get; internal set; }
+        public override ushort Port { get; internal set; }
     }
 }

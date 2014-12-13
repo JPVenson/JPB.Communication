@@ -31,8 +31,8 @@ namespace JPB.Communication
     public class NetworkFactory
     {
         private static NetworkFactory _instance = new NetworkFactory();
-        private Dictionary<short, TCPNetworkReceiver> _receivers;
-        private Dictionary<short, TCPNetworkSender> _senders;
+        private Dictionary<ushort, TCPNetworkReceiver> _receivers;
+        private Dictionary<ushort, TCPNetworkSender> _senders;
         private TCPNetworkReceiver _commonReciever;
         private TCPNetworkSender _commonSender;
         private readonly Object _mutex;
@@ -64,8 +64,8 @@ namespace JPB.Communication
 
         private NetworkFactory()
         {
-            _receivers = new Dictionary<short, TCPNetworkReceiver>();
-            _senders = new Dictionary<short, TCPNetworkSender>();
+            _receivers = new Dictionary<ushort, TCPNetworkReceiver>();
+            _senders = new Dictionary<ushort, TCPNetworkSender>();
             _mutex = new object();
         }
 
@@ -74,12 +74,12 @@ namespace JPB.Communication
             get { return _instance; }
         }
 
-        public Dictionary<short, TCPNetworkReceiver>.Enumerator GetReceivers()
+        public Dictionary<ushort, TCPNetworkReceiver>.Enumerator GetReceivers()
         {
             return _receivers.GetEnumerator();
         }
 
-        public Dictionary<short, TCPNetworkSender>.Enumerator GetSenders()
+        public Dictionary<ushort, TCPNetworkSender>.Enumerator GetSenders()
         {
             return _senders.GetEnumerator();
         }
@@ -111,14 +111,14 @@ namespace JPB.Communication
         /// </summary>
         /// <param name="listeningPort"></param>
         /// <param name="sendingPort"></param>
-        public void InitCommonSenderAndReciver(short listeningPort = -1, short sendingPort = -1)
+        public void InitCommonSenderAndReciver(ushort listeningPort = 0, ushort sendingPort = 0)
         {
-            if (listeningPort != -1)
+            if (listeningPort != 0)
             {
                 Reciever = GetReceiver(listeningPort);
             }
 
-            if (sendingPort != -1)
+            if (sendingPort != 0)
             {
                 Sender = GetSender(sendingPort);
             }
@@ -130,7 +130,7 @@ namespace JPB.Communication
         /// </summary>
         /// <param name="port"></param>
         /// <returns></returns>
-        public TCPNetworkSender GetSender(short port)
+        public TCPNetworkSender GetSender(ushort port)
         {
             lock (_mutex)
             {
@@ -145,7 +145,7 @@ namespace JPB.Communication
             }
         }
 
-        private TCPNetworkSender CreateSender(short port)
+        private TCPNetworkSender CreateSender(ushort port)
         {
             var sender = new TCPNetworkSender(port);
             _senders.Add(port, sender);
@@ -159,7 +159,7 @@ namespace JPB.Communication
         /// </summary>
         /// <param name="port"></param>
         /// <returns></returns>
-        public TCPNetworkReceiver GetReceiver(short port)
+        public TCPNetworkReceiver GetReceiver(ushort port)
         {
             lock (_mutex)
             {
@@ -174,7 +174,7 @@ namespace JPB.Communication
             }
         }
 
-        private TCPNetworkReceiver CreateReceiver(short port)
+        private TCPNetworkReceiver CreateReceiver(ushort port)
         {
             var receiver = new TCPNetworkReceiver(port);
             _receivers.Add(port, receiver);

@@ -30,7 +30,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 
-namespace JPB.Communication.ComBase
+namespace JPB.Communication.ComBase 
 {
     public static class NetworkInfoBase
     {

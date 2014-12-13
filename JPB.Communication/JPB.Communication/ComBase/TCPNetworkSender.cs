@@ -26,7 +26,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
@@ -38,7 +37,7 @@ namespace JPB.Communication.ComBase
 {
     public sealed class TCPNetworkSender : Networkbase
     {
-        internal TCPNetworkSender(short port)
+        internal TCPNetworkSender(ushort port)
         {
             Port = port;
             Timeout = TimeSpan.FromSeconds(15);
@@ -56,7 +55,7 @@ namespace JPB.Communication.ComBase
         /// <param name="port">Port of client pc</param>
         /// <returns></returns>
         /// <exception cref="TimeoutException"></exception>
-        public static async Task SendMessage(MessageBase message, string ip, short port)
+        public static async Task SendMessage(MessageBase message, string ip, ushort port)
         {
             await SendMessageAsync(message, ip, port);
         }
@@ -69,7 +68,7 @@ namespace JPB.Communication.ComBase
         /// <param name="port">Port of client pc</param>
         /// <returns></returns>
         /// <exception cref="TimeoutException"></exception>
-        public static Task SendMessageAsync(MessageBase message, string ip, short port)
+        public static Task SendMessageAsync(MessageBase message, string ip, ushort port)
         {
             var sender = NetworkFactory.Instance.GetSender(port);
             return sender.SendMessageAsync(message, ip);
@@ -77,6 +76,7 @@ namespace JPB.Communication.ComBase
 
         /// <summary>
         /// Sends a message to multible Hosts
+        /// 
         /// </summary>
         /// <returns>all non reached hosts</returns>
         public Task<IEnumerable<string>> SendMultiMessageAsync(MessageBase message, params string[] ips)
@@ -87,7 +87,6 @@ namespace JPB.Communication.ComBase
                     throw new ArgumentNullException("message");
                 if (ips == null)
                     throw new ArgumentNullException("ips");
-
 
                 var failedMessages = new List<string>();
 
@@ -319,6 +318,6 @@ namespace JPB.Communication.ComBase
 
         #endregion
 
-        public override short Port { get; internal set; }
+        public override ushort Port { get; internal set; }
     }
 }

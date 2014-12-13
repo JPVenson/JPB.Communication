@@ -19,9 +19,7 @@
  */
 
 using System;
-using System.Collections.ObjectModel;
-using System.Text;
-using JPB.Communication.ComBase.Messages;
+using JPB.Communication.ComBase;
 
 namespace JPB.Communication.ComBase
 {

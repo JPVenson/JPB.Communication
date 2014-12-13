@@ -23,7 +23,7 @@ using System.Runtime.Serialization.Json;
 using System.Text;
 using JPB.Communication.ComBase.Messages;
 
-namespace JPB.Communication.ComBase
+namespace JPB.Communication.ComBase 
 {
     public class MessageJsonSerlalizer : IMessageSerializer
     {

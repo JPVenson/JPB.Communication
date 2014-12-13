@@ -60,7 +60,7 @@ namespace JPB.Communication.Shared
         INotifyCollectionChanged,
         IDisposable
     {
-        public static NetworkValueBag<T> CreateNetworkValueCollection(short port, string guid)
+        public static NetworkValueBag<T> CreateNetworkValueCollection(ushort port, string guid)
         {
             return new NetworkValueBag<T>(port, guid);
         }
@@ -81,7 +81,7 @@ namespace JPB.Communication.Shared
         /// <param name="port"></param>
         /// <param name="guid"></param>
         /// <returns></returns>
-        public static async Task<ICollection<T>> GetCollection(string host, short port, string guid)
+        public static async Task<ICollection<T>> GetCollection(string host, ushort port, string guid)
         {
             var sender = await NetworkFactory.Instance.GetSender(port).SendRequstMessage<T[]>(new RequstMessage
             {
@@ -100,7 +100,7 @@ namespace JPB.Communication.Shared
         protected readonly TCPNetworkReceiver TcpNetworkReceiver;
         protected readonly TCPNetworkSender TcpNetworkSernder;
 
-        protected NetworkValueBag(short port, string guid)
+        protected NetworkValueBag(ushort port, string guid)
         {
             RegisterCollecion(guid);
 
@@ -211,7 +211,7 @@ new MessageBase() { InfoState = NetworkCollectionProtocol.CollectionRegisterUser
             }
         }
 
-        public short Port { get; private set; }
+        public ushort Port { get; private set; }
         public string Guid { get; protected set; }
         public int Count { get { return LocalValues.Count; } }
         public object SyncRoot { get; protected set; }
