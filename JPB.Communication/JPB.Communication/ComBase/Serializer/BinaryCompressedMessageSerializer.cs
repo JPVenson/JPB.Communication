@@ -22,8 +22,9 @@ using System.IO;
 using System.IO.Compression;
 using System.Text;
 using JPB.Communication.ComBase.Messages;
+using JPB.Communication.ComBase.Serializer.Contracts;
 
-namespace JPB.Communication.ComBase
+namespace JPB.Communication.ComBase.Serializer
 {
     public class BinaryCompressedMessageSerializer : IMessageSerializer
     {

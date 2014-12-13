@@ -28,6 +28,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -188,7 +189,7 @@ namespace JPB.Communication.ComBase
                     {
                         if (s.Message is T)
                             result = (T)s.Message;
-                        if (waitForResponsive != null) 
+                        if (waitForResponsive != null)
                             waitForResponsive.Set();
                     }, mess.Id);
                     var isSend = SendMessage(mess, ip);
@@ -256,10 +257,10 @@ namespace JPB.Communication.ComBase
         {
             throw new NotImplementedException("This side is working but there is no Reciever Imp");
 
-            var client = await CreateClientSockAsync(ip, Port);
-            if (client == null)
-                return;
-            SendBase(stream, client);
+            //var client = await CreateClientSockAsync(ip, Port);
+            //if (client == null)
+            //    return;
+            //SendBase(stream, client);
         }
 
         #region Base Methods
@@ -272,12 +273,25 @@ namespace JPB.Communication.ComBase
             return Wrap(message);
         }
 
-        private static async Task<TcpClient> CreateClientSockAsync(string ip, int port)
+        /// <summary>
+        /// Prepaired mehtod call that uses the Connect mehtod with multible IP addresses
+        /// 
+        /// Behavior is not checkted
+        /// WIP
+        /// </summary>
+        /// <param name="ip"></param>
+        /// <param name="port"></param>
+        /// <returns></returns>
+        private static async Task<TcpClient> CreateClientSockAsync(IEnumerable<string> ip, int port)
         {
             try
             {
                 var client = new TcpClient();
-                await client.ConnectAsync(ip, port);
+
+                //resolve DNS entrys
+                var ipAddresses = ip.Select(Dns.GetHostAddresses).Select(s => s.FirstOrDefault()).AsParallel().ToArray();
+
+                await client.ConnectAsync(ipAddresses, port);
                 client.NoDelay = true;
                 return client;
             }
@@ -287,15 +301,19 @@ namespace JPB.Communication.ComBase
             }
         }
 
+        private static Task<TcpClient> CreateClientSockAsync(string ip, int port)
+        {
+            return CreateClientSockAsync(new[] {ip}, port);
+        }
+
         private void SendBaseAsync(TcpMessage message, TcpClient client)
         {
-            using (var memstream = new MemoryStream(Serialize(message)))
-            {
-                using (SendBase(memstream, client))
-                {
+            var serialize = Serialize(message);
+            if (!serialize.Any())
+                return;
 
-                }
-            }
+            using (var memstream = new MemoryStream(serialize))
+            using (SendBase(memstream, client)) { }
         }
 
         private NetworkStream SendBase(Stream stream, TcpClient client)

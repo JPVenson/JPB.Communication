@@ -25,8 +25,9 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Xml.Serialization;
 using JPB.Communication.ComBase.Messages;
+using JPB.Communication.ComBase.Serializer.Contracts;
 
-namespace JPB.Communication.ComBase 
+namespace JPB.Communication.ComBase.Serializer 
 {
     /// <summary>
     /// Contains a Mixed Message Serlilizer that Converts the Message as XML and the Content to Binary

@@ -18,10 +18,9 @@
  https://github.com/JPVenson/JPB.Communication/blob/master/LICENSE
  */
 
-
 using JPB.Communication.ComBase.Messages;
 
-namespace JPB.Communication.ComBase 
+namespace JPB.Communication.ComBase.Serializer.Contracts 
 {
     public interface IMessageSerializer
     {

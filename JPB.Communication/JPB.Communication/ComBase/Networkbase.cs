@@ -19,7 +19,10 @@
  */
 
 using System;
+using System.Linq;
 using JPB.Communication.ComBase.Messages;
+using JPB.Communication.ComBase.Serializer;
+using JPB.Communication.ComBase.Serializer.Contracts;
 
 namespace JPB.Communication.ComBase
 {
@@ -139,20 +142,18 @@ namespace JPB.Communication.ComBase
 
         public MessageBase LoadMessageBaseFromBinary(byte[] source)
         {
-            try
-            {
-                return this.Serlilizer.DeSerializeMessageContent(source);
-            }
-            catch (Exception e)
-            {
-                return null;
-            }
+            return this.Serlilizer.DeSerializeMessageContent(source);
         }
 
         protected TcpMessage Wrap(MessageBase message)
         {
             var mess = new TcpMessage();
-            mess.MessageBase = SaveMessageBaseAsBinary(message);
+            var saveMessageBaseAsBinary = SaveMessageBaseAsBinary(message);
+
+            if (!saveMessageBaseAsBinary.Any())
+                return null;
+
+            mess.MessageBase = saveMessageBaseAsBinary;
             mess.Reciver = message.Reciver;
             mess.Sender = message.Sender;
             return mess;

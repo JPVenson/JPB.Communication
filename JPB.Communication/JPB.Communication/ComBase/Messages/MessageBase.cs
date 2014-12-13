@@ -29,6 +29,10 @@ using System.Runtime.Serialization;
 
 namespace JPB.Communication.ComBase.Messages
 {
+    /// <summary>
+    /// The Base object that can be transferred
+    /// To ensure a valid Serliazion every inherited class should impliment its own ISerializable Implimentation
+    /// </summary>
     [Serializable]
     public class MessageBase : ISerializable, ICloneable
     {
@@ -64,6 +68,9 @@ namespace JPB.Communication.ComBase.Messages
             Reciver = (string)info.GetValue("Reciver", typeof(string));
         }
 
+        /// <summary>
+        /// The Content we want to send
+        /// </summary>
         public object Message
         {
             get { return _message; }
@@ -75,6 +82,9 @@ namespace JPB.Communication.ComBase.Messages
             }
         }
 
+        /// <summary>
+        /// The Contract to identify this message on the Distent PC
+        /// </summary>
         public object InfoState
         {
             get { return _infoState; }
@@ -86,11 +96,35 @@ namespace JPB.Communication.ComBase.Messages
             }
         }
 
+        /// <summary>
+        /// The information about the Original Sender
+        /// Is used to identify a Routed message
+        /// Readonly
+        /// </summary>
         public string Sender { get; internal set; }
+
+        /// <summary>
+        /// The information about the Original Sender
+        /// Is used to identify a Routed message
+        /// Readonly
+        /// </summary>
         public string Reciver { get; internal set; }
 
+        /// <summary>
+        /// The ID of this message
+        /// Is used to clearly identify this message over the network
+        /// Readonly
+        /// </summary>
         public Guid Id { get; internal set; }
+
+        /// <summary>
+        /// Readonly
+        /// </summary>
         public DateTime RecievedAt { get; internal set; }
+
+        /// <summary>
+        /// Readonly
+        /// </summary>
         public DateTime SendAt { get; internal set; }
 
         public virtual void GetObjectData(SerializationInfo info, StreamingContext context)

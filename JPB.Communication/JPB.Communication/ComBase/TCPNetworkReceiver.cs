@@ -39,8 +39,7 @@ namespace JPB.Communication.ComBase
             _sock = new Socket(IPAddress.Any.AddressFamily,
                                SocketType.Stream,
                                ProtocolType.Tcp);
-            _sock.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);       
-           _sock.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.MaxConnections);
+            _sock.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
 
             // Bind the socket to the address and port.
             _sock.Bind(new IPEndPoint(NetworkInfoBase.IpAddress, Port));
@@ -78,7 +77,7 @@ namespace JPB.Communication.ComBase
                                     continue;
                             }
 
-                            if(result == null)
+                            if (result == null)
                                 return;
 
                             var sender = NetworkFactory.Instance.GetSender(Port);

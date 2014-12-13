@@ -38,10 +38,10 @@ namespace JPB.Communication.ComBase
             try
             {
                 item = DeSerialize(received);
-                RaiseIncommingMessage(item);
 
                 if (item != null)
                 {
+                    RaiseIncommingMessage(item);
                     var loadMessageBaseFromBinary = base.LoadMessageBaseFromBinary(item.MessageBase);
                     RaiseNewItemLoadedSuccess(loadMessageBaseFromBinary);
                     return true;

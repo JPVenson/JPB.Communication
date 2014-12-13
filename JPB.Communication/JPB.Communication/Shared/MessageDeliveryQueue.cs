@@ -1,10 +1,28 @@
-﻿using System;
+﻿/*
+ Created by Jean-Pierre Bachmann
+ Visit my GitHub page at:
+ 
+ https://github.com/JPVenson/
+
+ Please respect the Code and Work of other Programers an Read the license carefully
+
+ GNU AFFERO GENERAL PUBLIC LICENSE
+                       Version 3, 19 November 2007
+
+ Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
+ Everyone is permitted to copy and distribute verbatim copies
+ of this license document, but changing it is not allowed.
+
+ READ THE FULL LICENSE AT:
+
+ https://github.com/JPVenson/JPB.Communication/blob/master/LICENSE
+ */
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using JPB.Communication.ComBase;
 using JPB.Communication.ComBase.Messages;
-using JPB.Tasking.TaskManagement.Threading;
 
 namespace JPB.Communication.Shared
 {
@@ -26,7 +44,7 @@ namespace JPB.Communication.Shared
             _internal = new SeriellTaskFactory();
         }
 
-        public override ushort Port { get; internal set; }
+        public override sealed ushort Port { get; internal set; }
         public ICollection<string> Receivers { get; private set; }
 
         private TCPNetworkSender _sender;
