@@ -21,11 +21,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
+using System.Runtime.InteropServices;
 using JPB.Communication.ComBase;
 
 namespace JPB.Communication
 {
+    [ComVisible(true)]
+    [Guid("C6A14174-092C-40E5-BB12-207F3BC77F38")]
     public class NetworkFactory
     {
         private static NetworkFactory _instance = new NetworkFactory();
@@ -104,6 +106,11 @@ namespace JPB.Communication
             private set { _commonSender = value; }
         }
 
+        /// <summary>
+        /// This will set the Sender and Reciever Property
+        /// </summary>
+        /// <param name="listeningPort"></param>
+        /// <param name="sendingPort"></param>
         public void InitCommonSenderAndReciver(short listeningPort = -1, short sendingPort = -1)
         {
             if (listeningPort != -1)

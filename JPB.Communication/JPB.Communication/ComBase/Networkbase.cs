@@ -43,7 +43,7 @@ namespace JPB.Communication.ComBase
         public IMessageSerializer Serlilizer { get; set; }
 
         public static readonly IMessageSerializer DefaultMessageSerializer = new DefaultMessageSerlilizer();
-        public static readonly IMessageSerializer CompressedDefaultMessageSerializer = new BinaryCompressedMessageSerilalizer();
+        public static readonly IMessageSerializer CompressedDefaultMessageSerializer = new BinaryCompressedMessageSerializer();
         public static readonly IMessageSerializer JsonMessageSerializer = new MessageJsonSerlalizer();
 
         public static event MessageDelegate OnNewItemLoadedSuccess;

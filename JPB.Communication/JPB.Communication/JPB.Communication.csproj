@@ -28,6 +28,14 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>JPB.Communication.Sig.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -36,7 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ComBase\BinaryCompressedMessageSerilalizer.cs" />
+    <Compile Include="ComBase\BinaryCompressedMessageSerializer.cs" />
     <Compile Include="ComBase\ConnectionBase.cs" />
     <Compile Include="ComBase\DefaultMessageSerlilizer.cs" />
     <Compile Include="ComBase\IMessageSerializer.cs" />
@@ -50,6 +58,7 @@
     <Compile Include="ComBase\TcpMessage.cs" />
     <Compile Include="ComBase\TCPNetworkReceiver.cs" />
     <Compile Include="ComBase\TCPNetworkSender.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="NetworkFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Shared\NetworkCollectionMessage.cs" />
@@ -58,6 +67,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="JPB.Communication.licenseheader" />
+    <None Include="JPB.Communication.Sig.pfx" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

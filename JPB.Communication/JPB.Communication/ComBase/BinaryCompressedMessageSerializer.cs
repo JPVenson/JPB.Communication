@@ -25,9 +25,9 @@ using JPB.Communication.ComBase.Messages;
 
 namespace JPB.Communication.ComBase
 {
-    public class BinaryCompressedMessageSerilalizer : IMessageSerializer
+    public class BinaryCompressedMessageSerializer : IMessageSerializer
     {
-        static BinaryCompressedMessageSerilalizer()
+        static BinaryCompressedMessageSerializer()
         {
             DefaultMessageSerlilizer = new DefaultMessageSerlilizer();
         }

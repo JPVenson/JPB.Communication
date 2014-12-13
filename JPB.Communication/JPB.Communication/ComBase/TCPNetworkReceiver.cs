@@ -40,11 +40,13 @@ namespace JPB.Communication.ComBase
             _sock = new Socket(IPAddress.Any.AddressFamily,
                                SocketType.Stream,
                                ProtocolType.Tcp);
-            _sock.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true); 
-            _sock.Bind(new IPEndPoint(NetworkInfoBase.IpAddress, Port));
+            _sock.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);       
+           _sock.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.MaxConnections);
 
             // Bind the socket to the address and port.
-            _sock.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.MaxConnections);
+            _sock.Bind(new IPEndPoint(NetworkInfoBase.IpAddress, Port));
+
+
             // Start listening.
             _sock.Listen(5000);
             // Set up the callback to be notified when somebody requests
@@ -146,6 +148,9 @@ namespace JPB.Communication.ComBase
 
         public void Dispose()
         {
+            if (IsDisposing)
+                return;
+
             IsDisposing = true;
             if (_autoResetEvent != null)
                 _autoResetEvent.WaitOne();

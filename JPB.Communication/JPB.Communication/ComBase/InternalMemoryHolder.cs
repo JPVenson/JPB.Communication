@@ -26,7 +26,7 @@ using System.Threading.Tasks;
 
 namespace JPB.Communication.ComBase
 {
-    internal class InternalMemoryHolder : IDisposable
+    public class InternalMemoryHolder : IDisposable
     {
         private List<byte[]> _datarec = new List<byte[]>();
 
@@ -38,7 +38,18 @@ namespace JPB.Communication.ComBase
 
         private Task _writeAsync;
 
-        internal async void Add(byte[] bytes)
+        /// <summary>
+        /// Maximum bytes in storeage
+        /// This are 20 Mbit
+        /// </summary>
+        public const int MaximumStoreageInMemory = 20971520;
+
+        private bool ShouldPageToDisk()
+        {
+            return Last.Length*_datarec.Count >= MaximumStoreageInMemory;
+        }
+
+        public async void Add(byte[] bytes)
         {
             Last = bytes;
 
@@ -47,7 +58,7 @@ namespace JPB.Communication.ComBase
             if (_writeAsync != null)
                 await _writeAsync;
 
-            if (_datarec.Count >= 10 && !IsSharedMem)
+            if (ShouldPageToDisk() && !IsSharedMem)
             {
                 _fileStream = new FileStream(Path.GetTempFileName(), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Delete);
                 var completeBytes = privateGet();
@@ -69,13 +80,16 @@ namespace JPB.Communication.ComBase
             return !IsSharedMem ? _datarec.SelectMany(s => s).ToArray() : Last;
         }
 
-        internal byte[] Get()
+        public byte[] Get()
         {
             return privateGet();
         }
 
         public void Dispose()
         {
+            if (_writeAsync != null)
+                _writeAsync.Wait();
+
             if (_fileStream != null)
             {
                 try

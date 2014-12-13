@@ -37,9 +37,6 @@ namespace JPB.Communication.ComBase
             datarec = new InternalMemoryHolder();
             sock = s;
             datarec.Add(new byte[sock.ReceiveBufferSize]);
-            // Start listening for incoming data.  (If you want a multi-
-            // threaded service, you can start this method up in a separate
-            // thread.)
             BeginReceive();
         }
 
@@ -86,7 +83,9 @@ namespace JPB.Communication.ComBase
                 Parse(compltearray);
                 return;
             }
-            
+
+            //this is Not the end, my only friend the end
+            //allocate new memory and add the mem to the Memory holder
             var newbuff = new byte[sock.ReceiveBufferSize];
             datarec.Add(newbuff);
 

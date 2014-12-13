@@ -32,7 +32,7 @@ using System.Net.Sockets;
 
 namespace JPB.Communication.ComBase
 {
-    public class NetworkInfoBase
+    public static class NetworkInfoBase
     {
         private static IPAddress _ip;
 
