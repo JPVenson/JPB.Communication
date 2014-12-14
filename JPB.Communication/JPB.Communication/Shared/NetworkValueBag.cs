@@ -32,6 +32,9 @@ using JPB.Communication.ComBase.Messages;
 
 namespace JPB.Communication.Shared
 {
+    /// <summary>
+    /// Guid Container
+    /// </summary>
     public static class NetworkListControler
     {
         static NetworkListControler()
@@ -52,6 +55,7 @@ namespace JPB.Communication.Shared
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public class NetworkValueBag<T> :
+        Networkbase,
         ICollection<T>,
         ICollection,
         IProducerConsumerCollection<T>,
@@ -60,11 +64,22 @@ namespace JPB.Communication.Shared
         INotifyCollectionChanged,
         IDisposable
     {
+        /// <summary>
+        /// Creates a new Instance of the NetworkValueBag
+        /// </summary>
+        /// <param name="port"></param>
+        /// <param name="guid"></param>
+        /// <returns></returns>
         public static NetworkValueBag<T> CreateNetworkValueCollection(ushort port, string guid)
         {
             return new NetworkValueBag<T>(port, guid);
         }
 
+        /// <summary>
+        /// Must be called to ensure a Single Usage of an GUID
+        /// </summary>
+        /// <param name="guid"></param>
+        /// <exception cref="ArgumentException"></exception>
         protected static void RegisterCollecion(string guid)
         {
             if (NetworkListControler.Guids.Contains(guid))
@@ -92,14 +107,41 @@ namespace JPB.Communication.Shared
             return sender;
         }
 
+        /// <summary>
+        /// if this is not the first Host that Maintains the target Collection we are initly connectet
+        /// </summary>
         public string ConnectedToHost { get; protected set; }
 
-        public List<string> CollectionRecievers { get; protected set; }
+        /// <summary>
+        /// All other PC's that Contains a NetworkValueBag with the desiered GUID.
+        /// When Add,Remove,Clear is invoked this PC's will be notifyed to do the same
+        /// </summary>
+        public List<string> CollectionRecievers
+        {
+            get { return _collectionRecievers; }
+            protected set { _collectionRecievers = value; }
+        }
 
-        protected ICollection<T> LocalValues { get; set; }
-        protected readonly TCPNetworkReceiver TcpNetworkReceiver;
-        protected readonly TCPNetworkSender TcpNetworkSernder;
+        /// <summary>
+        /// The Internal collection that contains the values
+        /// </summary>
+        protected ICollection<T> LocalValues
+        {
+            get { return _localValues; }
+            set { _localValues = value; }
+        }
 
+        protected volatile readonly TCPNetworkReceiver TcpNetworkReceiver;
+        protected volatile readonly TCPNetworkSender TcpNetworkSernder;
+
+        private volatile ICollection<T> _localValues;
+        private volatile List<string> _collectionRecievers;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="port"></param>
+        /// <param name="guid"></param>
         protected NetworkValueBag(ushort port, string guid)
         {
             RegisterCollecion(guid);
@@ -144,6 +186,11 @@ namespace JPB.Communication.Shared
             TcpNetworkReceiver.UnRegisterRequstHandler(PullConnectMessage, NetworkCollectionProtocol.CollectionGetUsers);
         }
 
+        /// <summary>
+        /// Callback for CollectionGetUsers
+        /// </summary>
+        /// <param name="arg"></param>
+        /// <returns></returns>
         protected object PullConnectMessage(RequstMessage arg)
         {
             if (arg.Message is string && arg.Message == Guid)
@@ -200,6 +247,11 @@ new MessageBase() { InfoState = NetworkCollectionProtocol.CollectionRegisterUser
             return true;
         }
 
+        /// <summary>
+        /// Callback for CollectionGetCollection
+        /// </summary>
+        /// <param name="arg"></param>
+        /// <returns></returns>
         protected object PullGetCollectionMessage(RequstMessage arg)
         {
             if (arg.Message != Guid)
@@ -211,7 +263,7 @@ new MessageBase() { InfoState = NetworkCollectionProtocol.CollectionRegisterUser
             }
         }
 
-        public ushort Port { get; private set; }
+        public override ushort Port { get; internal set; }
         public string Guid { get; protected set; }
         public int Count { get { return LocalValues.Count; } }
         public object SyncRoot { get; protected set; }
@@ -239,7 +291,6 @@ new MessageBase() { InfoState = NetworkCollectionProtocol.CollectionRegisterUser
         {
             lock (SyncRoot)
             {
-                //We got a Single 
                 if (obj.Message is IEnumerable<string>)
                 {
                     var diabled = obj.Message as IEnumerable<string>;

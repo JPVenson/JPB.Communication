@@ -26,17 +26,34 @@ using JPB.Communication.ComBase.Serializer.Contracts;
 
 namespace JPB.Communication.ComBase
 {
+    /// <summary>
+    /// Delegate for Incomming or Outging messages
+    /// </summary>
+    /// <param name="mess"></param>
+    /// <param name="port"></param>
     public delegate void MessageDelegate(MessageBase mess, ushort port);
 
+    /// <summary>
+    /// The base class for Multible Network instances
+    /// </summary>
     public abstract class Networkbase
     {
+        /// <summary>
+        /// 
+        /// </summary>
         protected Networkbase()
         {
             Serlilizer = DefaultMessageSerializer;
         }
 
+        /// <summary>
+        /// Defines the Port the Instance is working on
+        /// </summary>
         public abstract ushort Port { get; internal set; }
 
+        /// <summary>
+        /// When some Serlilizaion is requert this Interface will be used
+        /// </summary>
         public IMessageSerializer Serlilizer { get; set; }
 
         public static readonly IMessageSerializer DefaultMessageSerializer = new DefaultMessageSerlilizer();

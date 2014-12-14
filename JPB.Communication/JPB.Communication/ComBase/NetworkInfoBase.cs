@@ -36,6 +36,9 @@ namespace JPB.Communication.ComBase
     {
         private static IPAddress _ip;
 
+        /// <summary>
+        /// Easy access to your preferred network Interface 
+        /// </summary>
         public static IPAddress IpAddress
         {
             get
@@ -57,6 +60,9 @@ namespace JPB.Communication.ComBase
             }
         }
 
+        /// <summary>
+        /// If your pc is connected via multible network Interfaces you can here resolve your IP
+        /// </summary>
         public static event Func<IPAddress[], IPAddress> ResolveOwnIp;
 
         internal static IPAddress RaiseResolveOwnIp(IPAddress[] addresses)
@@ -67,19 +73,26 @@ namespace JPB.Communication.ComBase
             return ResolveAddressByMySelf____Again____IfYouNeedSomethingToBeDoneRightDoItByYourSelf(addresses);
         }
 
-        public static event Func<IPAddress[], IPAddress> ResolveDistantIp;
+        /// <summary>
+        /// If a Host is specified, use this event to resolve the IP
+        /// </summary>
+        public static event Func<IPAddress[], string, IPAddress> ResolveDistantIp;
 
-        internal static IPAddress RaiseResolveDistantIp(IPAddress[] addresses)
+        internal static IPAddress RaiseResolveDistantIp(IPAddress[] addresses, string hostName)
         {
+            if (addresses.Length == 1)
+                return addresses.First();
+
             var handler = ResolveDistantIp;
             if (handler != null)
-                return handler(addresses);
+                return handler(addresses, hostName);
             return ResolveAddressByMySelf____Again____IfYouNeedSomethingToBeDoneRightDoItByYourSelf(addresses);
         }
 
         private static IPAddress ResolveAddressByMySelf____Again____IfYouNeedSomethingToBeDoneRightDoItByYourSelf(IEnumerable<IPAddress> addresses)
         {
-            return addresses.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork);
+            //The last address might be the local real address
+            return addresses.LastOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork);
         }
     }
 }

@@ -289,7 +289,15 @@ namespace JPB.Communication.ComBase
                 var client = new TcpClient();
 
                 //resolve DNS entrys
-                var ipAddresses = ip.Select(Dns.GetHostAddresses).Select(NetworkInfoBase.RaiseResolveDistantIp).AsParallel().ToArray();
+                var ipAddresses =
+                    ip.Select(s =>
+                    {
+                        var hostAddresses = Dns.GetHostAddresses(s);
+                        return new Tuple<string, IPAddress[]>(s, hostAddresses);
+                    })
+                    .Select(s => NetworkInfoBase.RaiseResolveDistantIp(s.Item2, s.Item1))
+                    .AsParallel()
+                    .ToArray();
 
                 await client.ConnectAsync(ipAddresses, port);
                 client.NoDelay = true;

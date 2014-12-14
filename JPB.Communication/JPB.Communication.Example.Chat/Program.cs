@@ -62,8 +62,7 @@ namespace JPB.Communication.Example.Chat
             //-------------------------------------------------------------------------------------
             //we setup the incomming message handlers now we will send a message to the counterpart
             //-------------------------------------------------------------------------------------
-
-
+            
             //create a Sender on the same port the same way we did on the Receiver
             var tcpNetworkSender = NetworkFactory.Instance.GetSender(port);
 
