@@ -41,9 +41,9 @@ namespace JPB.Communication.ComBase.Serializer
             return Compress(mess);
         }
 
-        public byte[] SerializeMessageContent(MessageBase A)
+        public byte[] SerializeMessageContent(MessageBase mess)
         {
-            return DefaultMessageSerlilizer.SerializeMessageContent(A);
+            return DefaultMessageSerlilizer.SerializeMessageContent(mess);
         }
 
         public TcpMessage DeSerializeMessage(byte[] source)

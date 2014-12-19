@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JPB.Communication.Example.C
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JPB.Communication.Example.ChatOverNetworkCollection", "JPB.Communication.Example.ChatOverNetworkCollection\JPB.Communication.Example.ChatOverNetworkCollection.csproj", "{BD25F7F6-5D9F-4C0C-9EF2-8C42C2A021DB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JPB.Communication.Test.LargeMessages", "JPB.Communication.Test.LargeMessages\JPB.Communication.Test.LargeMessages.csproj", "{CE77D015-C3F1-484F-A7BB-3C846ACB0D34}"
+EndProject
 Global
 	GlobalSection(SubversionScc) = preSolution
 		Svn-Managed = True
@@ -33,6 +35,10 @@ Global
 		{BD25F7F6-5D9F-4C0C-9EF2-8C42C2A021DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BD25F7F6-5D9F-4C0C-9EF2-8C42C2A021DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BD25F7F6-5D9F-4C0C-9EF2-8C42C2A021DB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CE77D015-C3F1-484F-A7BB-3C846ACB0D34}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE77D015-C3F1-484F-A7BB-3C846ACB0D34}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE77D015-C3F1-484F-A7BB-3C846ACB0D34}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE77D015-C3F1-484F-A7BB-3C846ACB0D34}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -40,5 +46,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{BABCC276-31C8-4739-84B2-F8FBE052F341} = {45E79551-EC87-411F-BAB8-43935C755C02}
 		{BD25F7F6-5D9F-4C0C-9EF2-8C42C2A021DB} = {45E79551-EC87-411F-BAB8-43935C755C02}
+		{CE77D015-C3F1-484F-A7BB-3C846ACB0D34} = {45E79551-EC87-411F-BAB8-43935C755C02}
 	EndGlobalSection
 EndGlobal

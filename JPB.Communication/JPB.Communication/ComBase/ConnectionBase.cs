@@ -19,7 +19,9 @@
  */
 
 using System;
+using System.IO;
 using JPB.Communication.ComBase;
+using JPB.Communication.ComBase.Messages;
 
 namespace JPB.Communication.ComBase
 {
@@ -31,7 +33,7 @@ namespace JPB.Communication.ComBase
         }
 
         public const string ErrorDueParse = "ERR / Message is Corrupt";
-        
+
         internal bool Parse(byte[] received)
         {
             TcpMessage item;
@@ -62,6 +64,38 @@ namespace JPB.Communication.ComBase
 
                 RaiseNewItemLoadedFail(source);
                 return false;
+            }
+        }
+
+        internal LargeMessage ParseLargeObject(byte[] received, Func<Stream> completed)
+        {
+            TcpMessage item;
+            try
+            {
+                item = DeSerialize(received);
+
+                if (item != null)
+                {
+                    RaiseIncommingMessage(item);
+                    var loadMessageBaseFromBinary = base.LoadMessageBaseFromBinary(item.MessageBase);
+                    return RaiseNewLargeItemLoadedSuccess(loadMessageBaseFromBinary, completed);
+                }
+                return null;
+            }
+            catch (Exception)
+            {
+                string source;
+                try
+                {
+                    source = this.Serlilizer.ResolveStringContent(received);
+                }
+                catch (Exception)
+                {
+                    source = ErrorDueParse;
+                }
+
+                RaiseNewItemLoadedFail(source);
+                return null;
             }
         }
     }

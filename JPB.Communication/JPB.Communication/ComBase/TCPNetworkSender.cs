@@ -30,6 +30,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.ServiceModel.Channels;
 using System.Threading;
 using System.Threading.Tasks;
 using JPB.Communication.ComBase.Messages;
@@ -168,6 +169,12 @@ namespace JPB.Communication.ComBase
 
         #endregion
 
+        internal void SendNeedMoreTimeBackAsync(RequstMessage mess, string ip)
+        {
+            mess.NeedMoreTime = 20000;
+            SendMessageAsync(mess, ip);
+        }
+
         /// <summary>
         /// Sends a message an awaits a response on the same port from the other side
         /// </summary>
@@ -179,23 +186,53 @@ namespace JPB.Communication.ComBase
         {
             var task = new Task<T>(() =>
             {
+                if (mess.ExpectedResult == default(ushort))
+                {
+                    mess.ExpectedResult = Port;
+                }
+
                 var result = default(T);
                 AutoResetEvent waitForResponsive;
                 using (waitForResponsive = new AutoResetEvent(false))
                 {
-                    var reciever = NetworkFactory.Instance.GetReceiver(Port);
+                    var reciever = NetworkFactory.Instance.GetReceiver(mess.ExpectedResult);
+
+                    var moreTime = 0L;
                     //register a callback that is filtered by the Guid we send inside our requst
-                    reciever.RegisterRequst(s =>
+                    Action<RequstMessage> ack = null;
+                    ack = s =>
                     {
+                        if (s.NeedMoreTime > 0)
+                        {
+                            moreTime = s.NeedMoreTime;
+                            //reregister request
+                            reciever.RegisterRequst(ack, mess.Id);
+                            return;
+                        }
+
                         if (s.Message is T)
                             result = (T)s.Message;
                         if (waitForResponsive != null)
                             waitForResponsive.Set();
-                    }, mess.Id);
+                    };
+
+                    reciever.RegisterRequst(ack, mess.Id);
                     var isSend = SendMessage(mess, ip);
                     if (isSend)
                     {
                         waitForResponsive.WaitOne(Timeout);
+                        while (moreTime > 0)
+                        {
+                            var mT = moreTime;
+                            moreTime = 0;
+                            waitForResponsive.WaitOne(TimeSpan.FromMilliseconds(mT));
+                        }
+
+                        //are we still receiving?
+                        while (reciever.IncommingMessage)
+                        {
+                            waitForResponsive.WaitOne(Timeout);
+                        }
                     }
                     reciever.UnRegisterCallback(mess.Id);
                 }
@@ -244,23 +281,37 @@ namespace JPB.Communication.ComBase
             return results;
         }
 
-        /// <summary>
-        /// To be Supplied
-        /// throw NotImplementedException
-        /// Sender is working but there is no Server Conzept
-        /// </summary>
-        /// <param name="stream"></param>
-        /// <param name="mess"></param>
-        /// <param name="ip"></param>
+        ///  <summary>
+        /// WIP
+        ///  </summary>
+        ///  <param name="stream"></param>
+        ///  <param name="mess"></param>
+        ///  <param name="ip"></param>
+        /// <param name="disposeOnEnd">Close and Dispose the stream after work</param>
         /// <exception cref="NotImplementedException"></exception>
-        public async void SendFile(FileStream stream, MessageBase mess, string ip)
+        public async void SendStreamDataAsync(Stream stream, MessageBase mess, string ip, bool disposeOnEnd = true)
         {
-            throw new NotImplementedException("This side is working but there is no Reciever Imp");
+            var client = await CreateClientSockAsync(ip, Port);
+            if (client == null)
+                return;
 
-            //var client = await CreateClientSockAsync(ip, Port);
-            //if (client == null)
-            //    return;
-            //SendBase(stream, client);
+            var prepairedMess = PrepareMessage(mess, ip);
+            var serialize = this.Serialize(prepairedMess);
+
+            using (var memstream = new MemoryStream(serialize))
+            using (var openNetwork = OpenAndSend(memstream, client))
+            {
+                //wait for the Responce that the other side is waiting for the content
+                openNetwork.ReadByte();
+                SendOnStream(openNetwork, stream, client);
+            }
+
+            if (disposeOnEnd)
+            {
+                stream.Close();
+                stream.Dispose();
+                stream = null;
+            }
         }
 
         #region Base Methods
@@ -276,7 +327,7 @@ namespace JPB.Communication.ComBase
         /// <summary>
         /// Prepaired mehtod call that uses the Connect mehtod with multible IP addresses
         /// 
-        /// Behavior is not checkted
+        /// Behavior is not tested
         /// WIP
         /// </summary>
         /// <param name="ip"></param>
@@ -311,7 +362,7 @@ namespace JPB.Communication.ComBase
 
         private static Task<TcpClient> CreateClientSockAsync(string ip, int port)
         {
-            return CreateClientSockAsync(new[] {ip}, port);
+            return CreateClientSockAsync(new[] { ip }, port);
         }
 
         private void SendBaseAsync(TcpMessage message, TcpClient client)
@@ -321,14 +372,22 @@ namespace JPB.Communication.ComBase
                 return;
 
             using (var memstream = new MemoryStream(serialize))
-            using (SendBase(memstream, client)) { }
+            using (OpenAndSend(memstream, client)) { }
         }
 
-        private NetworkStream SendBase(Stream stream, TcpClient client)
+        private Stream OpenAndSend(Stream stream, TcpClient client)
         {
-            NetworkStream networkStream = client.GetStream();
+            Stream networkStream = client.GetStream();
+            return SendOnStream(networkStream, stream, client);
+        }
+
+        private Stream SendOnStream(Stream networkStream, Stream stream, TcpClient client)
+        {
+            if (!stream.CanRead)
+                return networkStream;
 
             int bufSize = client.ReceiveBufferSize;
+
             var buf = new byte[bufSize];
 
             int bytesRead;
@@ -336,8 +395,9 @@ namespace JPB.Communication.ComBase
             {
                 networkStream.Write(buf, 0, bytesRead);
             }
-
-            networkStream.Write(new byte[0], 0, 0);
+            
+            //write an empty Chunck to indicate the end of this Part
+            networkStream.Write(new byte[] { 0x00 }, 0, 1);
 
             return networkStream;
         }

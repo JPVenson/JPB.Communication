@@ -19,6 +19,7 @@
  */
 
 using System;
+using System.IO;
 using System.Linq;
 using JPB.Communication.ComBase.Messages;
 using JPB.Communication.ComBase.Serializer;
@@ -32,6 +33,13 @@ namespace JPB.Communication.ComBase
     /// <param name="mess"></param>
     /// <param name="port"></param>
     public delegate void MessageDelegate(MessageBase mess, ushort port);
+
+    /// <summary>
+    /// Delegate for Incomming or Outging messages
+    /// </summary>
+    /// <param name="mess"></param>
+    /// <param name="port"></param>
+    public delegate void LargeMessageDelegate(LargeMessage mess, ushort port);
 
     /// <summary>
     /// The base class for Multible Network instances
@@ -64,6 +72,29 @@ namespace JPB.Communication.ComBase
         public static event EventHandler<string> OnNewItemLoadedFail;
         public static event EventHandler<TcpMessage> OnIncommingMessage;
         public static event MessageDelegate OnMessageSend;
+        public static event LargeMessageDelegate OnNewLargeItemLoadedSuccess;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="metaData"></param>
+        /// <param name="contendLoaded"></param>
+        protected virtual LargeMessage RaiseNewLargeItemLoadedSuccess(MessageBase metaData, Func<Stream> contendLoaded)
+        {
+            try
+            {
+                var handler = OnNewLargeItemLoadedSuccess;
+                var largeMessage = new LargeMessage(metaData, contendLoaded);
+                if (handler != null)
+                    handler(largeMessage, Port);
+                return largeMessage;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return null;
+            }
+        }
 
         protected virtual void RaiseMessageSended(MessageBase message)
         {
@@ -145,7 +176,12 @@ namespace JPB.Communication.ComBase
             }
         }
 
-        public byte[] SaveMessageBaseAsBinary(MessageBase A)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="A"></param>
+        /// <returns></returns>
+        public byte[] SaveMessageBaseAsContent(MessageBase A)
         {
             try
             {
@@ -165,7 +201,7 @@ namespace JPB.Communication.ComBase
         protected TcpMessage Wrap(MessageBase message)
         {
             var mess = new TcpMessage();
-            var saveMessageBaseAsBinary = SaveMessageBaseAsBinary(message);
+            var saveMessageBaseAsBinary = SaveMessageBaseAsContent(message);
 
             if (!saveMessageBaseAsBinary.Any())
                 return null;

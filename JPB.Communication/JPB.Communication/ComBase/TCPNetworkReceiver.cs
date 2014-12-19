@@ -34,7 +34,17 @@ namespace JPB.Communication.ComBase
     {
         internal TCPNetworkReceiver(ushort port)
         {
+            _largeMessages = new List<Tuple<Action<LargeMessage>, object>>();
+            _onetimeupdated = new List<Tuple<Action<MessageBase>, Guid>>();
+            _pendingrequests = new List<Tuple<Action<RequstMessage>, Guid>>();
+            _requestHandler = new List<Tuple<Func<RequstMessage, object>, object>>();
+            _updated = new List<Tuple<Action<MessageBase>, object>>();
+            _workeritems = new ConcurrentQueue<Action>();
+
+
             OnNewItemLoadedSuccess += TcpConnectionOnOnNewItemLoadedSuccess;
+            OnNewLargeItemLoadedSuccess += TcpConnectionOnOnNewItemLoadedSuccess;
+
             Port = port;
             _sock = new Socket(IPAddress.Any.AddressFamily,
                                SocketType.Stream,
@@ -50,69 +60,45 @@ namespace JPB.Communication.ComBase
             // Set up the callback to be notified when somebody requests
             // a new connection.
             _sock.BeginAccept(OnConnectRequest, _sock);
+
+            TypeCallbacks = new Dictionary<Type, Action<object>>();
+            TypeCallbacks.Add(typeof(RequstMessage), WorkOn_RequestMessage);
+            TypeCallbacks.Add(typeof(MessageBase), WorkOn_MessageBase);
+            TypeCallbacks.Add(typeof(LargeMessage), WorkOn_LargeMessage);
         }
 
-        private void TcpConnectionOnOnNewItemLoadedSuccess(MessageBase mess, ushort port)
+        /// <summary>
+        /// FOR INTERNAL USE ONLY
+        /// </summary>
+        internal Dictionary<Type, Action<object>> TypeCallbacks;
+
+        private readonly List<Tuple<Action<LargeMessage>, object>> _largeMessages;
+        private readonly List<Tuple<Action<MessageBase>, Guid>> _onetimeupdated;
+        private readonly List<Tuple<Action<RequstMessage>, Guid>> _pendingrequests;
+        private readonly List<Tuple<Func<RequstMessage, object>, object>> _requestHandler;
+        private readonly Socket _sock;
+        private readonly List<Tuple<Action<MessageBase>, object>> _updated;
+        private readonly ConcurrentQueue<Action> _workeritems;
+        private AutoResetEvent _autoResetEvent;
+
+        private bool _isWorking;
+        private bool _incommingMessage;
+
+        private void TcpConnectionOnOnNewItemLoadedSuccess(object mess, ushort port)
         {
             if (port == Port)
             {
-                var messCopy = mess;
+                IncommingMessage = false;
+                object messCopy = mess;
                 _workeritems.Enqueue(() =>
                 {
-                    if (messCopy is RequstMessage)
+                    var type = messCopy.GetType();
+
+                    var handler = TypeCallbacks.FirstOrDefault(s => s.Key == type);
+
+                    if (!default(KeyValuePair<Type, Action<object>>).Equals(handler))
                     {
-                        //message with return value inbound
-                        var requstInbound = messCopy as RequstMessage;
-                        var firstOrDefault = _requestHandler.Where(pendingrequest => pendingrequest.Item2.Equals(requstInbound.InfoState)).ToArray();
-                        if (firstOrDefault.Any())
-                        {
-                            object result = null;
-
-                            foreach (var tuple in firstOrDefault)
-                            {
-                                //Found a handler for that message and executed it
-
-                                result = tuple.Item1(requstInbound);
-                                if (result == null)
-                                    continue;
-                            }
-
-                            if (result == null)
-                                return;
-
-                            var sender = NetworkFactory.Instance.GetSender(Port);
-                            sender.SendMessageAsync(new RequstMessage()
-                            {
-                                Message = result,
-                                ResponseFor = requstInbound.Id
-                            }, messCopy.Sender);
-                        }
-                        else
-                        {
-                            //This is an awnser
-                            var awnser = _pendingrequests.FirstOrDefault(pendingrequest => pendingrequest.Item2.Equals(requstInbound.ResponseFor));
-                            if (awnser != null)
-                                awnser.Item1(requstInbound);
-                            _pendingrequests.Remove(awnser);
-                        }
-                    }
-                    else
-                    {
-                        var updateCallbacks = _updated.Where(action => action.Item2 == null || action.Item2.Equals(messCopy.InfoState)).ToArray();
-                        foreach (
-                            var action in updateCallbacks)
-                            action.Item1.BeginInvoke(messCopy, e => { }, null);
-
-                        //Go through all one time items and check for ID
-                        var oneTimeImtes = _onetimeupdated.Where(s => messCopy.Id == s.Item2).ToArray();
-
-                        foreach (var action in oneTimeImtes)
-                        {
-                            action.Item1.BeginInvoke(messCopy, e => { }, null);
-                        }
-
-                        foreach (var useditem in oneTimeImtes)
-                            _onetimeupdated.Remove(useditem);
+                        handler.Value(messCopy);
                     }
                 });
                 if (_isWorking)
@@ -124,23 +110,160 @@ namespace JPB.Communication.ComBase
                 task.ContinueWith(s => { _isWorking = false; });
             }
         }
+        
+        private void WorkOn_LargeMessage(object metaData)
+        {
+            var messCopy = metaData as LargeMessage;
 
-        private readonly List<Tuple<Action<MessageBase>, Guid>> _onetimeupdated = new List<Tuple<Action<MessageBase>, Guid>>();
+            var updateCallbacks = _largeMessages.Where(action => messCopy != null && (action.Item2 == null || action.Item2.Equals(messCopy.MetaData.InfoState))).ToArray();
+            foreach (var action in updateCallbacks)
+            {
+                action.Item1.BeginInvoke(messCopy, e => { }, null);
+            }
+        }
 
-        private readonly List<Tuple<Action<RequstMessage>, Guid>> _pendingrequests = new List<Tuple<Action<RequstMessage>, Guid>>();
+        private void WorkOn_MessageBase(object message)
+        {
+            var messCopy = message as MessageBase;
 
-        private readonly List<Tuple<Func<RequstMessage, object>, object>> _requestHandler = new List<Tuple<Func<RequstMessage, object>, object>>();
+            var updateCallbacks = _updated.Where(action => messCopy != null && (action.Item2 == null || action.Item2.Equals(messCopy.InfoState))).ToArray();
+            foreach (var action in updateCallbacks)
+            {
+                action.Item1.BeginInvoke(messCopy, e => { }, null);
+            }
 
-        private readonly Socket _sock;
+            //Go through all one time items and check for ID
+            var oneTimeImtes = _onetimeupdated.Where(s => messCopy != null && messCopy.Id == s.Item2).ToArray();
 
-        private readonly List<Tuple<Action<MessageBase>, object>> _updated =
-            new List<Tuple<Action<MessageBase>, object>>();
+            foreach (var action in oneTimeImtes)
+            {
+                action.Item1.BeginInvoke(messCopy, e => { }, null);
+            }
 
-        private readonly ConcurrentQueue<Action> _workeritems = new ConcurrentQueue<Action>();
+            foreach (var useditem in oneTimeImtes)
+                _onetimeupdated.Remove(useditem);
+        }
 
-        private AutoResetEvent _autoResetEvent;
+        private void WorkOn_RequestMessage(object messCopy)
+        {
+            //message with return value inbound
+            var requstInbound = messCopy as RequstMessage;
+            if (requstInbound == null) 
+                return;
 
-        private bool _isWorking;
+            var sender = NetworkFactory.Instance.GetSender(requstInbound.ExpectedResult);
+
+            var firstOrDefault = _requestHandler.Where(pendingrequest => pendingrequest.Item2.Equals(requstInbound.InfoState)).ToArray();
+            if (firstOrDefault.Any())
+            {
+                object result = null;
+
+                foreach (var tuple in firstOrDefault)
+                {
+                    //Found a handler for that message and executed it
+                    Thread waiter = null;
+
+                    try
+                    {
+                        waiter = new Thread(() =>
+                        {
+                            while (true)
+                            {
+                                if (result != null)
+                                    return;
+
+                                Thread.Sleep(TimeSpan.FromSeconds(10));
+
+                                if (result != null)
+                                    return;
+
+                                sender.SendNeedMoreTimeBackAsync(new RequstMessage()
+                                {
+                                    ResponseFor = requstInbound.Id
+                                }, requstInbound.Sender);
+                            }
+                        });
+                        waiter.Start();
+
+                        result = tuple.Item1(requstInbound);
+                    }
+                    catch (Exception)
+                    {
+                        result = null;
+                    }
+                    finally
+                    {
+                        if (waiter != null)
+                            waiter.Abort();
+                    }
+
+                    if (result == null)
+                        break;
+                }
+
+                if (result == null)
+                    return;
+
+                sender.SendMessageAsync(new RequstMessage()
+                {
+                    Message = result,
+                    ResponseFor = requstInbound.Id
+                }, requstInbound.Sender);
+            }
+            else
+            {
+                //This is an awnser
+                var awnser = _pendingrequests.FirstOrDefault(pendingrequest => pendingrequest.Item2.Equals(requstInbound.ResponseFor));
+                if (awnser != null)
+                    awnser.Item1(requstInbound);
+                _pendingrequests.Remove(awnser);
+            }
+        }
+        
+        /// <summary>
+        /// True if we are Recieving a message
+        /// </summary>
+        public bool IncommingMessage
+        {
+            get { return _incommingMessage; }
+            private set
+            {
+                _incommingMessage = value;
+                RaiseIncommingMessage();
+            }
+        }
+
+        /// <summary>
+        /// If Enabled this Receiver takes care of Small and Very large files
+        /// 
+        /// </summary>
+        public bool LargeMessageSupport { get; set; }
+
+        public event Func<TCPNetworkReceiver, Socket, bool> OnCheckConnectionInbound;
+
+        protected bool RaiseConnectionInbound(Socket sock)
+        {
+            var handler = OnCheckConnectionInbound;
+            if (handler != null)
+                return handler(this, sock);
+            return true;
+        }
+
+
+        /// <summary>
+        /// Is raised when a message is inside the buffer but not fully parsed
+        /// </summary>
+        public event EventHandler OnIncommingMessage;
+
+        /// <summary>
+        /// Is raised when a message is inside the buffer but not fully parsed
+        /// </summary>
+        protected void RaiseIncommingMessage()
+        {
+            var handler = OnIncommingMessage;
+            if (handler != null)
+                handler(this, EventArgs.Empty);
+        }
 
         #region Implementation of IDisposable
 
@@ -157,6 +280,9 @@ namespace JPB.Communication.ComBase
 
         #endregion
 
+        /// <summary>
+        /// 
+        /// </summary>
         public bool IsDisposing { get; private set; }
 
         public void UnregisterChanged(Action<MessageBase> action, object state)
@@ -182,9 +308,19 @@ namespace JPB.Communication.ComBase
         /// </summary>
         /// <param name="action">Callback</param>
         /// <param name="state">Maybe an Enum?</param>
-        public void RegisterChanged(Action<MessageBase> action, object state)
+        public void RegisterMessageBaseInbound(Action<MessageBase> action, object state)
         {
             _updated.Add(new Tuple<Action<MessageBase>, object>(action, state));
+        }
+
+        /// <summary>
+        /// Register a Callback localy that will be used when a new Large message is inbound that has state in its InfoState
+        /// </summary>
+        /// <param name="action">Callback</param>
+        /// <param name="state">Maybe an Enum?</param>
+        public void RegisterMessageBaseInbound(Action<LargeMessage> action, object state)
+        {
+            _largeMessages.Add(new Tuple<Action<LargeMessage>, object>(action, state));
         }
 
         /// <summary>
@@ -192,7 +328,7 @@ namespace JPB.Communication.ComBase
         /// </summary>
         /// <param name="action"></param>
         /// <param name="guid"></param>
-        public void RegisterCallback(Action<MessageBase> action, Guid guid)
+        public void RegisterOneTimeMessage(Action<MessageBase> action, Guid guid)
         {
             _onetimeupdated.Add(new Tuple<Action<MessageBase>, Guid>(action, guid));
         }
@@ -256,20 +392,39 @@ namespace JPB.Communication.ComBase
                 Action action = null;
                 if (!_workeritems.TryDequeue(out action))
                     return;
-                action();
+                action.BeginInvoke(s => { }, null);
             }
             _autoResetEvent.Set();
         }
 
         internal void OnConnectRequest(IAsyncResult result)
         {
+            IncommingMessage = true;
+
             // Get the socket (which should be this listener's socket) from
             // the argument.
             var sock = ((Socket)result.AsyncState);
 
-            // Create a new client connection, using the primary socket to
-            // spawn a new socket.
-            new TcpConnection(sock.EndAccept(result)) { Port = Port };
+            if (RaiseConnectionInbound(sock))
+            {
+                if (!LargeMessageSupport)
+                {
+                    var tcpConnection = new DefaultTcpConnection(sock.EndAccept(result))
+                    {
+                        Port = Port
+                    };
+                    tcpConnection.BeginReceive();
+                }
+                else
+                {
+                    var tcpConnection = new LargeTcpConnection(sock.EndAccept(result))
+                    {
+                        Port = Port
+                    };
+                    tcpConnection.BeginReceive();
+                }
+            }
+
             // Tell the listener socket to start listening again.
             _sock.BeginAccept(OnConnectRequest, sock);
         }

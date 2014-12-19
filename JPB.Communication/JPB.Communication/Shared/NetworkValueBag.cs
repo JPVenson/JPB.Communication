@@ -131,8 +131,8 @@ namespace JPB.Communication.Shared
             set { _localValues = value; }
         }
 
-        protected volatile readonly TCPNetworkReceiver TcpNetworkReceiver;
-        protected volatile readonly TCPNetworkSender TcpNetworkSernder;
+        protected readonly TCPNetworkReceiver TcpNetworkReceiver;
+        protected readonly TCPNetworkSender TcpNetworkSernder;
 
         private volatile ICollection<T> _localValues;
         private volatile List<string> _collectionRecievers;
@@ -166,11 +166,11 @@ namespace JPB.Communication.Shared
 
         private void RegisterCallbacks()
         {
-            TcpNetworkReceiver.RegisterChanged(pPullAddMessage, NetworkCollectionProtocol.CollectionAdd);
-            TcpNetworkReceiver.RegisterChanged(pPullClearMessage, NetworkCollectionProtocol.CollectionReset);
-            TcpNetworkReceiver.RegisterChanged(pPullRemoveMessage, NetworkCollectionProtocol.CollectionRemove);
-            TcpNetworkReceiver.RegisterChanged(PullRegisterMessage, NetworkCollectionProtocol.CollectionRegisterUser);
-            TcpNetworkReceiver.RegisterChanged(PullUnRegisterMessage, NetworkCollectionProtocol.CollectionUnRegisterUser);
+            TcpNetworkReceiver.RegisterMessageBaseInbound(pPullAddMessage, NetworkCollectionProtocol.CollectionAdd);
+            TcpNetworkReceiver.RegisterMessageBaseInbound(pPullClearMessage, NetworkCollectionProtocol.CollectionReset);
+            TcpNetworkReceiver.RegisterMessageBaseInbound(pPullRemoveMessage, NetworkCollectionProtocol.CollectionRemove);
+            TcpNetworkReceiver.RegisterMessageBaseInbound(PullRegisterMessage, NetworkCollectionProtocol.CollectionRegisterUser);
+            TcpNetworkReceiver.RegisterMessageBaseInbound(PullUnRegisterMessage, NetworkCollectionProtocol.CollectionUnRegisterUser);
             TcpNetworkReceiver.RegisterRequstHandler(PullGetCollectionMessage, NetworkCollectionProtocol.CollectionGetCollection);
             TcpNetworkReceiver.RegisterRequstHandler(PullConnectMessage, NetworkCollectionProtocol.CollectionGetUsers);
         }

@@ -51,6 +51,13 @@ namespace JPB.Communication.ComBase.Messages
             Message = mess ?? new object();
         }
 
+        public MessageBase(object mess, object infoState)
+            : this(Guid.NewGuid())
+        {
+            InfoState = infoState ?? new object();
+            Message = mess ?? new object();
+        }
+
         public MessageBase(Guid guid)
         {
             Id = guid;

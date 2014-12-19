@@ -23,25 +23,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
 
-namespace JPB.Communication.ComBase 
+namespace JPB.Communication.ComBase
 {
-    internal class TcpConnection : ConnectionBase, IDisposable
+    internal class DefaultTcpConnection : ConnectionBase, IDisposable
     {
         private readonly Socket sock;
         private InternalMemoryHolder datarec;
-        // Pick whatever encoding works best for you.  Just make sure the remote 
-        // host is using the same encoding.
 
-        internal TcpConnection(Socket s)
+        internal DefaultTcpConnection(Socket s)
         {
             datarec = new InternalMemoryHolder();
             sock = s;
             datarec.Add(new byte[sock.ReceiveBufferSize]);
-            BeginReceive();
         }
 
         // Call this method to set this connection's socket up to receive data.
-        private void BeginReceive()
+        internal void BeginReceive()
         {
             var last = datarec.Last;
             sock.BeginReceive(

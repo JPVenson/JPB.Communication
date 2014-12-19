@@ -57,7 +57,7 @@ namespace JPB.Communication.Example.Chat
                 .GetReceiver(port);
 
             //Register the callback that will be invoked when a new message is incomming that contains the InfoState ( Contract ) we defined
-            tcpNetworkReceiver.RegisterChanged(OnIncommingMessage, ChatMessageContract);
+            tcpNetworkReceiver.RegisterMessageBaseInbound(OnIncommingMessage, ChatMessageContract);
 
             //-------------------------------------------------------------------------------------
             //we setup the incomming message handlers now we will send a message to the counterpart

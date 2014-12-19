@@ -36,13 +36,31 @@ namespace JPB.Communication.ComBase.Messages
             : base(info, context)
         {
             ResponseFor = (Guid)info.GetValue("ResponseFor", typeof(Guid));
+            ExpectedResult = (ushort)info.GetValue("ExpectedResult", typeof(ushort));
+            NeedMoreTime = (long)info.GetValue("NeedMoreTime", typeof(long));
         }
         
+        /// <summary>
+        /// The ID of an Requestmessage for this is an Awsner
+        /// </summary>
         public Guid ResponseFor { get; set; }
+
+        /// <summary>
+        /// If set, we defining a Port we expecting an awnser
+        /// </summary>
+        public ushort ExpectedResult { get; set; }
+
+        /// <summary>
+        /// If set and this object is an Awnser to a Requst message,
+        /// The client will wait time specifiyed
+        /// </summary>
+        public long NeedMoreTime { get; set; }
         
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             info.AddValue("ResponseFor", ResponseFor, ResponseFor.GetType());
+            info.AddValue("ExpectedResult", ExpectedResult, ExpectedResult.GetType());
+            info.AddValue("NeedMoreTime", NeedMoreTime, NeedMoreTime.GetType());
             base.GetObjectData(info, context);
         }
     }

@@ -34,6 +34,11 @@ namespace JPB.Communication.ComBase
 
         internal bool IsSharedMem { get; set; }
 
+        /// <summary>
+        /// Forceses the usage of FIles
+        /// </summary>
+        public bool ForceSharedMem { get; set; }
+
         private FileStream _fileStream;
 
         private Task _writeAsync;
@@ -46,7 +51,7 @@ namespace JPB.Communication.ComBase
 
         private bool ShouldPageToDisk()
         {
-            return Last.Length*_datarec.Count >= MaximumStoreageInMemory;
+            return ForceSharedMem || Last.Length*_datarec.Count >= MaximumStoreageInMemory;
         }
 
         public async void Add(byte[] bytes)
@@ -63,6 +68,7 @@ namespace JPB.Communication.ComBase
                 _fileStream = new FileStream(Path.GetTempFileName(), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Delete);
                 var completeBytes = privateGet();
                 _writeAsync = _fileStream.WriteAsync(completeBytes, 0, completeBytes.Length);
+                _datarec.Clear();
                 IsSharedMem = true;
             }
             if (IsSharedMem)
@@ -83,6 +89,11 @@ namespace JPB.Communication.ComBase
         public byte[] Get()
         {
             return privateGet();
+        }
+
+        public Stream GetStream()
+        {
+            return _fileStream;
         }
 
         public void Dispose()

@@ -38,12 +38,12 @@ namespace JPB.Communication.ComBase.Serializer
             }
         }
 
-        public byte[] SerializeMessageContent(MessageBase A)
+        public byte[] SerializeMessageContent(MessageBase mess)
         {
             using (var memstream = new MemoryStream())
             {
                 var json = new DataContractJsonSerializer(typeof(MessageBase));
-                json.WriteObject(memstream, A);
+                json.WriteObject(memstream, mess);
                 return memstream.ToArray();
             }
         }

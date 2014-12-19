@@ -20,6 +20,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>full</DebugType>
@@ -34,6 +35,7 @@
     <DebugSymbols>true</DebugSymbols>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
     <DocumentationFile>bin\Release\JPB.Communication.XML</DocumentationFile>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>true</SignAssembly>
@@ -49,6 +51,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ComBase\LargeTcpConnection.cs" />
+    <Compile Include="ComBase\Messages\LargeMessage.cs" />
     <Compile Include="ComBase\Serializer\BinaryCompressedMessageSerializer.cs" />
     <Compile Include="ComBase\ConnectionBase.cs" />
     <Compile Include="ComBase\Serializer\DefaultMessageSerlilizer.cs" />
@@ -59,7 +63,7 @@
     <Compile Include="ComBase\Messages\RequstMessage.cs" />
     <Compile Include="ComBase\Networkbase.cs" />
     <Compile Include="ComBase\NetworkInfoBase.cs" />
-    <Compile Include="ComBase\TcpConnection.cs" />
+    <Compile Include="ComBase\DefaultTcpConnection.cs" />
     <Compile Include="ComBase\TcpMessage.cs" />
     <Compile Include="ComBase\TCPNetworkReceiver.cs" />
     <Compile Include="ComBase\TCPNetworkSender.cs" />

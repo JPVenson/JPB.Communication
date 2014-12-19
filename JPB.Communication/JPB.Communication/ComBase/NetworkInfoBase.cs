@@ -89,6 +89,11 @@ namespace JPB.Communication.ComBase
             return ResolveAddressByMySelf____Again____IfYouNeedSomethingToBeDoneRightDoItByYourSelf(addresses);
         }
 
+        /// <summary>
+        /// Not a Comment!
+        /// </summary>
+        /// <param name="addresses"></param>
+        /// <returns></returns>
         private static IPAddress ResolveAddressByMySelf____Again____IfYouNeedSomethingToBeDoneRightDoItByYourSelf(IEnumerable<IPAddress> addresses)
         {
             //The last address might be the local real address

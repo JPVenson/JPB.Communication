@@ -33,9 +33,9 @@ namespace JPB.Communication.ComBase.Serializer.Contracts
         /// <summary>
         /// Is used to convert the message object that is a Property of the TCP message into an other format then the TCP message 
         /// </summary>
-        /// <param name="A"></param>
+        /// <param name="mess"></param>
         /// <returns></returns>
-        byte[] SerializeMessageContent(MessageBase A);
+        byte[] SerializeMessageContent(MessageBase mess);
 
         /// <summary>
         /// Converts the output from the TCP network adapter into a valid TCP message
