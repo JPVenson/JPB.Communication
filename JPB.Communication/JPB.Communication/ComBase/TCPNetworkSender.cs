@@ -304,6 +304,7 @@ namespace JPB.Communication.ComBase
                 //wait for the Responce that the other side is waiting for the content
                 openNetwork.ReadByte();
                 SendOnStream(openNetwork, stream, client);
+                openNetwork.Write(new byte[] { 0x00 }, 0, 1);
             }
 
             if (disposeOnEnd)
@@ -372,7 +373,10 @@ namespace JPB.Communication.ComBase
                 return;
 
             using (var memstream = new MemoryStream(serialize))
-            using (OpenAndSend(memstream, client)) { }
+            using (var networkStream = OpenAndSend(memstream, client))
+            {
+                networkStream.Write(new byte[] { 0x00 }, 0, 1);
+            }
         }
 
         private Stream OpenAndSend(Stream stream, TcpClient client)
@@ -395,7 +399,7 @@ namespace JPB.Communication.ComBase
             {
                 networkStream.Write(buf, 0, bytesRead);
             }
-            
+
             //write an empty Chunck to indicate the end of this Part
             networkStream.Write(new byte[] { 0x00 }, 0, 1);
 

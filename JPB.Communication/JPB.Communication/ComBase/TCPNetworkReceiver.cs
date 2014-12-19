@@ -41,7 +41,6 @@ namespace JPB.Communication.ComBase
             _updated = new List<Tuple<Action<MessageBase>, object>>();
             _workeritems = new ConcurrentQueue<Action>();
 
-
             OnNewItemLoadedSuccess += TcpConnectionOnOnNewItemLoadedSuccess;
             OnNewLargeItemLoadedSuccess += TcpConnectionOnOnNewItemLoadedSuccess;
 

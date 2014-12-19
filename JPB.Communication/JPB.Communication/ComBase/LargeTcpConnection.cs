@@ -66,36 +66,24 @@ namespace JPB.Communication.ComBase
             //to incomming data left
             //try to concat the message
 
-            //rec is empty meens we are at the end of both message
+            //rec is empty means we are at the end of both message
             if (rec == 0 || !_sock.Connected)
             {
-                //Are we in a state where the MetaInformations are stored and the LargeData too?
-                if (LastDataReached || !_sock.Connected)
+                if (metaMessage != null)
                 {
-                    if (metaMessage != null)
-                        metaMessage.RaiseLoadCompleted();
-                    return;
+                    metaMessage.RaiseLoadCompleted();
                 }
-            }
-            else if (rec == 1)
-            {
-                //this indicates that we are at the end of the first message.
+                else
+                {
+                    var buff = NullRemover(_datarec.Get());
+                    int count = buff.Count();
+                    var compltearray = new byte[count];
+                    for (int i = 0; i < count; i++)
+                        compltearray.SetValue(buff[i], i);
+                    //No folloring data ... push the message as is
+                    Parse(compltearray);
+                }
                 LastDataReached = true;
-
-                // message was complete ... send now more if availbile
-                _sock.Send(new byte[] { 0x01 });
-
-                //We got the Meta Infos, store all other data inside the FS
-                var bytes = new byte[_sock.ReceiveBufferSize];
-                _streamData.Add(bytes);
-                _sock.BeginReceive(
-                    bytes, 0,
-                    bytes.Length,
-                    SocketFlags.None,
-                    OnBytesReceived,
-                    this);
-
-                return;
             }
             else if (LastDataReached)
             {
@@ -136,6 +124,29 @@ namespace JPB.Communication.ComBase
                     SocketFlags.None,
                     OnBytesReceived,
                     this);
+            }
+            //Part with only one byte indicates end of Part
+            else if (rec == 1)
+            {
+                //this indicates that we are at the end of the first message.
+                LastDataReached = true;
+
+                // message was complete ... send now more if availbile
+                _sock.Send(new byte[] { 0x01 });
+
+                //We got the Meta Infos, store all other data inside the FS
+                //wait ... are there other data?
+                if (_sock.Connected)
+                {
+                    var bytes = new byte[_sock.ReceiveBufferSize];
+                    _streamData.Add(bytes);
+                    _sock.BeginReceive(
+                         bytes, 0,
+                         bytes.Length,
+                         SocketFlags.None,
+                         OnBytesReceived,
+                         this);
+                }
             }
             else
             {

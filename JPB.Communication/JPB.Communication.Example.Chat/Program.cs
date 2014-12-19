@@ -47,6 +47,7 @@ namespace JPB.Communication.Example.Chat
             //Create an Instance that observe a Port
             ushort port = 1337; //LEED
 
+
             var tcpNetworkReceiver
 
                 //The complete access to Sender and Recieiver are done bei the Network Factory
@@ -56,20 +57,29 @@ namespace JPB.Communication.Example.Chat
                 //This mehtod will create or return an instance for the spezific port
                 .GetReceiver(port);
 
+            tcpNetworkReceiver.LargeMessageSupport = true;
+
             //Register the callback that will be invoked when a new message is incomming that contains the InfoState ( Contract ) we defined
             tcpNetworkReceiver.RegisterMessageBaseInbound(OnIncommingMessage, ChatMessageContract);
 
             //-------------------------------------------------------------------------------------
             //we setup the incomming message handlers now we will send a message to the counterpart
             //-------------------------------------------------------------------------------------
-            
+
             //create a Sender on the same port the same way we did on the Receiver
             var tcpNetworkSender = NetworkFactory.Instance.GetSender(port);
 
-            Console.WriteLine("Server IP or Hostname:");
-            var input = Console.ReadLine();
+            Console.WriteLine("Server IP or Hostname:"); 
             bool serverOnline = false;
             string server = null;
+            var input = string.Empty;
+#if DEBUG
+            server = NetworkInfoBase.IpAddress.ToString();
+            serverOnline = true;
+#else
+            input = Console.ReadLine();
+
+   
 
             //Mehtod to Get the Ipaddress from an Host name
             do
@@ -86,14 +96,14 @@ namespace JPB.Communication.Example.Chat
                     serverOnline = false;
                 }
             } while (!serverOnline);
-
+#endif
             Console.Clear();
             Console.Title = string.Format("{0} , That : {1}", Console.Title, server);
             Console.WriteLine("Server Found");
             //now, send as long as the user want to
             do
             {
-                Console.WriteLine("Please enter Message"); 
+                Console.WriteLine("Please enter Message");
                 Console.ForegroundColor = ConsoleColor.Green;
                 input = Console.ReadLine();
                 Console.ResetColor();

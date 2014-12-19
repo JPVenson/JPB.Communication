@@ -66,8 +66,6 @@ namespace JPB.Communication.Test.LargeMessages
             var largeMessage = sender as LargeMessage;
             var infoLoaded = largeMessage.InfoLoaded() as FileStream;
             infoLoaded.Close();
-
-            Console.WriteLine(File.ReadAllText(infoLoaded.Name));
         }
     }
 }
