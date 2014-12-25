@@ -31,11 +31,11 @@ namespace JPB.Communication
     public class NetworkFactory
     {
         private static NetworkFactory _instance = new NetworkFactory();
-        private Dictionary<ushort, TCPNetworkReceiver> _receivers;
-        private Dictionary<ushort, TCPNetworkSender> _senders;
+        internal Dictionary<ushort, TCPNetworkReceiver> _receivers;
+        internal Dictionary<ushort, TCPNetworkSender> _senders;
         private TCPNetworkReceiver _commonReciever;
         private TCPNetworkSender _commonSender;
-        private readonly Object _mutex;
+        internal readonly Object _mutex;
 
         public bool ShouldRaiseEvents { get; set; }
 
@@ -145,7 +145,7 @@ namespace JPB.Communication
             }
         }
 
-        private TCPNetworkSender CreateSender(ushort port)
+        internal TCPNetworkSender CreateSender(ushort port)
         {
             var sender = new TCPNetworkSender(port);
             _senders.Add(port, sender);
@@ -174,12 +174,23 @@ namespace JPB.Communication
             }
         }
 
-        private TCPNetworkReceiver CreateReceiver(ushort port)
+        internal TCPNetworkReceiver CreateReceiver(ushort port)
         {
             var receiver = new TCPNetworkReceiver(port);
             _receivers.Add(port, receiver);
             RaiseReceiverCreate();
             return receiver;
+        }
+
+        public bool ContainsReceiver(ushort port)
+        {
+            var element = _receivers.FirstOrDefault(s => s.Key == port);
+
+            if (!element.Equals(null) && element.Value != null)
+            {
+                return true;
+            }
+            return false;
         }
     }
 }

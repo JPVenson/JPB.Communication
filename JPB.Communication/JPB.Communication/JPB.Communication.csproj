@@ -51,6 +51,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ComBase\AsyncResultWrapper.cs" />
     <Compile Include="ComBase\LargeTcpConnection.cs" />
     <Compile Include="ComBase\Messages\LargeMessage.cs" />
     <Compile Include="ComBase\Serializer\BinaryCompressedMessageSerializer.cs" />
@@ -64,6 +65,7 @@
     <Compile Include="ComBase\Networkbase.cs" />
     <Compile Include="ComBase\NetworkInfoBase.cs" />
     <Compile Include="ComBase\DefaultTcpConnection.cs" />
+    <Compile Include="ComBase\StreamBuffer.cs" />
     <Compile Include="ComBase\TcpMessage.cs" />
     <Compile Include="ComBase\TCPNetworkReceiver.cs" />
     <Compile Include="ComBase\TCPNetworkSender.cs" />

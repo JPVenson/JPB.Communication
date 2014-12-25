@@ -21,6 +21,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -32,7 +33,29 @@ namespace JPB.Communication.ComBase
 {
     public sealed class TCPNetworkReceiver : Networkbase, IDisposable
     {
-        internal TCPNetworkReceiver(ushort port)
+        //internal static TCPNetworkReceiver CreateReceiverInSharedState(ushort portInfo, Socket sock)
+        //{
+        //    var inst = new TCPNetworkReceiver(portInfo, sock);
+        //    lock (NetworkFactory.Instance._mutex)
+        //    {
+        //        NetworkFactory.Instance._receivers.Add(portInfo, inst);
+        //    }
+
+        //    return inst;
+        //}
+
+        //internal static TCPNetworkReceiver CreateReceiverInSharedState(ushort portInfo)
+        //{
+        //    var inst = new TCPNetworkReceiver(portInfo);
+        //    lock (NetworkFactory.Instance._mutex)
+        //    {
+        //        NetworkFactory.Instance._receivers.Add(portInfo, inst);
+        //    }
+
+        //    return inst;
+        //}
+
+        private TCPNetworkReceiver(ushort port, Socket sock = null)
         {
             _largeMessages = new List<Tuple<Action<LargeMessage>, object>>();
             _onetimeupdated = new List<Tuple<Action<MessageBase>, Guid>>();
@@ -43,28 +66,53 @@ namespace JPB.Communication.ComBase
 
             OnNewItemLoadedSuccess += TcpConnectionOnOnNewItemLoadedSuccess;
             OnNewLargeItemLoadedSuccess += TcpConnectionOnOnNewItemLoadedSuccess;
-
             Port = port;
-            _sock = new Socket(IPAddress.Any.AddressFamily,
-                               SocketType.Stream,
-                               ProtocolType.Tcp);
-            _sock.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-
-            // Bind the socket to the address and port.
-            _sock.Bind(new IPEndPoint(NetworkInfoBase.IpAddress, Port));
-
-
-            // Start listening.
-            _sock.Listen(5000);
-            // Set up the callback to be notified when somebody requests
-            // a new connection.
-            _sock.BeginAccept(OnConnectRequest, _sock);
 
             TypeCallbacks = new Dictionary<Type, Action<object>>();
             TypeCallbacks.Add(typeof(RequstMessage), WorkOn_RequestMessage);
             TypeCallbacks.Add(typeof(MessageBase), WorkOn_MessageBase);
             TypeCallbacks.Add(typeof(LargeMessage), WorkOn_LargeMessage);
         }
+
+        internal TCPNetworkReceiver(ushort port)
+            : this(port, null)
+        {
+            _listenerSocket = new Socket(IPAddress.Any.AddressFamily,
+                               SocketType.Stream,
+                               ProtocolType.Tcp);
+
+            _listenerSocket.SetIPProtectionLevel(IPProtectionLevel.Unrestricted);
+
+            _listenerSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+
+            // Bind the socket to the address and port.
+            _listenerSocket.Bind(new IPEndPoint(NetworkInfoBase.IpAddress, Port));
+
+            // Start listening.
+            _listenerSocket.Listen(5000);
+
+            // Set up the callback to be notified when somebody requests
+            // a new connection.
+            _listenerSocket.BeginAccept(OnConnectRequest, _listenerSocket);
+
+            StreamSources = new Dictionary<IPEndPoint, Socket>();
+        }
+
+        //private void AsyncReader()
+        //{
+        //    while (true)
+        //    {
+        //        IDefaultTcpConnection conn = null;
+        //        conn = new DefaultTcpConnection(_listenerSocket.ReceiveBufferSize, _listenerSocket)
+        //        {
+        //            Port = Port
+        //        };
+        //        conn.Receive();
+        //    }
+        //}
+
+
+        private Thread waiterThread;
 
         /// <summary>
         /// FOR INTERNAL USE ONLY
@@ -75,7 +123,10 @@ namespace JPB.Communication.ComBase
         private readonly List<Tuple<Action<MessageBase>, Guid>> _onetimeupdated;
         private readonly List<Tuple<Action<RequstMessage>, Guid>> _pendingrequests;
         private readonly List<Tuple<Func<RequstMessage, object>, object>> _requestHandler;
-        private readonly Socket _sock;
+        internal readonly Socket _listenerSocket;
+
+        internal Dictionary<IPEndPoint, Socket> StreamSources { get; set; }
+
         private readonly List<Tuple<Action<MessageBase>, object>> _updated;
         private readonly ConcurrentQueue<Action> _workeritems;
         private AutoResetEvent _autoResetEvent;
@@ -109,7 +160,7 @@ namespace JPB.Communication.ComBase
                 task.ContinueWith(s => { _isWorking = false; });
             }
         }
-        
+
         private void WorkOn_LargeMessage(object metaData)
         {
             var messCopy = metaData as LargeMessage;
@@ -147,7 +198,7 @@ namespace JPB.Communication.ComBase
         {
             //message with return value inbound
             var requstInbound = messCopy as RequstMessage;
-            if (requstInbound == null) 
+            if (requstInbound == null)
                 return;
 
             var sender = NetworkFactory.Instance.GetSender(requstInbound.ExpectedResult);
@@ -218,7 +269,7 @@ namespace JPB.Communication.ComBase
                 _pendingrequests.Remove(awnser);
             }
         }
-        
+
         /// <summary>
         /// True if we are Recieving a message
         /// </summary>
@@ -233,7 +284,7 @@ namespace JPB.Communication.ComBase
         }
 
         /// <summary>
-        /// If Enabled this Receiver takes care of Small and Very large files
+        /// If Enabled this Receiver can handle streams and messages
         /// 
         /// </summary>
         public bool LargeMessageSupport { get; set; }
@@ -274,7 +325,7 @@ namespace JPB.Communication.ComBase
             IsDisposing = true;
             if (_autoResetEvent != null)
                 _autoResetEvent.WaitOne();
-            _sock.Dispose();
+            _listenerSocket.Dispose();
         }
 
         #endregion
@@ -399,35 +450,46 @@ namespace JPB.Communication.ComBase
         internal void OnConnectRequest(IAsyncResult result)
         {
             IncommingMessage = true;
-
-            // Get the socket (which should be this listener's socket) from
-            // the argument.
             var sock = ((Socket)result.AsyncState);
 
-            if (RaiseConnectionInbound(sock))
+            var endAccept = sock.EndAccept(result);
+            endAccept.NoDelay = true;
+            if (!StreamSources.ContainsKey(endAccept.RemoteEndPoint as IPEndPoint))
             {
-                if (!LargeMessageSupport)
+                if (result.IsCompleted)
                 {
-                    var tcpConnection = new DefaultTcpConnection(sock.EndAccept(result))
+                    // Get the socket (which should be this listener's socket) from
+                    // the argument.
+
+                    if (RaiseConnectionInbound(endAccept))
                     {
-                        Port = Port
-                    };
-                    tcpConnection.BeginReceive();
-                }
-                else
-                {
-                    var tcpConnection = new LargeTcpConnection(sock.EndAccept(result))
-                    {
-                        Port = Port
-                    };
-                    tcpConnection.BeginReceive();
+                        IDefaultTcpConnection conn;
+                        StreamSources.Add(endAccept.RemoteEndPoint as IPEndPoint, endAccept);
+
+                        if (!LargeMessageSupport)
+                        {
+                            conn = new DefaultTcpConnection(endAccept)
+                            {
+                                Port = Port
+                            };
+                        }
+                        else
+                        {
+                            conn = new LargeTcpConnection(endAccept)
+                            {
+                                Port = Port
+                            };
+                        }
+                        conn.BeginReceive();
+                    }
                 }
             }
 
             // Tell the listener socket to start listening again.
-            _sock.BeginAccept(OnConnectRequest, sock);
+            sock.BeginAccept(OnConnectRequest, sock);
         }
 
         public override ushort Port { get; internal set; }
+        public bool SharedConnection { get; set; }
     }
 }

@@ -6,7 +6,7 @@ using JPB.Communication.ComBase.Messages;
 
 namespace JPB.Communication.ComBase
 {
-    internal class LargeTcpConnection : ConnectionBase, IDisposable
+    internal class LargeTcpConnection : ConnectionBase, IDisposable, IDefaultTcpConnection
     {
         private readonly Socket _sock;
 
@@ -14,21 +14,23 @@ namespace JPB.Communication.ComBase
         /// Is used for the Message Content
         /// </summary>
         private readonly InternalMemoryHolder _datarec;
-        private readonly InternalMemoryHolder _streamData;
+        private readonly StreamBuffer _streamData;
 
         internal LargeTcpConnection(Socket s)
         {
             _datarec = new InternalMemoryHolder();
-            _streamData = new InternalMemoryHolder
-            {
-                ForceSharedMem = true
-            };
+            _streamData = new StreamBuffer();
             _sock = s;
             _datarec.Add(new byte[_sock.ReceiveBufferSize]);
         }
 
+        internal LargeTcpConnection(NetworkStream s)
+        {
+            throw new NotImplementedException();
+        }
+
         // Call this method to set this connection's socket up to receive data.
-        internal void BeginReceive()
+        public void BeginReceive()
         {
             var last = _datarec.Last;
             _sock.BeginReceive(
@@ -39,10 +41,18 @@ namespace JPB.Communication.ComBase
                 this);
         }
 
-        public bool LastDataReached { get; set; }
-        public bool MessageOut { get; set; }
+        public void Receive()
+        {
+            throw new NotImplementedException();
+        }
 
-        LargeMessage metaMessage;
+        public NetworkStream Stream { get; private set; }
+
+        public bool MetaDataReached { get; set; }
+
+        public bool LastCallWasMeta { get; set; }
+
+        LargeMessage _metaMessage;
 
         // This is the method that is called whenever the socket receives
         // incoming bytes.
@@ -58,110 +68,88 @@ namespace JPB.Communication.ComBase
             catch (Exception)
             {
                 Dispose();
-                if (metaMessage != null)
-                    metaMessage.RaiseLoadCompleted();
+                if (_metaMessage != null)
+                    _metaMessage.RaiseLoadCompleted();
                 return;
             }
 
-            //to incomming data left
-            //try to concat the message
-
-            //rec is empty means we are at the end of both message
-            if (rec == 0 || !_sock.Connected)
+            if (rec == 1)
             {
-                if (metaMessage != null)
-                {
-                    metaMessage.RaiseLoadCompleted();
-                }
-                else
-                {
-                    var buff = NullRemover(_datarec.Get());
-                    int count = buff.Count();
-                    var compltearray = new byte[count];
-                    for (int i = 0; i < count; i++)
-                        compltearray.SetValue(buff[i], i);
-                    //No folloring data ... push the message as is
-                    Parse(compltearray);
-                }
-                LastDataReached = true;
-            }
-            else if (LastDataReached)
-            {
-                if (!MessageOut)
-                {
-                    //no message was out ... push Normal message or message will Content callback
+                //meta data in buffer set MetaDataReached
+                MetaDataReached = true;
+                LastCallWasMeta = true;
+                _sock.Send(new byte[] { 0x00 });
 
-                    //we are at the end of the MetaData in anyway
-                    var buff = NullRemover(_datarec.Get());
-                    int count = buff.Count();
-                    var compltearray = new byte[count];
-                    for (int i = 0; i < count; i++)
-                        compltearray.SetValue(buff[i], i);
-
-                    if (rec == 0)
-                    {
-                        //No folloring data ... push the message as is
-                        Parse(compltearray);
-                    }
-                    else
-                    {
-                        //data availbile. Push Large message
-                        metaMessage = ParseLargeObject(compltearray, () =>
-                        {
-                            return this._streamData.GetStream();
-                        });
-                        MessageOut = true;
-                    }
-                }
-
-                //We got the Meta Infos, store all other data inside the FS
+                //start writing into content Stream
                 var bytes = new byte[_sock.ReceiveBufferSize];
-                _streamData.Add(bytes);
-
+                _streamData.Write(bytes);
                 _sock.BeginReceive(
                     bytes, 0,
                     bytes.Length,
                     SocketFlags.None,
                     OnBytesReceived,
                     this);
+
+                return;
             }
-            //Part with only one byte indicates end of Part
-            else if (rec == 1)
+
+            if (rec > 1)
             {
-                //this indicates that we are at the end of the first message.
-                LastDataReached = true;
-
-                // message was complete ... send now more if availbile
-                _sock.Send(new byte[] { 0x01 });
-
-                //We got the Meta Infos, store all other data inside the FS
-                //wait ... are there other data?
-                if (_sock.Connected)
+                if (MetaDataReached)
                 {
+                    if (_metaMessage == null)
+                    {
+                        _metaMessage = ParseLargeObject(concatBytes(_datarec), () => this._streamData.UnderlyingStream);
+                    }
+
                     var bytes = new byte[_sock.ReceiveBufferSize];
-                    _streamData.Add(bytes);
+                    _streamData.Flush(rec);
+                    _streamData.Write(bytes);
                     _sock.BeginReceive(
-                         bytes, 0,
-                         bytes.Length,
-                         SocketFlags.None,
-                         OnBytesReceived,
-                         this);
+                        bytes, 0,
+                        bytes.Length,
+                        SocketFlags.None,
+                        OnBytesReceived,
+                        this);
+                }
+                else
+                {
+                    LastCallWasMeta = false;
+                    var newbuff = new byte[_sock.ReceiveBufferSize];
+                    _datarec.Add(newbuff);
+                    _sock.BeginReceive(
+                        newbuff, 0,
+                        newbuff.Length,
+                        SocketFlags.None,
+                        OnBytesReceived,
+                        this);
                 }
             }
-            else
-            {
-                //this is Not the end, my only friend the end
-                //allocate new memory and add the mem to the Memory holder
-                var newbuff = new byte[_sock.ReceiveBufferSize];
-                _datarec.Add(newbuff);
 
-                _sock.BeginReceive(
-                    newbuff, 0,
-                    newbuff.Length,
-                    SocketFlags.None,
-                    OnBytesReceived,
-                    this);
+            if (rec == 0)
+            {
+                if (_metaMessage != null)
+                {
+                    _metaMessage.RaiseLoadCompleted();
+                }
+
+                //was there no Magic byte in the last message?
+                if (!LastCallWasMeta)
+                {
+                    Parse(concatBytes(_datarec));
+                    return;
+                }
             }
+        }
+
+        private byte[] concatBytes(InternalMemoryHolder rec)
+        {
+            var buff = NullRemover(rec.Get());
+            int count = buff.Count();
+            var compltearray = new byte[count];
+            for (int i = 0; i < count; i++)
+                compltearray.SetValue(buff[i], i);
+            return compltearray;
         }
 
         private byte[] NullRemover(byte[] dataStream)

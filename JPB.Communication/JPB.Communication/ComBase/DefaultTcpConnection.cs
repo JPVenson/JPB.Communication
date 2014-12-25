@@ -20,35 +20,106 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Sockets;
+using System.Threading;
 
 namespace JPB.Communication.ComBase
 {
-    internal class DefaultTcpConnection : ConnectionBase, IDisposable
+    internal interface IDefaultTcpConnection
     {
+        void BeginReceive();
+        //void Receive();
+
+        NetworkStream Stream { get; }
+    }
+
+    internal class DefaultTcpConnection : ConnectionBase, IDisposable, IDefaultTcpConnection
+    {
+        private readonly NetworkStream _stream;
         private readonly Socket sock;
         private InternalMemoryHolder datarec;
+        readonly int _receiveBufferSize;
 
         internal DefaultTcpConnection(Socket s)
         {
             datarec = new InternalMemoryHolder();
             sock = s;
-            datarec.Add(new byte[sock.ReceiveBufferSize]);
+            _receiveBufferSize = sock.ReceiveBufferSize = 500;
+            _stream = new NetworkStream(sock, FileAccess.ReadWrite, true);
         }
 
+        //internal DefaultTcpConnection(int receiveBufferSize, NetworkStream stream)
+        //{
+        //    datarec = new InternalMemoryHolder();
+        //    _receiveBufferSize = receiveBufferSize;
+        //    datarec.Add(new byte[receiveBufferSize]);
+        //    _stream = stream;
+        //}
+
         // Call this method to set this connection's socket up to receive data.
-        internal void BeginReceive()
+        public void BeginReceive()
         {
-            var last = datarec.Last;
-            sock.BeginReceive(
-                last, 0,
-                last.Length,
+            if (sock == null)
+                throw new ArgumentException("No sock supplyed please call DefaultTcpConnection(NetworkStream stream)");
+            datarec.Add(new byte[_receiveBufferSize]);
+            sock.BeginReceive(datarec.Last, 0,
+                datarec.Last.Length, 
                 SocketFlags.None,
                 OnBytesReceived,
                 this);
+
+
+            //sock.BeginReceive(
+            //    last, 0,
+            //    last.Length,
+            //    SocketFlags.None,
+            //    OnBytesReceived,
+            //    this);
         }
 
+        private bool HandleRec(int rec)
+        {
+            //0 is: No more Data
+            //1 is: Part Complted
+            //<1 is: Content
+
+
+            //to incomming data left
+            //try to concat the message
+            if (rec == 0 || rec == 1)
+            {
+                sock.Send(new byte[] { 0x00 });
+                //Stream.Write(new byte[] { 0x00 }, 0, 1);
+                var buff = NullRemover(datarec.Get());
+                int count = buff.Count();
+                var compltearray = new byte[count];
+                for (int i = 0; i < count; i++)
+                    compltearray.SetValue(buff[i], i);
+                Parse(compltearray);
+                return true;
+            }
+            sock.Send(new byte[] { 0x00 });
+            //Stream.Write(new byte[] { 0x00 }, 0, 1);
+            return false;
+        }
+
+        //public void Receive()
+        //{
+        //    while (true)
+        //    {
+        //        var last = datarec.Last;
+        //        var rec = Stream.Read(last, 0, last.Length);
+
+        //        if (HandleRec(rec))
+        //        {
+        //            return;
+        //        }
+
+        //        datarec.Add(new byte[sock.ReceiveBufferSize]);
+        //    }
+        //}
 
         // This is the method that is called whenever the socket receives
         // incoming bytes.
@@ -59,40 +130,47 @@ namespace JPB.Communication.ComBase
             int rec;
             try
             {
-                rec = sock.EndReceive(result);
+                SocketError errorCode;
+                rec = sock.EndReceive(result, out errorCode);
             }
             catch (Exception)
             {
-                Dispose();
-                return;
+                rec = -1;
             }
 
-            //to incomming data left
-            //try to concat the message
-            if (rec == 0)
+            if (!HandleRec(rec) && rec > -1)
             {
-                var buff = NullRemover(datarec.Get());
-                int count = buff.Count();
-                var compltearray = new byte[count];
-                for (int i = 0; i < count; i++)
-                    compltearray.SetValue(buff[i], i);
+                //this is Not the end, my only friend the end
+                //allocate new memory and add the mem to the Memory holder
 
-                Parse(compltearray);
-                return;
+
+                datarec.Add(new byte[_receiveBufferSize]);
+                sock.BeginReceive(datarec.Last, 0,
+                    datarec.Last.Length, SocketFlags.None,
+                    OnBytesReceived,
+                    this);
+
+
+                //datarec.Add(new byte[_receiveBufferSize]);
+                //Stream.BeginRead(datarec.Last, 0,
+                //    datarec.Last.Length,
+                //    OnBytesReceived,
+                //    this);
             }
+            else
+            {
+                datarec.Clear();
+                datarec.Add(new byte[_receiveBufferSize]);
+                sock.BeginReceive(datarec.Last, 0,
+                    datarec.Last.Length, SocketFlags.None,
+                    OnBytesReceived,
+                    this);
 
-            //this is Not the end, my only friend the end
-            //allocate new memory and add the mem to the Memory holder
-            var newbuff = new byte[sock.ReceiveBufferSize];
-            datarec.Add(newbuff);
-
-            sock.BeginReceive(
-                newbuff, 0,
-                newbuff.Length,
-                SocketFlags.None,
-                OnBytesReceived,
-                this);
-
+                    //Stream.BeginRead(datarec.Last, 0,
+                    //    datarec.Last.Length,
+                    //    OnBytesReceived,
+                    //    this);
+            }
         }
 
         private byte[] NullRemover(byte[] dataStream)
@@ -117,5 +195,10 @@ namespace JPB.Communication.ComBase
         #endregion
 
         public override ushort Port { get; internal set; }
+
+        public NetworkStream Stream
+        {
+            get { return _stream; }
+        }
     }
 }

@@ -28,6 +28,11 @@ namespace JPB.Communication.ComBase
 {
     public class InternalMemoryHolder : IDisposable
     {
+        public InternalMemoryHolder()
+        {
+
+        }
+
         private List<byte[]> _datarec = new List<byte[]>();
 
         internal byte[] Last { get; set; }
@@ -51,7 +56,7 @@ namespace JPB.Communication.ComBase
 
         private bool ShouldPageToDisk()
         {
-            return ForceSharedMem || Last.Length*_datarec.Count >= MaximumStoreageInMemory;
+            return ForceSharedMem || Last.Length * _datarec.Count >= MaximumStoreageInMemory;
         }
 
         public async void Add(byte[] bytes)
@@ -118,6 +123,30 @@ namespace JPB.Communication.ComBase
                 }
             }
             _datarec = null;
+        }
+
+        public void Clear()
+        {
+            IsSharedMem = false;
+            if (_fileStream != null)
+            {
+                try
+                {
+                    if (File.Exists(_fileStream.Name))
+                        File.Delete(_fileStream.Name);
+                }
+                catch (Exception e)
+                {
+                    throw;
+                }
+                finally
+                {
+                    _fileStream.Dispose();
+                    _fileStream = null;
+                }
+            }
+
+            _datarec.Clear();
         }
     }
 }

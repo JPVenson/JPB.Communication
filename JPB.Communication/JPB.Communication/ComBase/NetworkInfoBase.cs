@@ -26,6 +26,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -35,6 +36,7 @@ namespace JPB.Communication.ComBase
     public static class NetworkInfoBase
     {
         private static IPAddress _ip;
+        private static IPAddress _exIp;
 
         /// <summary>
         /// Easy access to your preferred network Interface 
@@ -47,7 +49,7 @@ namespace JPB.Communication.ComBase
                     return _ip;
 
                 var firstOrDefault = Dns.GetHostEntry(Dns.GetHostName());
-                    //.AddressList.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork);
+                //.AddressList.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork);
                 if (firstOrDefault.AddressList.Length > 1)
                 {
                     _ip = RaiseResolveOwnIp(firstOrDefault.AddressList);
@@ -58,6 +60,38 @@ namespace JPB.Communication.ComBase
                 }
                 return _ip;
             }
+        }
+
+        public static IPAddress IpAddressExternal
+        {
+            get
+            {
+                if (_exIp != null)
+                {
+                    return _exIp;
+                }
+
+                _exIp = IPAddress.Parse(GetPublicIP());
+                return _exIp;
+            }
+        }
+
+        public static string GetPublicIP()
+        {
+            String direction = "";
+            WebRequest request = WebRequest.Create("http://checkip.dyndns.org/");
+            using (WebResponse response = request.GetResponse())
+            using (StreamReader stream = new StreamReader(response.GetResponseStream()))
+            {
+                direction = stream.ReadToEnd();
+            }
+
+            //Search for the ip in the html
+            int first = direction.IndexOf("Address: ") + 9;
+            int last = direction.LastIndexOf("</body>");
+            direction = direction.Substring(first, last - first);
+
+            return direction;
         }
 
         /// <summary>

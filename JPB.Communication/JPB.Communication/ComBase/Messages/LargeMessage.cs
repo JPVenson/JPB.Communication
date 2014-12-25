@@ -18,16 +18,16 @@ namespace JPB.Communication.ComBase.Messages
         /// <summary>
         /// Raised when the stream is complted
         /// </summary>
-        public event EventHandler OnLoadCompleted;
+        public event Action<LargeMessage> OnLoadCompleted;
 
         /// <summary>
-        /// 
+        /// Raises the OnLoadComplete event and Seek 0
         /// </summary>
         protected internal virtual void RaiseLoadCompleted()
         {
             var handler = OnLoadCompleted;
             if (handler != null)
-                handler(this, EventArgs.Empty);
+                handler(this);
 
             DataComplete = true;
         }

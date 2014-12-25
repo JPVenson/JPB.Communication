@@ -26,6 +26,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -47,14 +48,17 @@ namespace JPB.Communication.ComBase
 
         public TimeSpan Timeout { get; set; }
 
+        public const string TraceCategory = "TCPNetworkSender";
+        public bool SharedConnection { get; set; }
+
         #region Message Methods
 
         /// <summary>
         /// Sends a message to a Given IP:Port and wait for Deliver
         /// </summary>
         /// <param name="message">Instance of message</param>
-        /// <param name="ip">Ip of client pc</param>
-        /// <param name="port">Port of client pc</param>
+        /// <param name="ip">Ip of sock pc</param>
+        /// <param name="port">Port of sock pc</param>
         /// <returns></returns>
         /// <exception cref="TimeoutException"></exception>
         public static async Task SendMessage(MessageBase message, string ip, ushort port)
@@ -66,8 +70,8 @@ namespace JPB.Communication.ComBase
         /// Sends a message async to a IP:Port
         /// </summary>
         /// <param name="message">Instance of message</param>
-        /// <param name="ip">Ip of client pc</param>
-        /// <param name="port">Port of client pc</param>
+        /// <param name="ip">Ip of sock pc</param>
+        /// <param name="port">Port of sock pc</param>
         /// <returns></returns>
         /// <exception cref="TimeoutException"></exception>
         public static Task SendMessageAsync(MessageBase message, string ip, ushort port)
@@ -129,10 +133,10 @@ namespace JPB.Communication.ComBase
         }
 
         /// <summary>
-        /// Sends one message to one client and wait for deliver
+        /// Sends one message to one sock and wait for deliver
         /// </summary>
         /// <param name="message">Message object or inherted object</param>
-        /// <param name="ip">Ip of client</param>
+        /// <param name="ip">Ip of sock</param>
         /// <returns>frue if message was successful delivered otherwise false</returns>
         /// <exception cref="TimeoutException"></exception>
         public bool SendMessage(MessageBase message, string ip)
@@ -144,16 +148,16 @@ namespace JPB.Communication.ComBase
         }
 
         /// <summary>
-        /// Sends one message to one client async
+        /// Sends one message to one sock async
         /// </summary>
         /// <param name="message">Message object or inherted object</param>
-        /// <param name="ip">Ip of client</param>
+        /// <param name="ip">Ip of sock</param>
         /// <returns>frue if message was successful delivered otherwise false</returns>
         public Task<bool> SendMessageAsync(MessageBase message, string ip)
         {
             var task = new Task<bool>(() =>
             {
-                var client = CreateClientSockAsync(ip, Port);
+                var client = CreateClientSockAsync(ip);
                 var tcpMessage = PrepareMessage(message, ip);
                 client.Wait();
                 var result = client.Result;
@@ -167,8 +171,6 @@ namespace JPB.Communication.ComBase
             return task;
         }
 
-        #endregion
-
         internal void SendNeedMoreTimeBackAsync(RequstMessage mess, string ip)
         {
             mess.NeedMoreTime = 20000;
@@ -179,7 +181,7 @@ namespace JPB.Communication.ComBase
         /// Sends a message an awaits a response on the same port from the other side
         /// </summary>
         /// <param name="mess">Message object or inherted object</param>
-        /// <param name="ip">Ip of client</param>
+        /// <param name="ip">Ip of sock</param>
         /// <returns>Result from other side or default(T)</returns>
         /// <exception cref="TimeoutException"></exception>
         public Task<T> SendRequstMessageAsync<T>(RequstMessage mess, string ip)
@@ -247,7 +249,7 @@ namespace JPB.Communication.ComBase
         /// Sends a message an awaits a response on the same port from the other side
         /// </summary>
         /// <param name="mess">Message object or inherted object</param>
-        /// <param name="ip">Ip of client</param>
+        /// <param name="ip">Ip of sock</param>
         /// <returns>Result from other side or default(T)</returns>
         /// <exception cref="TimeoutException"></exception>
         public async Task<T> SendRequstMessage<T>(RequstMessage mess, string ip)
@@ -260,7 +262,7 @@ namespace JPB.Communication.ComBase
         /// </summary>
         /// <typeparam name="T">the result we await</typeparam>
         /// <param name="mess">Message object or inherted object</param>
-        /// <param name="ips">Ips of client</param>
+        /// <param name="ips">Ips of sock</param>
         /// <returns>A Dictiornary that contains for each key ( IP ) the result we got</returns>
         public Dictionary<string, T> SendMultiRequestMessage<T>(RequstMessage mess, string[] ips)
         {
@@ -291,21 +293,28 @@ namespace JPB.Communication.ComBase
         /// <exception cref="NotImplementedException"></exception>
         public async void SendStreamDataAsync(Stream stream, MessageBase mess, string ip, bool disposeOnEnd = true)
         {
-            var client = await CreateClientSockAsync(ip, Port);
+            var client = await CreateClientSockAsync(ip);
             if (client == null)
                 return;
 
             var prepairedMess = PrepareMessage(mess, ip);
             var serialize = this.Serialize(prepairedMess);
 
-            using (var memstream = new MemoryStream(serialize))
-            using (var openNetwork = OpenAndSend(memstream, client))
-            {
-                //wait for the Responce that the other side is waiting for the content
-                openNetwork.ReadByte();
-                SendOnStream(openNetwork, stream, client);
-                openNetwork.Write(new byte[] { 0x00 }, 0, 1);
-            }
+            //using (var memstream = new MemoryStream(serialize))
+            //{
+            //    var openNetwork = OpenAndSend(memstream, client);
+            //    //wait for the Responce that the other side is waiting for the content
+            //    //openNetwork.Write(new byte[] { 0x00 }, 0, 1);
+
+            //    AwaitCallbackFromRemoteHost(client);
+
+            //    //SendOnStream(openNetwork, stream, client);
+            //    //openNetwork.Write(new byte[0], 0, 0);
+            //    SendOnStream(stream, client);
+            //    openNetwork.Write(new byte[0], 0, 0);
+            //    if (!SharedConnection)
+            //        openNetwork.Close();
+            //}
 
             if (disposeOnEnd)
             {
@@ -315,7 +324,18 @@ namespace JPB.Communication.ComBase
             }
         }
 
+        #endregion
+
         #region Base Methods
+
+        public async Task InitSharedConnection(string ip)
+        {
+            if (this.SharedConnection)
+            {
+                this.SharedConnection = true;
+                await CreateClientSockAsync(ip);
+            }
+        }
 
         private TcpMessage PrepareMessage(MessageBase message, string ip)
         {
@@ -334,7 +354,7 @@ namespace JPB.Communication.ComBase
         /// <param name="ip"></param>
         /// <param name="port"></param>
         /// <returns></returns>
-        private static async Task<TcpClient> CreateClientSockAsync(IEnumerable<string> ip, int port)
+        private static async Task<TcpClient> CreateClientSockAsync(IEnumerable<string> ip, ushort port)
         {
             try
             {
@@ -342,12 +362,8 @@ namespace JPB.Communication.ComBase
 
                 //resolve DNS entrys
                 var ipAddresses =
-                    ip.Select(s =>
-                    {
-                        var hostAddresses = Dns.GetHostAddresses(s);
-                        return new Tuple<string, IPAddress[]>(s, hostAddresses);
-                    })
-                    .Select(s => NetworkInfoBase.RaiseResolveDistantIp(s.Item2, s.Item1))
+                    ip
+                    .Select(ResolveIp)
                     .AsParallel()
                     .ToArray();
 
@@ -361,53 +377,222 @@ namespace JPB.Communication.ComBase
             }
         }
 
-        private static Task<TcpClient> CreateClientSockAsync(string ip, int port)
+        private static IPAddress ResolveIp(string host)
         {
-            return CreateClientSockAsync(new[] { ip }, port);
+            return NetworkInfoBase.RaiseResolveDistantIp(Dns.GetHostAddresses(host), host);
         }
 
-        private void SendBaseAsync(TcpMessage message, TcpClient client)
+        private TCPNetworkReceiver _receiver;
+
+        private Socket GetSockForIpOrNull(string ip)
+        {
+            if (_receiver == null)
+                return null;
+
+            IPAddress ipAddress;
+            if (!IPAddress.TryParse(ip, out ipAddress))
+            {
+                ipAddress = ResolveIp(ip);
+            }
+
+            var ipEndPoint = new IPEndPoint(ipAddress, Port);
+            var fod = _receiver.StreamSources.FirstOrDefault(s => s.Key.Address.Equals(ipEndPoint.Address));
+
+            if (default(KeyValuePair<IPEndPoint, Socket>).Equals(fod))
+            {
+                return null;
+            }
+            return fod.Value;
+        }
+
+        private async Task<Socket> CreateClientSockAsync(string ipOrHost)
+        {
+            if (this.SharedConnection)
+            {
+                if (_receiver == null)
+                {
+                    if (!NetworkFactory.Instance.ContainsReceiver(Port))
+                    {
+                        var socket1 = await CreateClientSock(ipOrHost, Port);
+                        if (socket1.Connected)
+                        {
+                            _receiver = NetworkFactory.Instance.GetReceiver(Port);
+                        }
+                        else
+                        {
+                            return null;
+                        }
+                    }
+                    else
+                    {
+                        _receiver = NetworkFactory.Instance.GetReceiver(Port);
+                    }
+                }
+
+                Socket socket = GetSockForIpOrNull(ipOrHost);
+                if (socket != null)
+                {
+                    if (!socket.Connected)
+                    {
+                        socket.Connect(ipOrHost, Port);
+                    }
+                    return socket;
+                }
+                else
+                {
+                    socket = await CreateClientSock(ipOrHost, Port);
+                    _receiver.StreamSources.Add(new IPEndPoint(IPAddress.Parse(ipOrHost), Port), socket);
+                    return socket;
+                }
+            }
+            return await CreateClientSock(ipOrHost, Port);
+        }
+
+        private static async Task<Socket> CreateClientSock(string ipOrHost, ushort port)
+        {
+            try
+            {
+                var client = new TcpClient();
+                client.NoDelay = true;
+                await client.ConnectAsync(ipOrHost, port);
+                return client.Client;
+            }
+            catch (Exception e)
+            {
+                return null;
+            }
+        }
+
+        //private void AwaitCallbackFromRemoteHost(NetworkStream sock)
+        //{
+        //    sock.ReadTimeout = 2000;
+
+        //    do
+        //    {
+        //        var tryCount = 0;
+        //        var tryMax = 2;
+
+        //        //ok due th fact that we are sometimes faster then the remote PC
+        //        //we need to send maybe Multible times the zero byte message
+        //        //normal messages are not effected
+
+        //        tryCount++;
+        //        try
+        //        {
+        //            sock.Flush();
+        //            Thread.Sleep(100);
+        //            sock.Write(new byte[] { 0x00 }, 0, 1);
+
+        //            //Nagles alg waits for 200 ms
+        //            Thread.Sleep(250);
+        //            sock.ReadByte();
+        //        }
+        //        catch (Exception e)
+        //        {
+        //            if (tryCount >= tryMax || !sock.CanRead || !sock.CanWrite)
+        //            {
+        //                throw;
+        //            }
+        //            Debug.WriteLine(string.Format("TCPSender> awaits callback from remote pc try {0} of {1}", tryCount, tryMax), TraceCategory);
+        //            sock.Write(new byte[] { 0x00 }, 0, 1);
+        //            continue;
+        //        }
+        //        break;
+        //    } while (true);
+        // }
+
+
+        private void AwaitCallbackFromRemoteHost(Socket sock)
+        {
+            sock.ReceiveTimeout = 2000;
+            sock.DontFragment = false;
+            do
+            {
+                var tryCount = 0;
+                var tryMax = 2;
+
+                //ok due th fact that we are sometimes faster then the remote PC
+                //we need to send maybe Multible times the zero byte message
+                //normal messages are not effected
+
+                tryCount++;
+                try
+                {
+                    sock.Send(new byte[] { 0x00 });
+
+                    //Nagles alg waits for 200 ms
+                    Thread.Sleep(250);
+                    sock.Receive(new byte[] { 0x00 });
+                }
+                catch (Exception e)
+                {
+                    if (tryCount >= tryMax || !sock.Connected)
+                    {
+                        throw;
+                    }
+                    Debug.WriteLine(
+                        string.Format("TCPSender> awaits callback from remote pc try {0} of {1}", tryCount, tryMax),
+                        TraceCategory);
+
+                    sock.Send(new byte[] { 0x00 });
+                    continue;
+                }
+                break;
+            } while (true);
+        }
+
+        private void SendBaseAsync(TcpMessage message, Socket client)
         {
             var serialize = Serialize(message);
             if (!serialize.Any())
                 return;
 
             using (var memstream = new MemoryStream(serialize))
-            using (var networkStream = OpenAndSend(memstream, client))
+                OpenAndSend(memstream, client);
+
+            //AwaitCallbackFromRemoteHost(stream);
+            AwaitCallbackFromRemoteHost(client);
+            if (!SharedConnection)
             {
-                networkStream.Write(new byte[] { 0x00 }, 0, 1);
+                client.Close();
             }
         }
 
-        private Stream OpenAndSend(Stream stream, TcpClient client)
+        private Socket OpenAndSend(Stream stream, Socket client)
         {
-            Stream networkStream = client.GetStream();
-            return SendOnStream(networkStream, stream, client);
+            //var target = new NetworkStream(client, FileAccess.ReadWrite, true);
+            return SendOnStream(stream, client);
         }
 
-        private Stream SendOnStream(Stream networkStream, Stream stream, TcpClient client)
+        private Socket SendOnStream(Stream stream, Socket sock)
         {
-            if (!stream.CanRead)
-                return networkStream;
-
-            int bufSize = client.ReceiveBufferSize;
+            int bufSize = sock.ReceiveBufferSize;
 
             var buf = new byte[bufSize];
+            var read = 0;
 
-            int bytesRead;
-            while ((bytesRead = stream.Read(buf, 0, bufSize)) > 0)
+            while ((read = stream.Read(buf, 0, bufSize)) > 0)
             {
-                networkStream.Write(buf, 0, bytesRead);
+                var send = sock.Send(buf);
+                //target.Write(buf, 0, read);
             }
-
-            //write an empty Chunck to indicate the end of this Part
-            networkStream.Write(new byte[] { 0x00 }, 0, 1);
-
-            return networkStream;
+            return sock;
         }
 
         #endregion
 
         public override ushort Port { get; internal set; }
+
+        public bool ConnectionOpen(string ip)
+        {
+            if (!SharedConnection)
+                return false;
+
+            var sockForIpOrNull = GetSockForIpOrNull(ip);
+            if (sockForIpOrNull == null)
+                return false;
+
+            return sockForIpOrNull.Connected;
+        }
     }
 }
