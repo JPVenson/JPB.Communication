@@ -82,7 +82,7 @@ namespace JPB.Communication.ComBase
             //try to concat the message
             if (rec == 0 || rec == 1)
             {
-                sock.Send(new byte[] { });
+                //sock.Send(new byte[] { });
                 //Stream.Write(new byte[] { 0x00 }, 0, 1);
                 var buff = NullRemover(datarec.Get());
                 int count = buff.Count();

@@ -494,7 +494,7 @@ namespace JPB.Communication.ComBase
                 tryCount++;
                 try
                 {
-                    sock.Send(new byte[] { });
+                    //sock.Send(new byte[] { 0x00 });
 
                     //Nagles alg waits for 200 ms
                     Thread.Sleep(250);
