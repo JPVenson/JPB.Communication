@@ -27,14 +27,6 @@ using System.Threading;
 
 namespace JPB.Communication.ComBase
 {
-    internal interface IDefaultTcpConnection
-    {
-        void BeginReceive();
-        //void Receive();
-
-        NetworkStream Stream { get; }
-    }
-
     internal class DefaultTcpConnection : ConnectionBase, IDisposable, IDefaultTcpConnection
     {
         private readonly NetworkStream _stream;
@@ -46,7 +38,7 @@ namespace JPB.Communication.ComBase
         {
             datarec = new InternalMemoryHolder();
             sock = s;
-            _receiveBufferSize = sock.ReceiveBufferSize = 500;
+            _receiveBufferSize = sock.ReceiveBufferSize;
             _stream = new NetworkStream(sock, FileAccess.ReadWrite, true);
         }
 
@@ -65,7 +57,7 @@ namespace JPB.Communication.ComBase
                 throw new ArgumentException("No sock supplyed please call DefaultTcpConnection(NetworkStream stream)");
             datarec.Add(new byte[_receiveBufferSize]);
             sock.BeginReceive(datarec.Last, 0,
-                datarec.Last.Length, 
+                datarec.Last.Length,
                 SocketFlags.None,
                 OnBytesReceived,
                 this);
@@ -105,22 +97,6 @@ namespace JPB.Communication.ComBase
             return false;
         }
 
-        //public void Receive()
-        //{
-        //    while (true)
-        //    {
-        //        var last = datarec.Last;
-        //        var rec = Stream.Read(last, 0, last.Length);
-
-        //        if (HandleRec(rec))
-        //        {
-        //            return;
-        //        }
-
-        //        datarec.Add(new byte[sock.ReceiveBufferSize]);
-        //    }
-        //}
-
         // This is the method that is called whenever the socket receives
         // incoming bytes.
         protected void OnBytesReceived(IAsyncResult result)
@@ -138,38 +114,72 @@ namespace JPB.Communication.ComBase
                 rec = -1;
             }
 
-            if (!HandleRec(rec) && rec > -1)
+            try
             {
-                //this is Not the end, my only friend the end
-                //allocate new memory and add the mem to the Memory holder
+                if (!HandleRec(rec) && rec > -1)
+                {
+                    //this is Not the end, my only friend the end
+                    //allocate new memory and add the mem to the Memory holder
 
 
-                datarec.Add(new byte[_receiveBufferSize]);
-                sock.BeginReceive(datarec.Last, 0,
-                    datarec.Last.Length, SocketFlags.None,
-                    OnBytesReceived,
-                    this);
+                    datarec.Add(new byte[_receiveBufferSize]);
+                    sock.BeginReceive(datarec.Last, 0,
+                        datarec.Last.Length, SocketFlags.None,
+                        OnBytesReceived,
+                        this);
 
 
-                //datarec.Add(new byte[_receiveBufferSize]);
-                //Stream.BeginRead(datarec.Last, 0,
-                //    datarec.Last.Length,
-                //    OnBytesReceived,
-                //    this);
-            }
-            else
-            {
-                datarec.Clear();
-                datarec.Add(new byte[_receiveBufferSize]);
-                sock.BeginReceive(datarec.Last, 0,
-                    datarec.Last.Length, SocketFlags.None,
-                    OnBytesReceived,
-                    this);
+                    //datarec.Add(new byte[_receiveBufferSize]);
+                    //Stream.BeginRead(datarec.Last, 0,
+                    //    datarec.Last.Length,
+                    //    OnBytesReceived,
+                    //    this);
+                }
+                else
+                {
+                    datarec.Clear();
+                    datarec.Add(new byte[_receiveBufferSize]);
+                    if (sock.Connected)
+                    {
+                        try
+                        {
+                            sock.BeginReceive(datarec.Last, 0,
+                                datarec.Last.Length, SocketFlags.None,
+                                OnBytesReceived,
+                                this);
+                        }
+                        catch (Exception)
+                        {
+                            Dispose();
+                        }
+                    }
 
                     //Stream.BeginRead(datarec.Last, 0,
                     //    datarec.Last.Length,
                     //    OnBytesReceived,
                     //    this);
+                }
+            }
+            catch (Exception)
+            {
+                if (!sock.Connected)
+                {
+                    Dispose();
+                }
+
+                datarec.Clear();
+                datarec.Add(new byte[_receiveBufferSize]);
+                try
+                {
+                    sock.BeginReceive(datarec.Last, 0,
+                        datarec.Last.Length, SocketFlags.None,
+                        OnBytesReceived,
+                        this);
+                }
+                catch (Exception)
+                {
+                    Dispose();
+                }
             }
         }
 

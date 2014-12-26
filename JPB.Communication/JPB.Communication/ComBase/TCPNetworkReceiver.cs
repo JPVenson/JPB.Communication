@@ -94,8 +94,6 @@ namespace JPB.Communication.ComBase
             // Set up the callback to be notified when somebody requests
             // a new connection.
             _listenerSocket.BeginAccept(OnConnectRequest, _listenerSocket);
-
-            StreamSources = new Dictionary<IPEndPoint, Socket>();
         }
 
         //private void AsyncReader()
@@ -124,9 +122,7 @@ namespace JPB.Communication.ComBase
         private readonly List<Tuple<Action<RequstMessage>, Guid>> _pendingrequests;
         private readonly List<Tuple<Func<RequstMessage, object>, object>> _requestHandler;
         internal readonly Socket _listenerSocket;
-
-        internal Dictionary<IPEndPoint, Socket> StreamSources { get; set; }
-
+        
         private readonly List<Tuple<Action<MessageBase>, object>> _updated;
         private readonly ConcurrentQueue<Action> _workeritems;
         private AutoResetEvent _autoResetEvent;
@@ -454,42 +450,54 @@ namespace JPB.Communication.ComBase
 
             var endAccept = sock.EndAccept(result);
             endAccept.NoDelay = true;
-            if (!StreamSources.ContainsKey(endAccept.RemoteEndPoint as IPEndPoint))
-            {
-                if (result.IsCompleted)
-                {
-                    // Get the socket (which should be this listener's socket) from
-                    // the argument.
 
-                    if (RaiseConnectionInbound(endAccept))
-                    {
-                        IDefaultTcpConnection conn;
-                        StreamSources.Add(endAccept.RemoteEndPoint as IPEndPoint, endAccept);
-
-                        if (!LargeMessageSupport)
-                        {
-                            conn = new DefaultTcpConnection(endAccept)
-                            {
-                                Port = Port
-                            };
-                        }
-                        else
-                        {
-                            conn = new LargeTcpConnection(endAccept)
-                            {
-                                Port = Port
-                            };
-                        }
-                        conn.BeginReceive();
-                    }
-                }
-            }
-
+            StartListener(endAccept);
             // Tell the listener socket to start listening again.
             sock.BeginAccept(OnConnectRequest, sock);
         }
 
+        internal void StartListener(Socket endAccept)
+        {
+            if (RaiseConnectionInbound(endAccept))
+            {
+                if (SharedConnection)
+                {
+                    var firstOrDefault = SharedConnectionManager.Instance.Connections.FirstOrDefault(s => endAccept == s.Item2);
+                    if (firstOrDefault == null)
+                    {
+                        SharedConnectionManager.Instance.AddConnection(endAccept, this);
+                    }
+                }
+
+                IDefaultTcpConnection conn;
+
+                if (!LargeMessageSupport)
+                {
+                    conn = new DefaultTcpConnection(endAccept)
+                    {
+                        Port = Port
+                    };
+                }
+                else
+                {
+                    conn = new LargeTcpConnection(endAccept)
+                    {
+                        Port = Port
+                    };
+                }
+                conn.BeginReceive();
+            }
+        }
+
         public override ushort Port { get; internal set; }
         public bool SharedConnection { get; set; }
+
+        public TCPNetworkSender GetSharedSender(string ipOrHost)
+        {
+            var firstOrDefault = SharedConnectionManager.Instance.Connections.FirstOrDefault(s => s.Item1 == ipOrHost);
+            if (firstOrDefault == null)
+                return null;
+            return firstOrDefault.Item4;
+        }
     }
 }

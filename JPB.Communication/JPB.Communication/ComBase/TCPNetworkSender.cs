@@ -177,6 +177,7 @@ namespace JPB.Communication.ComBase
             SendMessageAsync(mess, ip);
         }
 
+
         /// <summary>
         /// Sends a message an awaits a response on the same port from the other side
         /// </summary>
@@ -188,7 +189,7 @@ namespace JPB.Communication.ComBase
         {
             var task = new Task<T>(() =>
             {
-                if (mess.ExpectedResult == default(ushort))
+                if (mess.ExpectedResult == default(ushort) || SharedConnection)
                 {
                     mess.ExpectedResult = Port;
                 }
@@ -258,7 +259,7 @@ namespace JPB.Communication.ComBase
         }
 
         /// <summary>
-        /// Sends one message COPY to each ip and awaits from all a result or nothing
+        /// Sends one message COPY to each ipOrHost and awaits from all a result or nothing
         /// </summary>
         /// <typeparam name="T">the result we await</typeparam>
         /// <param name="mess">Message object or inherted object</param>
@@ -328,19 +329,29 @@ namespace JPB.Communication.ComBase
 
         #region Base Methods
 
-        public async Task InitSharedConnection(string ip)
+        public bool UseExternalIpAsSender { get; set; }
+
+        public async Task<TCPNetworkReceiver> InitSharedConnection(string ipOrHost)
         {
-            if (this.SharedConnection)
-            {
-                this.SharedConnection = true;
-                await CreateClientSockAsync(ip);
-            }
+            UseExternalIpAsSender = true;
+            return await SharedConnectionManager.Instance.ConnectToHost(ipOrHost, Port);
+        }
+
+        internal async Task<Socket> _InitSharedConnection(string ip)
+        {
+            this.SharedConnection = true;
+            return await CreateClientSockAsync(ip);
         }
 
         private TcpMessage PrepareMessage(MessageBase message, string ip)
         {
             message.SendAt = DateTime.Now;
-            message.Sender = NetworkInfoBase.IpAddress.ToString();
+            if (string.IsNullOrEmpty(message.Sender) || !UseExternalIpAsSender)
+                message.Sender = NetworkInfoBase.IpAddress.ToString();
+            if (UseExternalIpAsSender)
+            {
+                message.Sender = NetworkInfoBase.IpAddressExternal.ToString();
+            }
             message.Reciver = ip;
             return Wrap(message);
         }
@@ -363,7 +374,7 @@ namespace JPB.Communication.ComBase
                 //resolve DNS entrys
                 var ipAddresses =
                     ip
-                    .Select(ResolveIp)
+                    .Select(SharedConnectionManager.ResolveIp)
                     .AsParallel()
                     .ToArray();
 
@@ -377,73 +388,38 @@ namespace JPB.Communication.ComBase
             }
         }
 
-        private static IPAddress ResolveIp(string host)
-        {
-            return NetworkInfoBase.RaiseResolveDistantIp(Dns.GetHostAddresses(host), host);
-        }
-
-        private TCPNetworkReceiver _receiver;
-
-        private Socket GetSockForIpOrNull(string ip)
-        {
-            if (_receiver == null)
-                return null;
-
-            IPAddress ipAddress;
-            if (!IPAddress.TryParse(ip, out ipAddress))
-            {
-                ipAddress = ResolveIp(ip);
-            }
-
-            var ipEndPoint = new IPEndPoint(ipAddress, Port);
-            var fod = _receiver.StreamSources.FirstOrDefault(s => s.Key.Address.Equals(ipEndPoint.Address));
-
-            if (default(KeyValuePair<IPEndPoint, Socket>).Equals(fod))
-            {
-                return null;
-            }
-            return fod.Value;
-        }
-
         private async Task<Socket> CreateClientSockAsync(string ipOrHost)
         {
             if (this.SharedConnection)
             {
-                if (_receiver == null)
+                var isConnected = SharedConnectionManager.Instance.GetSock(ipOrHost);
+                if (isConnected == null)
                 {
-                    if (!NetworkFactory.Instance.ContainsReceiver(Port))
-                    {
-                        var socket1 = await CreateClientSock(ipOrHost, Port);
-                        if (socket1.Connected)
-                        {
-                            _receiver = NetworkFactory.Instance.GetReceiver(Port);
-                        }
-                        else
-                        {
-                            return null;
-                        }
-                    }
-                    else
-                    {
-                        _receiver = NetworkFactory.Instance.GetReceiver(Port);
-                    }
-                }
-
-                Socket socket = GetSockForIpOrNull(ipOrHost);
-                if (socket != null)
-                {
-                    if (!socket.Connected)
-                    {
-                        socket.Connect(ipOrHost, Port);
-                    }
-                    return socket;
+                    return await CreateClientSock(ipOrHost, Port);
                 }
                 else
                 {
-                    socket = await CreateClientSock(ipOrHost, Port);
-                    _receiver.StreamSources.Add(new IPEndPoint(IPAddress.Parse(ipOrHost), Port), socket);
-                    return socket;
+                    return isConnected;
                 }
+
+                //var resolveIp = SharedConnectionManager.ResolveIp(ipOrHost);
+
+                //Socket socket = GetSockForIpOrNull(resolveIp.ToString());
+                //if (socket != null)
+                //{
+                //    if (!socket.Connected)
+                //    {
+                //        socket.Connect(ipOrHost, Port);
+                //        Receiver.StartListener(socket);
+                //    }
+                //    return socket;
+                //}
+                //else
+                //{
+                //    socket = await CreateClientSock(ipOrHost, Port);
+                //    Receiver.StartListener(socket);
+                //    return socket;
+                //}
             }
             return await CreateClientSock(ipOrHost, Port);
         }
@@ -583,12 +559,12 @@ namespace JPB.Communication.ComBase
 
         public override ushort Port { get; internal set; }
 
-        public bool ConnectionOpen(string ip)
+        public bool ConnectionOpen(string ipOrHost)
         {
             if (!SharedConnection)
                 return false;
 
-            var sockForIpOrNull = GetSockForIpOrNull(ip);
+            var sockForIpOrNull = SharedConnectionManager.Instance.GetSockForIpOrNull(ipOrHost);
             if (sockForIpOrNull == null)
                 return false;
 

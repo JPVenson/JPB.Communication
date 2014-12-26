@@ -25,6 +25,7 @@
 #endregion
 
 using System;
+using System.Diagnostics;
 using System.Runtime.Serialization;
 
 namespace JPB.Communication.ComBase.Messages
@@ -34,6 +35,7 @@ namespace JPB.Communication.ComBase.Messages
     /// To ensure a valid Serliazion every inherited class should impliment its own ISerializable Implimentation
     /// </summary>
     [Serializable]
+    [DebuggerStepThrough]
     public class MessageBase : ISerializable, ICloneable
     {
         private object _message;

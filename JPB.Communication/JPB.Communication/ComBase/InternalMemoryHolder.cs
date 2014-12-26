@@ -101,8 +101,15 @@ namespace JPB.Communication.ComBase
             return _fileStream;
         }
 
+        public bool Disposed { get; private set; }
+
         public void Dispose()
         {
+            if (Disposed)
+                return;
+
+            Disposed = true;
+
             if (_writeAsync != null)
                 _writeAsync.Wait();
 
@@ -127,6 +134,9 @@ namespace JPB.Communication.ComBase
 
         public void Clear()
         {
+            if (Disposed)
+                return;
+
             IsSharedMem = false;
             if (_fileStream != null)
             {
@@ -145,8 +155,8 @@ namespace JPB.Communication.ComBase
                     _fileStream = null;
                 }
             }
-
-            _datarec.Clear();
+            if (_datarec != null)
+                _datarec.Clear();
         }
     }
 }
