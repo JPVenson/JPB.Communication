@@ -494,7 +494,7 @@ namespace JPB.Communication.ComBase
                 tryCount++;
                 try
                 {
-                    sock.Send(new byte[] { 0x00 });
+                    sock.Send(new byte[] { });
 
                     //Nagles alg waits for 200 ms
                     Thread.Sleep(250);
@@ -510,7 +510,7 @@ namespace JPB.Communication.ComBase
                         string.Format("TCPSender> awaits callback from remote pc try {0} of {1}", tryCount, tryMax),
                         TraceCategory);
 
-                    sock.Send(new byte[] { 0x00 });
+                    sock.Send(new byte[] { });
                     continue;
                 }
                 break;
