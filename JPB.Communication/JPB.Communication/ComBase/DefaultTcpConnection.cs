@@ -151,7 +151,7 @@ namespace JPB.Communication.ComBase
                 }
 
                 datarec.Clear();
-                datarec.Add(new byte[_receiveBufferSize],0);
+                datarec.Add(new byte[_receiveBufferSize], 0);
                 try
                 {
                     sock.BeginReceive(datarec.Last, 0,

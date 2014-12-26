@@ -38,7 +38,7 @@ using JPB.Communication.ComBase.Messages;
 
 namespace JPB.Communication.ComBase
 {
-    public sealed class TCPNetworkSender : Networkbase
+    public sealed class TCPNetworkSender : Networkbase, IDisposable
     {
         internal TCPNetworkSender(ushort port)
         {
@@ -528,6 +528,11 @@ namespace JPB.Communication.ComBase
                 return false;
 
             return sockForIpOrNull.Connected;
+        }
+
+        public void Dispose()
+        {
+            NetworkFactory.Instance._senders.Remove(Port);
         }
     }
 }

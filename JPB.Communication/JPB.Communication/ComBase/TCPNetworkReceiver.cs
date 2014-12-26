@@ -324,6 +324,8 @@ namespace JPB.Communication.ComBase
             if (_autoResetEvent != null)
                 _autoResetEvent.WaitOne();
             _listenerSocket.Dispose();
+
+            NetworkFactory.Instance._receivers.Remove(Port);
         }
 
         #endregion

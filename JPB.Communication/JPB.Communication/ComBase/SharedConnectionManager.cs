@@ -53,6 +53,19 @@ namespace JPB.Communication.ComBase
         {
             var ip = ResolveIp(hostOrIp).ToString();
             var fod = Connections.FirstOrDefault(s => s.Item1 == ip);
+            if(fod != null)
+            {
+                if(fod.Item4.ConnectionOpen(hostOrIp))
+                {
+                    return fod.Item3;
+                }
+                else
+                {
+                    fod.Item3.Dispose();
+                    fod.Item4.Dispose();
+                    fod = null;
+                }
+            }
             if (fod == null)
             {
                 var sender = NetworkFactory.Instance.GetSender(port);
