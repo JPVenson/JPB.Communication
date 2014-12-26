@@ -189,7 +189,7 @@ namespace JPB.Communication.ComBase
         {
             var task = new Task<T>(() =>
             {
-                if (mess.ExpectedResult == default(ushort) || SharedConnection)
+                if (mess.ExpectedResult == default(ushort))
                 {
                     mess.ExpectedResult = Port;
                 }

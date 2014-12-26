@@ -48,7 +48,7 @@ namespace JPB.Communication.ComBase
             }
             return fod.Item2;
         }
-        
+
         public async Task<TCPNetworkReceiver> ConnectToHost(string hostOrIp, ushort port)
         {
             var ip = ResolveIp(hostOrIp).ToString();
@@ -58,7 +58,8 @@ namespace JPB.Communication.ComBase
                 var sender = NetworkFactory.Instance.GetSender(port);
                 var socket = await sender._InitSharedConnection(ip);
                 var ipAddress = socket.LocalEndPoint as IPEndPoint;
-                var receiver = NetworkFactory.Instance.GetReceiver((ushort)ipAddress.Port);
+                var port1 = (ushort)ipAddress.Port;
+                var receiver = TCPNetworkReceiver.CreateReceiverInSharedState(port1, socket);
                 Connections.Add(new Tuple<string, Socket, TCPNetworkReceiver, TCPNetworkSender>(ip, socket, receiver, sender));
                 return receiver;
             }

@@ -33,16 +33,18 @@ namespace JPB.Communication.ComBase
 {
     public sealed class TCPNetworkReceiver : Networkbase, IDisposable
     {
-        //internal static TCPNetworkReceiver CreateReceiverInSharedState(ushort portInfo, Socket sock)
-        //{
-        //    var inst = new TCPNetworkReceiver(portInfo, sock);
-        //    lock (NetworkFactory.Instance._mutex)
-        //    {
-        //        NetworkFactory.Instance._receivers.Add(portInfo, inst);
-        //    }
+        internal static TCPNetworkReceiver CreateReceiverInSharedState(ushort portInfo, Socket sock)
+        {
+            var inst = new TCPNetworkReceiver(portInfo, sock);
+            inst.StartListener(sock);
 
-        //    return inst;
-        //}
+            lock (NetworkFactory.Instance._mutex)
+            {
+                NetworkFactory.Instance._receivers.Add(portInfo, inst);
+            }
+
+            return inst;
+        }
 
         //internal static TCPNetworkReceiver CreateReceiverInSharedState(ushort portInfo)
         //{
