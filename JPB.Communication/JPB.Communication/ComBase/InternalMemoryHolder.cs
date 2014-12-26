@@ -35,7 +35,7 @@ namespace JPB.Communication.ComBase
 
         private List<byte[]> _datarec = new List<byte[]>();
 
-        internal byte[] Last { get; set; }
+        internal byte[] Last { get; private set; }
 
         internal bool IsSharedMem { get; set; }
 
@@ -62,10 +62,8 @@ namespace JPB.Communication.ComBase
             return ForceSharedMem || Last.Length * _datarec.Count >= MaximumStoreageInMemory;
         }
 
-        public async void Add(byte[] bytes)
+        public async void Add(byte[] bytes, int i)
         {
-            Last = bytes;
-
             //this will write the content async to the Buffer as long as there is no other write action to do
             //if we are still writing async inside an other Add, wait for the last one
             if (_writeAsync != null)
@@ -79,18 +77,33 @@ namespace JPB.Communication.ComBase
                 _datarec.Clear();
                 IsSharedMem = true;
             }
-            if (IsSharedMem)
+            if (Last != null && i != -1)
             {
-                _writeAsync = _fileStream.WriteAsync(bytes, 0, bytes.Length);
+                var consumedContent = new byte[i];
+                if (Last.Length <= i)
+                    for (int j = 0; j < i; j++)
+                    {
+                        consumedContent[j] = Last[j];
+                    }
+                else
+                {
+                    consumedContent = Last;
+                }
+                if (IsSharedMem)
+                {
+                    _writeAsync = _fileStream.WriteAsync(consumedContent, 0, consumedContent.Length);
+                }
+                else
+                {
+                    _datarec.Add(consumedContent);
+                }
             }
-            else
-            {
-                _datarec.Add(bytes);
-            }
+            Last = bytes;
         }
 
         private byte[] privateGet()
         {
+            Add(new byte[0], -1);
             return !IsSharedMem ? _datarec.SelectMany(s => s).ToArray() : Last;
         }
 

@@ -55,7 +55,7 @@ namespace JPB.Communication.ComBase
         {
             if (sock == null)
                 throw new ArgumentException("No sock supplyed please call DefaultTcpConnection(NetworkStream stream)");
-            datarec.Add(new byte[_receiveBufferSize]);
+            datarec.Add(new byte[_receiveBufferSize], -1);
             sock.BeginReceive(datarec.Last, 0,
                 datarec.Last.Length,
                 SocketFlags.None,
@@ -90,6 +90,7 @@ namespace JPB.Communication.ComBase
                 for (int i = 0; i < count; i++)
                     compltearray.SetValue(buff[i], i);
                 Parse(compltearray);
+                sock.Send(new byte[] { 0x00 });
                 return true;
             }
             sock.Send(new byte[] { 0x00 });
@@ -122,7 +123,7 @@ namespace JPB.Communication.ComBase
                     //allocate new memory and add the mem to the Memory holder
 
 
-                    datarec.Add(new byte[_receiveBufferSize]);
+                    datarec.Add(new byte[_receiveBufferSize], rec);
                     sock.BeginReceive(datarec.Last, 0,
                         datarec.Last.Length, SocketFlags.None,
                         OnBytesReceived,
@@ -138,7 +139,7 @@ namespace JPB.Communication.ComBase
                 else
                 {
                     datarec.Clear();
-                    datarec.Add(new byte[_receiveBufferSize]);
+                    datarec.Add(new byte[_receiveBufferSize], rec);
                     if (sock.Connected)
                     {
                         try
@@ -168,7 +169,7 @@ namespace JPB.Communication.ComBase
                 }
 
                 datarec.Clear();
-                datarec.Add(new byte[_receiveBufferSize]);
+                datarec.Add(new byte[_receiveBufferSize], rec);
                 try
                 {
                     sock.BeginReceive(datarec.Last, 0,

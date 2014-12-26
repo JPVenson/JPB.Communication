@@ -526,7 +526,6 @@ namespace JPB.Communication.ComBase
             using (var memstream = new MemoryStream(serialize))
                 OpenAndSend(memstream, client);
 
-            //AwaitCallbackFromRemoteHost(stream);
             AwaitCallbackFromRemoteHost(client);
             if (!SharedConnection)
             {
