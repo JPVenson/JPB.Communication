@@ -24,11 +24,6 @@ namespace JPB.Communication.ComBase
             _datarec.Add(new byte[_sock.ReceiveBufferSize], 0);
         }
 
-        internal LargeTcpConnection(NetworkStream s)
-        {
-            throw new NotImplementedException();
-        }
-
         // Call this method to set this connection's socket up to receive data.
         public void BeginReceive()
         {
@@ -39,11 +34,6 @@ namespace JPB.Communication.ComBase
                 SocketFlags.None,
                 OnBytesReceived,
                 this);
-        }
-
-        public void Receive()
-        {
-            throw new NotImplementedException();
         }
 
         public NetworkStream Stream { get; private set; }
@@ -67,7 +57,6 @@ namespace JPB.Communication.ComBase
             }
             catch (Exception)
             {
-                Dispose();
                 if (_metaMessage != null)
                     _metaMessage.RaiseLoadCompleted();
                 return;

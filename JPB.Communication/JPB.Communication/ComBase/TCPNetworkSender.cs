@@ -505,10 +505,10 @@ namespace JPB.Communication.ComBase
 
             var buf = new byte[bufSize];
             var read = 0;
-
+            int send = 0;
             while ((read = stream.Read(buf, 0, bufSize)) > 0)
             {
-                var send = sock.Send(buf);
+                send = sock.Send(buf, 0, read, SocketFlags.None);
                 //target.Write(buf, 0, read);
             }
             return sock;

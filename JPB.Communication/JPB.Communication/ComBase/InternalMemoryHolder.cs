@@ -79,7 +79,7 @@ namespace JPB.Communication.ComBase
             {
                 await _writeAsync;
             }
-            if (Last != null)
+            if (Last != null && adjustLast > 0)
             {
                 var consumedBytes = new byte[adjustLast];
                 if (adjustLast < Last.Length)

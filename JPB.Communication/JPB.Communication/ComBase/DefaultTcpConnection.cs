@@ -83,9 +83,7 @@ namespace JPB.Communication.ComBase
             //try to concat the message
             if (rec == 0 || rec == 1)
             {
-                //sock.Send(new byte[] { });
-                //Stream.Write(new byte[] { 0x00 }, 0, 1);
-                var buff = NullRemover(datarec.Get());
+                var buff = datarec.Get();
                 int count = buff.Count();
                 var compltearray = new byte[count];
                 for (int i = 0; i < count; i++)
@@ -124,12 +122,6 @@ namespace JPB.Communication.ComBase
                         datarec.Last.Length, SocketFlags.None,
                         OnBytesReceived,
                         this);
-
-                    //datarec.Add(new byte[_receiveBufferSize]);
-                    //Stream.BeginRead(datarec.Last, 0,
-                    //    datarec.Last.Length,
-                    //    OnBytesReceived,
-                    //    this);
                 }
                 else
                 {
@@ -174,7 +166,7 @@ namespace JPB.Communication.ComBase
             }
         }
 
-        private byte[] NullRemover(byte[] dataStream)
+        internal static byte[] NullRemover(byte[] dataStream)
         {
             int i;
             var temp = new List<byte>();
