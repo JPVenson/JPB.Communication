@@ -55,7 +55,8 @@ namespace JPB.Communication.ComBase
         {
             if (sock == null)
                 throw new ArgumentException("No sock supplyed please call DefaultTcpConnection(NetworkStream stream)");
-            datarec.Add(new byte[_receiveBufferSize]);
+
+            datarec.Add(new byte[_receiveBufferSize], 0);
             sock.BeginReceive(datarec.Last, 0,
                 datarec.Last.Length,
                 SocketFlags.None,
@@ -118,7 +119,7 @@ namespace JPB.Communication.ComBase
                 {
                     //this is Not the end, my only friend the end
                     //allocate new memory and add the mem to the Memory holder
-                    datarec.Add(new byte[_receiveBufferSize]);
+                    datarec.Add(new byte[_receiveBufferSize], rec);
                     sock.BeginReceive(datarec.Last, 0,
                         datarec.Last.Length, SocketFlags.None,
                         OnBytesReceived,
@@ -133,7 +134,7 @@ namespace JPB.Communication.ComBase
                 else
                 {
                     datarec.Clear();
-                    datarec.Add(new byte[_receiveBufferSize]);
+                    datarec.Add(new byte[_receiveBufferSize], 0);
                     if (sock.Connected)
                     {
                         try
@@ -148,11 +149,6 @@ namespace JPB.Communication.ComBase
                             Dispose();
                         }
                     }
-
-                    //Stream.BeginRead(datarec.Last, 0,
-                    //    datarec.Last.Length,
-                    //    OnBytesReceived,
-                    //    this);
                 }
             }
             catch (Exception)
@@ -163,7 +159,7 @@ namespace JPB.Communication.ComBase
                 }
 
                 datarec.Clear();
-                datarec.Add(new byte[_receiveBufferSize]);
+                datarec.Add(new byte[_receiveBufferSize],0);
                 try
                 {
                     sock.BeginReceive(datarec.Last, 0,

@@ -62,34 +62,40 @@ namespace JPB.Communication.ComBase
             return ForceSharedMem || Last.Length * _datarec.Count >= MaximumStoreageInMemory;
         }
 
-        public async void Add(byte[] bytes)
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <param name="adjustLast"></param>
+        public async void Add(byte[] bytes, int adjustLast)
         {
             if (Disposed)
                 return;
 
-            Last = bytes;
-
             //this will write the content async to the Buffer as long as there is no other write action to do
             //if we are still writing async inside an other Add, wait for the last one
             if (_writeAsync != null)
+            {
                 await _writeAsync;
-
-            if (ShouldPageToDisk() && !IsSharedMem)
-            {
-                _fileStream = new FileStream(Path.GetTempFileName(), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Delete);
-                var completeBytes = privateGet();
-                _writeAsync = _fileStream.WriteAsync(completeBytes, 0, completeBytes.Length);
-                _datarec.Clear();
-                IsSharedMem = true;
             }
-            if (IsSharedMem)
+            if (Last != null)
             {
-                _writeAsync = _fileStream.WriteAsync(bytes, 0, bytes.Length);
+                var consumedBytes = new byte[adjustLast];
+                if (adjustLast < Last.Length)
+                {
+                    for (var i = 0; i < adjustLast; i++)
+                    {
+                        consumedBytes[i] = Last[i];
+                    }
+                }
+                else
+                {
+                    consumedBytes = Last;
+                }
+                _datarec.Add(consumedBytes);
             }
-            else
-            {
-                _datarec.Add(bytes);
-            }
+            Last = bytes;
         }
 
         private byte[] privateGet()
@@ -172,3 +178,19 @@ namespace JPB.Communication.ComBase
         }
     }
 }
+//if (ShouldPageToDisk() && !IsSharedMem)
+//{
+//    _fileStream = new FileStream(Path.GetTempFileName(), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Delete);
+//    var completeBytes = privateGet();
+//    _writeAsync = _fileStream.WriteAsync(completeBytes, 0, completeBytes.Length);
+//    _datarec.Clear();
+//    IsSharedMem = true;
+//}
+//if (IsSharedMem)
+//{
+//    _writeAsync = _fileStream.WriteAsync(bytes, 0, bytes.Length);
+//}
+//else
+//{
+//    _datarec.Add(bytes);
+//}

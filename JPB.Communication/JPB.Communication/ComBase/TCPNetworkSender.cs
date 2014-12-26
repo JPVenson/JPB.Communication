@@ -442,7 +442,6 @@ namespace JPB.Communication.ComBase
         private void AwaitCallbackFromRemoteHost(Socket sock)
         {
             sock.ReceiveTimeout = 2000;
-            sock.DontFragment = false;
             do
             {
                 var tryCount = 0;
