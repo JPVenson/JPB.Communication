@@ -94,7 +94,13 @@ namespace JPB.Communication.ComBase
 
         private byte[] privateGet()
         {
-            return !IsSharedMem ? _datarec.SelectMany(s => s).ToArray() : Last;
+            if (_writeAsync != null)
+                _writeAsync.Wait();
+
+            if (!IsSharedMem)
+                return _datarec.SelectMany(s => s).ToArray();
+            else
+                return Last;
         }
 
         public byte[] Get()

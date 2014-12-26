@@ -118,8 +118,6 @@ namespace JPB.Communication.ComBase
                 {
                     //this is Not the end, my only friend the end
                     //allocate new memory and add the mem to the Memory holder
-
-
                     datarec.Add(new byte[_receiveBufferSize]);
                     sock.BeginReceive(datarec.Last, 0,
                         datarec.Last.Length, SocketFlags.None,

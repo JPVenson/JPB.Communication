@@ -439,45 +439,6 @@ namespace JPB.Communication.ComBase
             }
         }
 
-        //private void AwaitCallbackFromRemoteHost(NetworkStream sock)
-        //{
-        //    sock.ReadTimeout = 2000;
-
-        //    do
-        //    {
-        //        var tryCount = 0;
-        //        var tryMax = 2;
-
-        //        //ok due th fact that we are sometimes faster then the remote PC
-        //        //we need to send maybe Multible times the zero byte message
-        //        //normal messages are not effected
-
-        //        tryCount++;
-        //        try
-        //        {
-        //            sock.Flush();
-        //            Thread.Sleep(100);
-        //            sock.Write(new byte[] { 0x00 }, 0, 1);
-
-        //            //Nagles alg waits for 200 ms
-        //            Thread.Sleep(250);
-        //            sock.ReadByte();
-        //        }
-        //        catch (Exception e)
-        //        {
-        //            if (tryCount >= tryMax || !sock.CanRead || !sock.CanWrite)
-        //            {
-        //                throw;
-        //            }
-        //            Debug.WriteLine(string.Format("TCPSender> awaits callback from remote pc try {0} of {1}", tryCount, tryMax), TraceCategory);
-        //            sock.Write(new byte[] { 0x00 }, 0, 1);
-        //            continue;
-        //        }
-        //        break;
-        //    } while (true);
-        // }
-
-
         private void AwaitCallbackFromRemoteHost(Socket sock)
         {
             sock.ReceiveTimeout = 2000;
@@ -494,7 +455,7 @@ namespace JPB.Communication.ComBase
                 tryCount++;
                 try
                 {
-                    //sock.Send(new byte[] { 0x00 });
+                    sock.Send(new byte[] { 0x00 });
 
                     //Nagles alg waits for 200 ms
                     Thread.Sleep(250);
