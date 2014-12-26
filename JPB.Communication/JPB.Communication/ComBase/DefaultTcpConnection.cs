@@ -90,11 +90,8 @@ namespace JPB.Communication.ComBase
                 for (int i = 0; i < count; i++)
                     compltearray.SetValue(buff[i], i);
                 Parse(compltearray);
-                sock.Send(new byte[] { 0x00 });
                 return true;
             }
-            sock.Send(new byte[] { 0x00 });
-            //Stream.Write(new byte[] { 0x00 }, 0, 1);
             return false;
         }
 
@@ -128,7 +125,6 @@ namespace JPB.Communication.ComBase
                         datarec.Last.Length, SocketFlags.None,
                         OnBytesReceived,
                         this);
-
 
                     //datarec.Add(new byte[_receiveBufferSize]);
                     //Stream.BeginRead(datarec.Last, 0,

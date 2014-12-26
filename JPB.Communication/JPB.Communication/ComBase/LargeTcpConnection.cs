@@ -21,7 +21,7 @@ namespace JPB.Communication.ComBase
             _datarec = new InternalMemoryHolder();
             _streamData = new StreamBuffer();
             _sock = s;
-            _datarec.Add(new byte[_sock.ReceiveBufferSize], -1);
+            _datarec.Add(new byte[_sock.ReceiveBufferSize]);
         }
 
         internal LargeTcpConnection(NetworkStream s)
@@ -116,7 +116,7 @@ namespace JPB.Communication.ComBase
                 {
                     LastCallWasMeta = false;
                     var newbuff = new byte[_sock.ReceiveBufferSize];
-                    _datarec.Add(newbuff, -1);
+                    _datarec.Add(newbuff);
                     _sock.BeginReceive(
                         newbuff, 0,
                         newbuff.Length,
