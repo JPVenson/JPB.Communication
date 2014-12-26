@@ -498,7 +498,7 @@ namespace JPB.Communication.ComBase
 
                     //Nagles alg waits for 200 ms
                     Thread.Sleep(250);
-                    sock.Receive(new byte[] { 0x00 });
+                    //sock.Receive(new byte[] { 0x00 });
                 }
                 catch (Exception e)
                 {

@@ -56,6 +56,9 @@ namespace JPB.Communication.ComBase
 
         private bool ShouldPageToDisk()
         {
+            if (Disposed)
+                return false;
+
             return ForceSharedMem || Last.Length * _datarec.Count >= MaximumStoreageInMemory;
         }
 
