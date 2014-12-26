@@ -64,6 +64,9 @@ namespace JPB.Communication.ComBase
 
         public async void Add(byte[] bytes)
         {
+            if (Disposed)
+                return;
+
             Last = bytes;
 
             //this will write the content async to the Buffer as long as there is no other write action to do
