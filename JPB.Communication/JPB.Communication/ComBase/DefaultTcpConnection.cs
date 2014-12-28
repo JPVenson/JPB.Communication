@@ -83,19 +83,33 @@ namespace JPB.Communication.ComBase
             //try to concat the message
             if (rec == 0 || rec == 1)
             {
+                //Wrong Partial byte only call?
                 var buff = datarec.Get();
                 if (buff.Length <= 2)
                 {
                     datarec.Clear();
                     return false;
                 }
-
-                int count = buff.Count();
-                var compltearray = new byte[count];
-                for (int i = 0; i < count; i++)
-                    compltearray.SetValue(buff[i], i);
                 
-                Parse(compltearray);
+                int count = buff.Count();
+                var compltearray = new List<byte>();
+                bool beginContent = false;
+                for (int i = 0,f = 0; f < count; f++)
+                {
+                    var b = buff[f];
+                    if (!beginContent)
+                    {
+                        if (b == 0x00)
+                        {
+                            continue;
+                        }
+                        beginContent = true;
+                    }
+                    compltearray.Add(b);
+                    i++;
+                }
+                
+                Parse(compltearray.ToArray());
                 return true;
             }
             return false;
