@@ -90,7 +90,7 @@ namespace JPB.Communication.ComBase
             // a new connection.
             _listenerSocket.BeginAccept(OnConnectRequest, _listenerSocket);
         }
-        
+
         /// <summary>
         /// FOR INTERNAL USE ONLY
         /// </summary>
@@ -102,7 +102,7 @@ namespace JPB.Communication.ComBase
 
         private readonly List<Tuple<Func<RequstMessage, object>, object>> _requestHandler;
         internal readonly Socket _listenerSocket;
-        
+
         private readonly List<Tuple<Action<MessageBase>, object>> _updated;
         private readonly ConcurrentQueue<Action> _workeritems;
         private AutoResetEvent _autoResetEvent;
@@ -289,7 +289,7 @@ namespace JPB.Communication.ComBase
             }
         }
 
-   
+
 
         protected bool RaiseConnectionInbound(Socket sock)
         {
@@ -319,7 +319,8 @@ namespace JPB.Communication.ComBase
             IsDisposing = true;
             if (_autoResetEvent != null)
                 _autoResetEvent.WaitOne();
-            _listenerSocket.Dispose();
+            if (_listenerSocket != null)
+                _listenerSocket.Dispose();
 
             NetworkFactory.Instance._receivers.Remove(Port);
         }
