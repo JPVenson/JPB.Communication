@@ -459,7 +459,7 @@ namespace JPB.Communication.ComBase
             {
                 if (SharedConnection)
                 {
-                    var firstOrDefault = ConnectionPool.Instance.Connections.FirstOrDefault(s => endAccept == s.Item2);
+                    var firstOrDefault = ConnectionPool.Instance.Connections.FirstOrDefault(s => endAccept == s.Socket);
                     if (firstOrDefault == null)
                     {
                         ConnectionPool.Instance.AddConnection(endAccept, this);
@@ -494,10 +494,10 @@ namespace JPB.Communication.ComBase
         /// <returns></returns>
         public TCPNetworkSender GetSharedSenderOrNull(string ipOrHost)
         {
-            var firstOrDefault = ConnectionPool.Instance.Connections.FirstOrDefault(s => s.Item1 == ipOrHost);
+            var firstOrDefault = ConnectionPool.Instance.Connections.FirstOrDefault(s => s.Ip == ipOrHost);
             if (firstOrDefault == null)
                 return null;
-            return firstOrDefault.Item4;
+            return firstOrDefault.TCPNetworkSender;
         }
     }
 }

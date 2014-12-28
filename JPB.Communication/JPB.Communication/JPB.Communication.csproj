@@ -52,6 +52,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ComBase\AsyncResultWrapper.cs" />
+    <Compile Include="ComBase\ConnectionWrapper.cs" />
     <Compile Include="ComBase\IDefaultTcpConnection.cs" />
     <Compile Include="ComBase\LargeTcpConnection.cs" />
     <Compile Include="ComBase\Messages\LargeMessage.cs" />

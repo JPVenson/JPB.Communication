@@ -10,11 +10,14 @@ using System.Threading.Tasks;
 
 namespace JPB.Communication.ComBase
 {
-    internal class ConnectionPool
+    /// <summary>
+    /// Stores open Connections
+    /// </summary>
+    public class ConnectionPool
     {
         private ConnectionPool()
         {
-            Connections = new List<Tuple<string, Socket, TCPNetworkReceiver, TCPNetworkSender>>();
+            Connections = new List<ConnectionWrapper>();
         }
 
         private static ConnectionPool _instance;
@@ -29,12 +32,35 @@ namespace JPB.Communication.ComBase
             return NetworkInfoBase.RaiseResolveDistantIp(Dns.GetHostAddresses(host), host);
         }
 
+        public event EventHandler<ConnectionWrapper> OnConnectionCreated;
+
+        protected virtual void RaiseConnectionCreated(ConnectionWrapper item)
+        {
+            var handler = OnConnectionCreated;
+            if (handler != null)
+                handler(this, item);
+        }
+
+        public event EventHandler<ConnectionWrapper> OnConnectionClosed;
+
+        protected virtual void RaiseConnectionClosed(ConnectionWrapper item)
+        {
+            var handler = OnConnectionClosed;
+            if (handler != null)
+                handler(this, item);
+        }
+
         /// <summary>
         /// 
         /// </summary>
-        public List<Tuple<string, Socket, TCPNetworkReceiver, TCPNetworkSender>> Connections { get; private set; }
+        internal List<ConnectionWrapper> Connections { get; private set; }
 
-        public Socket GetSockForIpOrNull(string hostOrIp)
+        public ILookup<string, ConnectionWrapper> GetConnections()
+        {
+            return Connections.ToLookup(s => s.Ip);
+        }
+
+        internal Socket GetSockForIpOrNull(string hostOrIp)
         {
             IPAddress ipAddress;
             if (!IPAddress.TryParse(hostOrIp, out ipAddress))
@@ -42,27 +68,27 @@ namespace JPB.Communication.ComBase
                 ipAddress = ResolveIp(hostOrIp);
             }
 
-            var fod = Connections.FirstOrDefault(s => s.Item1 == ipAddress.ToString());
+            var fod = Connections.FirstOrDefault(s => s.Ip == ipAddress.ToString());
 
             if (fod == null)
             {
                 return null;
             }
-            return fod.Item2;
+            return fod.Socket;
         }
 
-        public async Task<TCPNetworkReceiver> ConnectToHost(string hostOrIp, ushort port)
+        internal async Task<TCPNetworkReceiver> ConnectToHost(string hostOrIp, ushort port)
         {
             var ip = ResolveIp(hostOrIp).ToString();
-            var fod = Connections.FirstOrDefault(s => s.Item1 == ip);
+            var fod = Connections.FirstOrDefault(s => s.Ip == ip);
             if(fod != null)
             {
-                if(fod.Item4.ConnectionOpen(hostOrIp))
+                if(fod.TCPNetworkSender.ConnectionOpen(hostOrIp))
                 {
-                    return fod.Item3;
+                    return fod.TCPNetworkReceiver;
                 }
-                fod.Item3.Dispose();
-                fod.Item4.Dispose();
+                fod.TCPNetworkReceiver.Dispose();
+                fod.TCPNetworkSender.Dispose();
                 Connections.Remove(fod);
             }
 
@@ -76,8 +102,19 @@ namespace JPB.Communication.ComBase
             var ipAddress = socket.LocalEndPoint as IPEndPoint;
             var port1 = (ushort)ipAddress.Port;
             var receiver = TCPNetworkReceiver.CreateReceiverInSharedState(port1, socket);
-            Connections.Add(new Tuple<string, Socket, TCPNetworkReceiver, TCPNetworkSender>(ip, socket, receiver, sender));
+            AddConnection(new ConnectionWrapper(ip, socket, receiver, sender));
             return receiver;
+        }
+        private void AddConnection(ConnectionWrapper connectionWrapper)
+        {
+            this.Connections.Add(connectionWrapper);
+            this.RaiseConnectionCreated(connectionWrapper);
+        }
+
+        private void AddConnection(string ip, Socket socket, TCPNetworkReceiver receiver, TCPNetworkSender sender)
+        {
+            var connectionWrapper = new ConnectionWrapper(ip, socket, receiver, sender);
+            AddConnection(connectionWrapper);
         }
 
         private void ThrowSockedNotAvailbileHelper()
@@ -90,22 +127,22 @@ namespace JPB.Communication.ComBase
             throw networkInformationException;
         }
 
-        public Socket GetSock(string ipOrHost)
+        internal Socket GetSock(string ipOrHost)
         {
             string ip = ResolveIp(ipOrHost).ToString();
-            var fod = Connections.FirstOrDefault(s => s.Item1 == ip);
+            var fod = Connections.FirstOrDefault(s => s.Ip == ip);
             if (fod == null)
                 return null;
-            return fod.Item2;
+            return fod.Socket;
         }
 
-        public void AddConnection(Socket endAccept, TCPNetworkReceiver tcpNetworkReceiver)
+        internal void AddConnection(Socket endAccept, TCPNetworkReceiver tcpNetworkReceiver)
         {
             var ipEndPoint = endAccept.RemoteEndPoint as IPEndPoint;
             var senderForRemotePort = NetworkFactory.Instance.GetSender((ushort)ipEndPoint.Port);
 
-            Connections.Add(
-                new Tuple<string, Socket, TCPNetworkReceiver, TCPNetworkSender>(ipEndPoint.Address.ToString(), endAccept,
+            AddConnection(
+                new ConnectionWrapper(ipEndPoint.Address.ToString(), endAccept,
                     tcpNetworkReceiver, senderForRemotePort));
         }
     }

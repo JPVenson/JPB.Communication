@@ -39,27 +39,27 @@ namespace JPB.Communication
 
         public bool ShouldRaiseEvents { get; set; }
 
-        public event EventHandler OnSenderCreate;
-        public event EventHandler OnReceiverCreate;
+        public event EventHandler<TCPNetworkSender> OnSenderCreate;
+        public event EventHandler<TCPNetworkReceiver> OnReceiverCreate;
 
-        protected virtual void RaiseSenderCreate()
+        protected virtual void RaiseSenderCreate(TCPNetworkSender item)
         {
             if(!ShouldRaiseEvents)
                 return;
 
             var handler = OnSenderCreate;
             if (handler != null)
-                handler(this, EventArgs.Empty);
+                handler(this, item);
         }
 
-        protected virtual void RaiseReceiverCreate()
+        protected virtual void RaiseReceiverCreate(TCPNetworkReceiver item)
         {
             if (!ShouldRaiseEvents)
                 return;
 
             var handler = OnReceiverCreate;
             if (handler != null)
-                handler(this, EventArgs.Empty);
+                handler(this, item);
         }
 
         private NetworkFactory()
@@ -149,7 +149,7 @@ namespace JPB.Communication
         {
             var sender = new TCPNetworkSender(port);
             _senders.Add(port, sender);
-            RaiseSenderCreate();
+            RaiseSenderCreate(sender);
             return sender;
         }
 
@@ -178,7 +178,7 @@ namespace JPB.Communication
         {
             var receiver = new TCPNetworkReceiver(port);
             _receivers.Add(port, receiver);
-            RaiseReceiverCreate();
+            RaiseReceiverCreate(receiver);
             return receiver;
         }
 
