@@ -46,7 +46,12 @@ namespace JPB.Communication.ComBase
             Timeout = TimeSpan.FromSeconds(15);
         }
 
-        public TimeSpan Timeout { get; set; }
+        /// <summary>
+        /// The timeout for wating on Request messages callback
+        /// Warning
+        /// Setting this below 10 will maybe cause in timeout problems
+        /// </summary>
+        public TimeSpan Timeout { get; private set; }
 
         public const string TraceCategory = "TCPNetworkSender";
         public bool SharedConnection { get; set; }
@@ -334,7 +339,7 @@ namespace JPB.Communication.ComBase
         public async Task<TCPNetworkReceiver> InitSharedConnection(string ipOrHost)
         {
             UseExternalIpAsSender = true;
-            return await SharedConnectionManager.Instance.ConnectToHost(ipOrHost, Port);
+            return await ConnectionPool.Instance.ConnectToHost(ipOrHost, Port);
         }
 
         internal async Task<Socket> _InitSharedConnection(string ip)
@@ -374,7 +379,7 @@ namespace JPB.Communication.ComBase
                 //resolve DNS entrys
                 var ipAddresses =
                     ip
-                    .Select(SharedConnectionManager.ResolveIp)
+                    .Select(ConnectionPool.ResolveIp)
                     .AsParallel()
                     .ToArray();
 
@@ -392,7 +397,7 @@ namespace JPB.Communication.ComBase
         {
             if (this.SharedConnection)
             {
-                var isConnected = SharedConnectionManager.Instance.GetSock(ipOrHost);
+                var isConnected = ConnectionPool.Instance.GetSock(ipOrHost);
                 if (isConnected == null)
                 {
                     if (!isConnected.Connected)
@@ -406,7 +411,7 @@ namespace JPB.Communication.ComBase
                     return isConnected;
                 }
 
-                //var resolveIp = SharedConnectionManager.ResolveIp(ipOrHost);
+                //var resolveIp = ConnectionPool.ResolveIp(ipOrHost);
 
                 //Socket socket = GetSockForIpOrNull(resolveIp.ToString());
                 //if (socket != null)
@@ -445,7 +450,7 @@ namespace JPB.Communication.ComBase
 
         private void AwaitCallbackFromRemoteHost(Socket sock)
         {
-            sock.ReceiveTimeout = 2000;
+            sock.ReceiveTimeout = Timeout.Milliseconds;
             do
             {
                 var tryCount = 0;
@@ -499,7 +504,6 @@ namespace JPB.Communication.ComBase
 
         private Socket OpenAndSend(Stream stream, Socket client)
         {
-            //var target = new NetworkStream(client, FileAccess.ReadWrite, true);
             return SendOnStream(stream, client);
         }
 
@@ -522,12 +526,17 @@ namespace JPB.Communication.ComBase
 
         public override ushort Port { get; internal set; }
 
+        /// <summary>
+        /// Checks for an existing connection in the ConnectionPool
+        /// </summary>
+        /// <param name="ipOrHost"></param>
+        /// <returns></returns>
         public bool ConnectionOpen(string ipOrHost)
         {
             if (!SharedConnection)
                 return false;
 
-            var sockForIpOrNull = SharedConnectionManager.Instance.GetSockForIpOrNull(ipOrHost);
+            var sockForIpOrNull = ConnectionPool.Instance.GetSockForIpOrNull(ipOrHost);
             if (sockForIpOrNull == null)
                 return false;
 

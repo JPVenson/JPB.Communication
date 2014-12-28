@@ -8,18 +8,18 @@ using System.Threading.Tasks;
 
 namespace JPB.Communication.ComBase
 {
-    internal class SharedConnectionManager
+    internal class ConnectionPool
     {
-        private SharedConnectionManager()
+        private ConnectionPool()
         {
             Connections = new List<Tuple<string, Socket, TCPNetworkReceiver, TCPNetworkSender>>();
         }
 
-        private static SharedConnectionManager _instance;
+        private static ConnectionPool _instance;
 
-        public static SharedConnectionManager Instance
+        public static ConnectionPool Instance
         {
-            get { return _instance ?? (_instance = new SharedConnectionManager()); }
+            get { return _instance ?? (_instance = new ConnectionPool()); }
         }
 
         public static IPAddress ResolveIp(string host)
@@ -30,7 +30,7 @@ namespace JPB.Communication.ComBase
         /// <summary>
         /// 
         /// </summary>
-        public List<Tuple<string, Socket, TCPNetworkReceiver, TCPNetworkSender>> Connections { get; set; }
+        public List<Tuple<string, Socket, TCPNetworkReceiver, TCPNetworkSender>> Connections { get; private set; }
 
         public Socket GetSockForIpOrNull(string hostOrIp)
         {
@@ -59,24 +59,18 @@ namespace JPB.Communication.ComBase
                 {
                     return fod.Item3;
                 }
-                else
-                {
-                    fod.Item3.Dispose();
-                    fod.Item4.Dispose();
-                    fod = null;
-                }
+                fod.Item3.Dispose();
+                fod.Item4.Dispose();
+                Connections.Remove(fod);
             }
-            if (fod == null)
-            {
-                var sender = NetworkFactory.Instance.GetSender(port);
-                var socket = await sender._InitSharedConnection(ip);
-                var ipAddress = socket.LocalEndPoint as IPEndPoint;
-                var port1 = (ushort)ipAddress.Port;
-                var receiver = TCPNetworkReceiver.CreateReceiverInSharedState(port1, socket);
-                Connections.Add(new Tuple<string, Socket, TCPNetworkReceiver, TCPNetworkSender>(ip, socket, receiver, sender));
-                return receiver;
-            }
-            return null;
+
+            var sender = NetworkFactory.Instance.GetSender(port);
+            var socket = await sender._InitSharedConnection(ip);
+            var ipAddress = socket.LocalEndPoint as IPEndPoint;
+            var port1 = (ushort)ipAddress.Port;
+            var receiver = TCPNetworkReceiver.CreateReceiverInSharedState(port1, socket);
+            Connections.Add(new Tuple<string, Socket, TCPNetworkReceiver, TCPNetworkSender>(ip, socket, receiver, sender));
+            return receiver;
         }
 
         public Socket GetSock(string ipOrHost)

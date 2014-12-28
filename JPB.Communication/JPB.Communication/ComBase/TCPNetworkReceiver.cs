@@ -31,6 +31,10 @@ using JPB.Communication.ComBase.Messages;
 
 namespace JPB.Communication.ComBase
 {
+    /// <summary>
+    /// A Manged wrapper with callback functions for a Socket
+    /// It will observe and serlilze the content of incomming data from the Socket
+    /// </summary>
     public sealed class TCPNetworkReceiver : Networkbase, IDisposable
     {
         internal static TCPNetworkReceiver CreateReceiverInSharedState(ushort portInfo, Socket sock)
@@ -45,17 +49,6 @@ namespace JPB.Communication.ComBase
 
             return inst;
         }
-
-        //internal static TCPNetworkReceiver CreateReceiverInSharedState(ushort portInfo)
-        //{
-        //    var inst = new TCPNetworkReceiver(portInfo);
-        //    lock (NetworkFactory.Instance._mutex)
-        //    {
-        //        NetworkFactory.Instance._receivers.Add(portInfo, inst);
-        //    }
-
-        //    return inst;
-        //}
 
         private TCPNetworkReceiver(ushort port, Socket sock = null)
         {
@@ -97,23 +90,7 @@ namespace JPB.Communication.ComBase
             // a new connection.
             _listenerSocket.BeginAccept(OnConnectRequest, _listenerSocket);
         }
-
-        //private void AsyncReader()
-        //{
-        //    while (true)
-        //    {
-        //        IDefaultTcpConnection conn = null;
-        //        conn = new DefaultTcpConnection(_listenerSocket.ReceiveBufferSize, _listenerSocket)
-        //        {
-        //            Port = Port
-        //        };
-        //        conn.Receive();
-        //    }
-        //}
-
-
-        private Thread waiterThread;
-
+        
         /// <summary>
         /// FOR INTERNAL USE ONLY
         /// </summary>
@@ -122,6 +99,7 @@ namespace JPB.Communication.ComBase
         private readonly List<Tuple<Action<LargeMessage>, object>> _largeMessages;
         private readonly List<Tuple<Action<MessageBase>, Guid>> _onetimeupdated;
         private readonly List<Tuple<Action<RequstMessage>, Guid>> _pendingrequests;
+
         private readonly List<Tuple<Func<RequstMessage, object>, object>> _requestHandler;
         internal readonly Socket _listenerSocket;
         
@@ -248,6 +226,7 @@ namespace JPB.Communication.ComBase
                             {
                                 while (result == null)
                                 {
+                                    //Fixed value because on the Sender side we are waiting 
                                     Thread.Sleep(TimeSpan.FromSeconds(10));
 
                                     if (result != null)
@@ -479,10 +458,10 @@ namespace JPB.Communication.ComBase
             {
                 if (SharedConnection)
                 {
-                    var firstOrDefault = SharedConnectionManager.Instance.Connections.FirstOrDefault(s => endAccept == s.Item2);
+                    var firstOrDefault = ConnectionPool.Instance.Connections.FirstOrDefault(s => endAccept == s.Item2);
                     if (firstOrDefault == null)
                     {
-                        SharedConnectionManager.Instance.AddConnection(endAccept, this);
+                        ConnectionPool.Instance.AddConnection(endAccept, this);
                     }
                 }
 
@@ -514,7 +493,7 @@ namespace JPB.Communication.ComBase
         /// <returns></returns>
         public TCPNetworkSender GetSharedSenderOrNull(string ipOrHost)
         {
-            var firstOrDefault = SharedConnectionManager.Instance.Connections.FirstOrDefault(s => s.Item1 == ipOrHost);
+            var firstOrDefault = ConnectionPool.Instance.Connections.FirstOrDefault(s => s.Item1 == ipOrHost);
             if (firstOrDefault == null)
                 return null;
             return firstOrDefault.Item4;
