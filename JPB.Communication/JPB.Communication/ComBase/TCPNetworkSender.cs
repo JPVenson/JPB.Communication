@@ -427,6 +427,7 @@ namespace JPB.Communication.ComBase
                     {
                         isConnected.Connect(ipOrHost, Port);
                     }
+                    return isConnected;
                 }
                 else
                 {
