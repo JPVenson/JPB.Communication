@@ -30,6 +30,7 @@ namespace JPB.Communication.WPF.Controls.View
             InitializeComponent();
             NetworkLogViewModel = new NetworkLogViewModel { ShowDetailMode = Visibility.Visible };
             ConnectionPoolViewModel = new ConnectionPoolViewModel {ShowDetailMode = Visibility.Visible};
+            NetworkFactoryViewModel = new NetworkFactoryViewModel();
 
             //IPAddress ex = null;
             //IPAddress inter = null;
@@ -64,6 +65,15 @@ namespace JPB.Communication.WPF.Controls.View
         {
             get { return (NetworkLogViewModel) GetValue(NetworkLogViewModelProperty); }
             set { SetValue(NetworkLogViewModelProperty, value); }
+        }
+
+        public static readonly DependencyProperty NetworkFactoryViewModelProperty = DependencyProperty.Register(
+            "NetworkFactoryViewModel", typeof (NetworkFactoryViewModel), typeof (NetworkEventLogger), new PropertyMetadata(default(NetworkFactoryViewModel)));
+
+        public NetworkFactoryViewModel NetworkFactoryViewModel
+        {
+            get { return (NetworkFactoryViewModel) GetValue(NetworkFactoryViewModelProperty); }
+            set { SetValue(NetworkFactoryViewModelProperty, value); }
         }
     }
 }

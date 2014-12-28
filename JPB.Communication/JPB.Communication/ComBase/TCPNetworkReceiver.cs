@@ -45,6 +45,7 @@ namespace JPB.Communication.ComBase
             lock (NetworkFactory.Instance._mutex)
             {
                 NetworkFactory.Instance._receivers.Add(portInfo, inst);
+                NetworkFactory.Instance.RaiseReceiverCreate(inst);
             }
 
             return inst;

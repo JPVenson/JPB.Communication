@@ -32,6 +32,14 @@
             Content="{Binding ConnectionPoolViewModel}"
             ContentTemplate="{StaticResource ResourceKey=ConnetionPoolTemplate}"/>
             </TabItem>
+
+            <TabItem Header="Network Factory Log">
+                <ContentControl 
+                    VerticalAlignment="Stretch"
+                    HorizontalAlignment="Stretch"
+            Content="{Binding NetworkFactoryViewModel}"
+            ContentTemplate="{StaticResource ResourceKey=NetworkFactoryViewModel}"/>
+            </TabItem>
         </TabControl>
     </Grid>
 </UserControl>

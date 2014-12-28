@@ -40,7 +40,7 @@ namespace JPB.Communication.Example.ChatOverNetworkCollection
             ushort port = 1337;
 
             //Register a callback for this Contract
-            NetworkFactory.Instance.GetReceiver(port).RegisterChanged(s =>
+            NetworkFactory.Instance.GetReceiver(port).RegisterMessageBaseInbound(s =>
             {
                 Console.WriteLine("> {0}", s.Message);
             }, messageContract);

@@ -5,7 +5,8 @@
 	xmlns:viewModel="clr-namespace:JPB.Communication.WPF.Controls.ViewModel"
 	xmlns:converter="clr-namespace:JPB.WPFBase.Converter;assembly=JPB.WPFBase"
 	xmlns:viewModel1="clr-namespace:IEADPC.BatchControl.Managing.ViewModel"
-	xmlns:controls="clr-namespace:JPB.Communication.WPF.Controls">
+	xmlns:controls="clr-namespace:JPB.Communication.WPF.Controls"
+	xmlns:comBase="clr-namespace:JPB.Communication.ComBase;assembly=JPB.Communication">
     <converter:VisibilityBooleanConverter x:Key="BooleanToVisibility" />
 
     <controls:HasValueToVisibiltyConverter x:Key="HasValueToVisibiltyConverter" />
@@ -173,4 +174,28 @@
             </DataGrid>
         </DockPanel>
     </DataTemplate>
+    <DataTemplate x:Key="NetworkFactoryViewModel" DataType="{x:Type viewModel:NetworkFactoryViewModel}">
+        <DockPanel>
+            <DataGrid  DockPanel.Dock="Top" AutoGenerateColumns="False" ItemsSource="{Binding Path=Sender, Mode=OneWay}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Binding="{Binding Port, Mode=OneWay}" Header="Port"/>
+                    <DataGridTextColumn Binding="{Binding Timeout, Mode=OneWay}" Header="Timeout"/>
+                    <DataGridTextColumn Binding="{Binding Serlilizer, Mode=OneWay}" Header="Serilizer"/>
+                    <DataGridTextColumn Binding="{Binding SharedConnection, Mode=OneWay}" Header="Is Shared Connection"/>
+                    <DataGridTextColumn Binding="{Binding UseExternalIpAsSender, Mode=OneWay}" Header="Use External IP as Sender"/>
+                </DataGrid.Columns>
+            </DataGrid>
+            <DataGrid DockPanel.Dock="Top" AutoGenerateColumns="False" ItemsSource="{Binding Path=Receiver, Mode=OneWay}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Binding="{Binding Port, Mode=OneWay}" Header="Port"/>
+                    <DataGridTextColumn Binding="{Binding AutoRespond, Mode=OneWay}" Header="Auto Respond"/>
+                    <DataGridTextColumn Binding="{Binding IncommingMessage, Mode=OneWay}" Header="Incomming Message"/>
+                    <DataGridTextColumn Binding="{Binding LargeMessageSupport, Mode=OneWay}" Header="Supportes Large Messages"/>
+                    <DataGridTextColumn Binding="{Binding Serlilizer, Mode=OneWay}" Header="Serilizer"/>
+                    <DataGridTextColumn Binding="{Binding IsDisposing, Mode=OneWay}" Header="Disposed"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </DockPanel>
+    </DataTemplate>
+    
 </ResourceDictionary>

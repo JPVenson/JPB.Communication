@@ -13,6 +13,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JPB.Communication.Example.C
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JPB.Communication.Test.LargeMessages", "JPB.Communication.Test.LargeMessages\JPB.Communication.Test.LargeMessages.csproj", "{CE77D015-C3F1-484F-A7BB-3C846ACB0D34}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JPB.Communication.Test.SingelSock", "JPB.Communication.Test.SingelSock\JPB.Communication.Test.SingelSock.csproj", "{55817FCD-66AE-454F-8BDF-B12BEEC8A46B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JPB.Communication.WPF.Controls", "JPB.Communication.WPF.Controls\JPB.Communication.WPF.Controls.csproj", "{9C1EBE04-A332-4CD6-91DB-4CB0EBAB5293}"
+EndProject
 Global
 	GlobalSection(SubversionScc) = preSolution
 		Svn-Managed = True
@@ -39,6 +43,14 @@ Global
 		{CE77D015-C3F1-484F-A7BB-3C846ACB0D34}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CE77D015-C3F1-484F-A7BB-3C846ACB0D34}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CE77D015-C3F1-484F-A7BB-3C846ACB0D34}.Release|Any CPU.Build.0 = Release|Any CPU
+		{55817FCD-66AE-454F-8BDF-B12BEEC8A46B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{55817FCD-66AE-454F-8BDF-B12BEEC8A46B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{55817FCD-66AE-454F-8BDF-B12BEEC8A46B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{55817FCD-66AE-454F-8BDF-B12BEEC8A46B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9C1EBE04-A332-4CD6-91DB-4CB0EBAB5293}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C1EBE04-A332-4CD6-91DB-4CB0EBAB5293}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C1EBE04-A332-4CD6-91DB-4CB0EBAB5293}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9C1EBE04-A332-4CD6-91DB-4CB0EBAB5293}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -47,5 +59,6 @@ Global
 		{BABCC276-31C8-4739-84B2-F8FBE052F341} = {45E79551-EC87-411F-BAB8-43935C755C02}
 		{BD25F7F6-5D9F-4C0C-9EF2-8C42C2A021DB} = {45E79551-EC87-411F-BAB8-43935C755C02}
 		{CE77D015-C3F1-484F-A7BB-3C846ACB0D34} = {45E79551-EC87-411F-BAB8-43935C755C02}
+		{55817FCD-66AE-454F-8BDF-B12BEEC8A46B} = {45E79551-EC87-411F-BAB8-43935C755C02}
 	EndGlobalSection
 EndGlobal

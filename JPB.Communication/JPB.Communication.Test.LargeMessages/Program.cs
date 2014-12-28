@@ -51,7 +51,7 @@ namespace JPB.Communication.Test.LargeMessages
             Console.WriteLine(s.MetaData.Message);
             if (s.DataComplete)
             {
-                s_OnLoadCompleted(s, null);
+                s_OnLoadCompleted(s);
             }
             else
             {
@@ -59,10 +59,9 @@ namespace JPB.Communication.Test.LargeMessages
             }
         }
 
-        static void s_OnLoadCompleted(object sender, EventArgs e)
+        static void s_OnLoadCompleted(LargeMessage sender)
         {
             Console.WriteLine("File Loaded ... load content");
-
             var largeMessage = sender as LargeMessage;
             var infoLoaded = largeMessage.InfoLoaded() as FileStream;
             infoLoaded.Close();

@@ -39,8 +39,7 @@ namespace JPB.Communication.Example.Chat
         static void Main(string[] args)
         {
             //Maybe multible network Adapters ... on what do we want to Recieve?
-
-
+            
             NetworkInfoBase.ResolveOwnIp += NetworkInfoBaseOnResolveOwnIp;
             Console.Title = string.Format("This: {0}", NetworkInfoBase.IpAddress.ToString());
             Console.Clear();
@@ -57,7 +56,7 @@ namespace JPB.Communication.Example.Chat
                 //This mehtod will create or return an instance for the spezific port
                 .GetReceiver(port);
 
-            tcpNetworkReceiver.LargeMessageSupport = true;
+            tcpNetworkReceiver.LargeMessageSupport = false;
 
             //Register the callback that will be invoked when a new message is incomming that contains the InfoState ( Contract ) we defined
             tcpNetworkReceiver.RegisterMessageBaseInbound(OnIncommingMessage, ChatMessageContract);

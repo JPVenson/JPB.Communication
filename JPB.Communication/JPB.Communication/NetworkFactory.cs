@@ -42,9 +42,9 @@ namespace JPB.Communication
         public event EventHandler<TCPNetworkSender> OnSenderCreate;
         public event EventHandler<TCPNetworkReceiver> OnReceiverCreate;
 
-        protected virtual void RaiseSenderCreate(TCPNetworkSender item)
+        internal virtual void RaiseSenderCreate(TCPNetworkSender item)
         {
-            if(!ShouldRaiseEvents)
+            if (!ShouldRaiseEvents)
                 return;
 
             var handler = OnSenderCreate;
@@ -52,7 +52,7 @@ namespace JPB.Communication
                 handler(this, item);
         }
 
-        protected virtual void RaiseReceiverCreate(TCPNetworkReceiver item)
+        internal virtual void RaiseReceiverCreate(TCPNetworkReceiver item)
         {
             if (!ShouldRaiseEvents)
                 return;
@@ -74,14 +74,14 @@ namespace JPB.Communication
             get { return _instance; }
         }
 
-        public Dictionary<ushort, TCPNetworkReceiver>.Enumerator GetReceivers()
+        public Dictionary<ushort, TCPNetworkReceiver> GetReceivers()
         {
-            return _receivers.GetEnumerator();
+            return _receivers.Select(s => s).ToDictionary(s => s.Key, s => s.Value);
         }
 
-        public Dictionary<ushort, TCPNetworkSender>.Enumerator GetSenders()
+        public Dictionary<ushort, TCPNetworkSender> GetSenders()
         {
-            return _senders.GetEnumerator();
+            return _senders.Select(s => s).ToDictionary(s => s.Key, s => s.Value);
         }
 
         public TCPNetworkReceiver Reciever
@@ -105,6 +105,11 @@ namespace JPB.Communication
             }
             private set { _commonSender = value; }
         }
+
+        /// <summary>
+        /// Object for syncron access
+        /// </summary>
+        public object SyncRoot { get { return _mutex; } }
 
         /// <summary>
         /// This will set the Sender and Reciever Property

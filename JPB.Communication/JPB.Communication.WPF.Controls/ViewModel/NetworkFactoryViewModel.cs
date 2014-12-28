@@ -12,11 +12,25 @@ namespace JPB.Communication.WPF.Controls.ViewModel
     {
         public NetworkFactoryViewModel()
         {
-            Receiver = new ThreadSaveObservableCollection<IDisposable>();
-            Sender = new ThreadSaveObservableCollection<IDisposable>();
+            Receiver = new ThreadSaveObservableCollection<object>();
+            Sender = new ThreadSaveObservableCollection<object>();
 
-            NetworkFactory.Instance.OnReceiverCreate += Instance_OnReceiverCreate;
-            NetworkFactory.Instance.OnSenderCreate += Instance_OnSenderCreate;
+            lock (NetworkFactory.Instance.SyncRoot)
+            {
+                foreach (var receiver in NetworkFactory.Instance.GetReceivers())
+                {
+                    Receiver.Add(receiver.Value);
+                }
+
+                foreach (var sender in NetworkFactory.Instance.GetSenders())
+                {
+                    Sender.Add(sender.Value);
+                }
+
+                NetworkFactory.Instance.ShouldRaiseEvents = true;
+                NetworkFactory.Instance.OnReceiverCreate += Instance_OnReceiverCreate;
+                NetworkFactory.Instance.OnSenderCreate += Instance_OnSenderCreate;
+            }
         }
 
         void Instance_OnSenderCreate(object sender, TCPNetworkSender e)
@@ -29,9 +43,9 @@ namespace JPB.Communication.WPF.Controls.ViewModel
             Receiver.Add(e);
         }
 
-        private ThreadSaveObservableCollection<IDisposable> _receiver;
+        private ThreadSaveObservableCollection<object> _receiver;
 
-        public ThreadSaveObservableCollection<IDisposable> Receiver
+        public ThreadSaveObservableCollection<object> Receiver
         {
             get { return _receiver; }
             set
@@ -41,9 +55,9 @@ namespace JPB.Communication.WPF.Controls.ViewModel
             }
         }
 
-        private ThreadSaveObservableCollection<IDisposable> _sender;
+        private ThreadSaveObservableCollection<object> _sender;
 
-        public ThreadSaveObservableCollection<IDisposable> Sender
+        public ThreadSaveObservableCollection<object> Sender
         {
             get { return _sender; }
             set
