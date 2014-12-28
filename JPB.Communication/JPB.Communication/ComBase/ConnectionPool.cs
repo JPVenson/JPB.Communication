@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
@@ -66,11 +68,26 @@ namespace JPB.Communication.ComBase
 
             var sender = NetworkFactory.Instance.GetSender(port);
             var socket = await sender._InitSharedConnection(ip);
+            if (socket == null)
+            {
+                ThrowSockedNotAvailbileHelper();
+            }
+
             var ipAddress = socket.LocalEndPoint as IPEndPoint;
             var port1 = (ushort)ipAddress.Port;
             var receiver = TCPNetworkReceiver.CreateReceiverInSharedState(port1, socket);
             Connections.Add(new Tuple<string, Socket, TCPNetworkReceiver, TCPNetworkSender>(ip, socket, receiver, sender));
             return receiver;
+        }
+
+        private void ThrowSockedNotAvailbileHelper()
+        {
+            var networkInformationException = new NetworkInformationException()
+            {
+                Source = typeof(TCPNetworkSender).FullName
+            };
+            networkInformationException.Data.Add("Description","");
+            throw networkInformationException;
         }
 
         public Socket GetSock(string ipOrHost)

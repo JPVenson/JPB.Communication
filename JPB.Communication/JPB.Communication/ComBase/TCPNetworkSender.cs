@@ -56,6 +56,25 @@ namespace JPB.Communication.ComBase
         public const string TraceCategory = "TCPNetworkSender";
         public bool SharedConnection { get; set; }
 
+        [ThreadStatic]
+        public static Exception LastException;
+
+        private static void SetException(object sender, Exception e)
+        {
+            LastException = e;
+            RaiseCriticalException(sender, e);
+        }
+
+        public static event EventHandler<Exception> OnCriticalException;
+
+        private static void RaiseCriticalException(object sender, Exception e)
+        {
+            var handler = OnCriticalException;
+            if (handler != null)
+                handler(sender, e);
+        }
+
+
         #region Message Methods
 
         /// <summary>
@@ -306,21 +325,23 @@ namespace JPB.Communication.ComBase
             var prepairedMess = PrepareMessage(mess, ip);
             var serialize = this.Serialize(prepairedMess);
 
-            //using (var memstream = new MemoryStream(serialize))
-            //{
-            //    var openNetwork = OpenAndSend(memstream, client);
-            //    //wait for the Responce that the other side is waiting for the content
-            //    //openNetwork.Write(new byte[] { 0x00 }, 0, 1);
+            using (var memstream = new MemoryStream(serialize))
+            {
+                var openNetwork = OpenAndSend(memstream, client);
+                //wait for the Responce that the other side is waiting for the content
+                //openNetwork.Write(new byte[] { 0x00 }, 0, 1);
 
-            //    AwaitCallbackFromRemoteHost(client);
+                AwaitCallbackFromRemoteHost(client);
 
-            //    //SendOnStream(openNetwork, stream, client);
-            //    //openNetwork.Write(new byte[0], 0, 0);
-            //    SendOnStream(stream, client);
-            //    openNetwork.Write(new byte[0], 0, 0);
-            //    if (!SharedConnection)
-            //        openNetwork.Close();
-            //}
+                SendOnStream(stream, client);
+
+                AwaitCallbackFromRemoteHost(client);
+                if (!SharedConnection)
+                {
+                    openNetwork.Send(new byte[0]);
+                    openNetwork.Close();
+                }
+            }
 
             if (disposeOnEnd)
             {
@@ -361,89 +382,72 @@ namespace JPB.Communication.ComBase
             return Wrap(message);
         }
 
-        /// <summary>
-        /// Prepaired mehtod call that uses the Connect mehtod with multible IP addresses
-        /// 
-        /// Behavior is not tested
-        /// WIP
-        /// </summary>
-        /// <param name="ip"></param>
-        /// <param name="port"></param>
-        /// <returns></returns>
-        private static async Task<TcpClient> CreateClientSockAsync(IEnumerable<string> ip, ushort port)
-        {
-            try
-            {
-                var client = new TcpClient();
+        ///// <summary>
+        ///// Prepaired mehtod call that uses the Connect mehtod with multible IP addresses
+        ///// 
+        ///// Behavior is not tested
+        ///// WIP
+        ///// </summary>
+        ///// <param name="ip"></param>
+        ///// <param name="port"></param>
+        ///// <returns></returns>
+        //private static async Task<TcpClient> CreateClientSockAsync(IEnumerable<string> ip, ushort port)
+        //{
+        //    TcpClient client = null;
+        //    try
+        //    {
+        //        client = new TcpClient();
 
-                //resolve DNS entrys
-                var ipAddresses =
-                    ip
-                    .Select(ConnectionPool.ResolveIp)
-                    .AsParallel()
-                    .ToArray();
+        //        //resolve DNS entrys
+        //        var ipAddresses =
+        //            ip
+        //            .Select(ConnectionPool.ResolveIp)
+        //            .AsParallel()
+        //            .ToArray();
 
-                await client.ConnectAsync(ipAddresses, port);
-                client.NoDelay = true;
-                return client;
-            }
-            catch (Exception e)
-            {
-                return null;
-            }
-        }
+        //        await client.ConnectAsync(ipAddresses, port);
+        //        client.NoDelay = true;
+        //        return client;
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        SetException(client, e);
+        //        return null;
+        //    }
+        //}
 
         private async Task<Socket> CreateClientSockAsync(string ipOrHost)
         {
             if (this.SharedConnection)
             {
                 var isConnected = ConnectionPool.Instance.GetSock(ipOrHost);
-                if (isConnected == null)
+                if (isConnected != null)
                 {
                     if (!isConnected.Connected)
                     {
                         isConnected.Connect(ipOrHost, Port);
                     }
-                    return await CreateClientSock(ipOrHost, Port);
                 }
                 else
                 {
-                    return isConnected;
+                    return await CreateClientSock(ipOrHost, Port);
                 }
-
-                //var resolveIp = ConnectionPool.ResolveIp(ipOrHost);
-
-                //Socket socket = GetSockForIpOrNull(resolveIp.ToString());
-                //if (socket != null)
-                //{
-                //    if (!socket.Connected)
-                //    {
-                //        socket.Connect(ipOrHost, Port);
-                //        Receiver.StartListener(socket);
-                //    }
-                //    return socket;
-                //}
-                //else
-                //{
-                //    socket = await CreateClientSock(ipOrHost, Port);
-                //    Receiver.StartListener(socket);
-                //    return socket;
-                //}
             }
             return await CreateClientSock(ipOrHost, Port);
         }
 
         private static async Task<Socket> CreateClientSock(string ipOrHost, ushort port)
         {
+            var client = new TcpClient();
             try
             {
-                var client = new TcpClient();
                 client.NoDelay = true;
                 await client.ConnectAsync(ipOrHost, port);
                 return client.Client;
             }
             catch (Exception e)
             {
+                SetException(client, e);
                 return null;
             }
         }
@@ -479,26 +483,27 @@ namespace JPB.Communication.ComBase
                         string.Format("TCPSender> awaits callback from remote pc try {0} of {1}", tryCount, tryMax),
                         TraceCategory);
 
-                    sock.Send(new byte[] { });
+                    sock.Send(new byte[0]);
                     continue;
                 }
                 break;
             } while (true);
         }
 
-        private void SendBaseAsync(TcpMessage message, Socket client)
+        private void SendBaseAsync(TcpMessage message, Socket openNetwork)
         {
             var serialize = Serialize(message);
             if (!serialize.Any())
                 return;
 
             using (var memstream = new MemoryStream(serialize))
-                OpenAndSend(memstream, client);
+                OpenAndSend(memstream, openNetwork);
 
-            AwaitCallbackFromRemoteHost(client);
+            AwaitCallbackFromRemoteHost(openNetwork);
             if (!SharedConnection)
             {
-                client.Close();
+                openNetwork.Send(new byte[0]);
+                openNetwork.Close();
             }
         }
 

@@ -72,12 +72,29 @@ namespace JPB.Communication.ComBase
                 //start writing into content Stream
                 var bytes = new byte[_sock.ReceiveBufferSize];
                 _streamData.Write(bytes);
-                _sock.BeginReceive(
-                    bytes, 0,
-                    bytes.Length,
-                    SocketFlags.None,
-                    OnBytesReceived,
-                    this);
+                
+                if (_sock.Connected)
+                {
+                    try
+                    {
+                        _sock.BeginReceive(
+                            bytes, 0,
+                            bytes.Length,
+                            SocketFlags.None,
+                            OnBytesReceived,
+                            this);
+                    }
+                    catch (Exception)
+                    {
+                        //no more data?!
+                        Parse(concatBytes(_datarec));
+                    }
+                }
+                else
+                {
+                    //no more data?!
+                    Parse(concatBytes(_datarec));
+                }
 
                 return;
             }
@@ -145,7 +162,7 @@ namespace JPB.Communication.ComBase
         {
             int i;
             var temp = new List<byte>();
-            for (i = 0; i < dataStream.Count() - 1; i++)
+            for (i = 0; i < dataStream.Count(); i++)
             {
                 if (dataStream[i] == 0x00) continue;
                 temp.Add(dataStream[i]);
