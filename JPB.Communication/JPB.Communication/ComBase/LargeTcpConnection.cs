@@ -35,7 +35,7 @@ namespace JPB.Communication.ComBase
                 OnBytesReceived,
                 this);
         }
-        
+
         public bool MetaDataReached { get; set; }
 
         public bool LastCallWasMeta { get; set; }
@@ -70,7 +70,7 @@ namespace JPB.Communication.ComBase
                 //start writing into content Stream
                 var bytes = new byte[_sock.ReceiveBufferSize];
                 _streamData.Write(bytes);
-                
+
                 if (_sock.Connected)
                 {
                     try
@@ -109,12 +109,20 @@ namespace JPB.Communication.ComBase
                     var bytes = new byte[_sock.ReceiveBufferSize];
                     _streamData.Flush(rec);
                     _streamData.Write(bytes);
-                    _sock.BeginReceive(
-                        bytes, 0,
-                        bytes.Length,
-                        SocketFlags.None,
-                        OnBytesReceived,
-                        this);
+
+                    if (_metaMessage.StreamSize <= _streamData.Length)
+                    {
+                        _sock.BeginReceive(
+                            bytes, 0,
+                            bytes.Length,
+                            SocketFlags.None,
+                            OnBytesReceived,
+                            this);
+                    }
+                    else
+                    {
+                        _metaMessage.RaiseLoadCompleted();
+                    }
                 }
                 else
                 {

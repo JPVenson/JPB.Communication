@@ -316,11 +316,13 @@ namespace JPB.Communication.ComBase
         ///  <param name="ip"></param>
         /// <param name="disposeOnEnd">Close and Dispose the stream after work</param>
         /// <exception cref="NotImplementedException"></exception>
-        public async void SendStreamDataAsync(Stream stream, MessageBase mess, string ip, bool disposeOnEnd = true)
+        public async void SendStreamDataAsync(Stream stream, StreamMetaMessage mess, string ip, bool disposeOnEnd = true)
         {
             var client = await CreateClientSockAsync(ip);
             if (client == null)
                 return;
+
+            mess.StreamSize = stream.Length;
 
             var prepairedMess = PrepareMessage(mess, ip);
             var serialize = this.Serialize(prepairedMess);
@@ -328,14 +330,16 @@ namespace JPB.Communication.ComBase
             using (var memstream = new MemoryStream(serialize))
             {
                 var openNetwork = OpenAndSend(memstream, client);
+
                 //wait for the Responce that the other side is waiting for the content
                 //openNetwork.Write(new byte[] { 0x00 }, 0, 1);
 
-                AwaitCallbackFromRemoteHost(client);
+                AwaitCallbackFromRemoteHost(client, true);
 
                 SendOnStream(stream, client);
 
-                AwaitCallbackFromRemoteHost(client);
+                AwaitCallbackFromRemoteHost(client, true);
+
                 if (!SharedConnection)
                 {
                     openNetwork.Send(new byte[0]);
@@ -453,7 +457,7 @@ namespace JPB.Communication.ComBase
             }
         }
 
-        private void AwaitCallbackFromRemoteHost(Socket sock)
+        private void AwaitCallbackFromRemoteHost(Socket sock, bool wait)
         {
             sock.ReceiveTimeout = Timeout.Milliseconds;
             do
@@ -472,7 +476,8 @@ namespace JPB.Communication.ComBase
 
                     //Nagles alg waits for 200 ms
                     Thread.Sleep(250);
-                    //sock.Receive(new byte[] { 0x00 });
+                    if (wait)
+                        sock.Receive(new byte[] { 0x00 });
                 }
                 catch (Exception e)
                 {
@@ -500,7 +505,7 @@ namespace JPB.Communication.ComBase
             using (var memstream = new MemoryStream(serialize))
                 OpenAndSend(memstream, openNetwork);
 
-            AwaitCallbackFromRemoteHost(openNetwork);
+            AwaitCallbackFromRemoteHost(openNetwork, false);
             if (!SharedConnection)
             {
                 openNetwork.Send(new byte[0]);

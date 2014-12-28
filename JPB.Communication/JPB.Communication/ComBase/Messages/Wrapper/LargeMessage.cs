@@ -9,8 +9,9 @@ namespace JPB.Communication.ComBase.Messages
     /// </summary>
     public class LargeMessage
     {
-        public LargeMessage(MessageBase metaData, Func<Stream> infoLoaded)
+        public LargeMessage(StreamMetaMessage metaData, Func<Stream> infoLoaded)
         {
+            StreamSize = metaData.StreamSize;
             InfoLoaded = infoLoaded;
             MetaData = metaData;
         }
@@ -31,6 +32,11 @@ namespace JPB.Communication.ComBase.Messages
 
             DataComplete = true;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public long StreamSize { get; private set; }
 
 
         /// <summary>

@@ -52,10 +52,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ComBase\ConnectionWrapper.cs" />
+    <Compile Include="ComBase\Messages\StreamMetaMessage.cs" />
     <Compile Include="ComBase\Serializer\Contracts\FullXmlSerializer.cs" />
     <Compile Include="ComBase\TcpConnectionBase.cs" />
     <Compile Include="ComBase\LargeTcpConnection.cs" />
-    <Compile Include="ComBase\Messages\LargeMessage.cs" />
+    <Compile Include="ComBase\Messages\Wrapper\LargeMessage.cs" />
     <Compile Include="ComBase\Serializer\BinaryCompressedMessageSerializer.cs" />
     <Compile Include="ComBase\ConnectionBase.cs" />
     <Compile Include="ComBase\Serializer\DefaultMessageSerlilizer.cs" />
