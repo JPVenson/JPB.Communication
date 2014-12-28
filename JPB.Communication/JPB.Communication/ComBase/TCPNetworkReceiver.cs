@@ -467,7 +467,7 @@ namespace JPB.Communication.ComBase
                     }
                 }
 
-                IDefaultTcpConnection conn;
+                TcpConnectionBase conn;
 
                 if (!LargeMessageSupport)
                 {
@@ -483,6 +483,7 @@ namespace JPB.Communication.ComBase
                         Port = Port
                     };
                 }
+                conn.Serlilizer = this.Serlilizer;
                 conn.BeginReceive();
             }
         }

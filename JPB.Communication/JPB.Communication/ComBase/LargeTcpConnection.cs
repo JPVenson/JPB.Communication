@@ -6,7 +6,7 @@ using JPB.Communication.ComBase.Messages;
 
 namespace JPB.Communication.ComBase
 {
-    internal class LargeTcpConnection : ConnectionBase, IDisposable, IDefaultTcpConnection
+    internal class LargeTcpConnection : TcpConnectionBase, IDisposable
     {
         private readonly Socket _sock;
 
@@ -25,7 +25,7 @@ namespace JPB.Communication.ComBase
         }
 
         // Call this method to set this connection's socket up to receive data.
-        public void BeginReceive()
+        public override void BeginReceive()
         {
             var last = _datarec.Last;
             _sock.BeginReceive(
@@ -35,9 +35,7 @@ namespace JPB.Communication.ComBase
                 OnBytesReceived,
                 this);
         }
-
-        public NetworkStream Stream { get; private set; }
-
+        
         public bool MetaDataReached { get; set; }
 
         public bool LastCallWasMeta { get; set; }

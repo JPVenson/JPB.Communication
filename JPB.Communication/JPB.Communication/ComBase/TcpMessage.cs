@@ -19,20 +19,38 @@
  */
 
 using System;
+using System.Runtime.Serialization;
 
 namespace JPB.Communication.ComBase
 {
-    public class TcpMessage
+    [Serializable]
+    public class TcpMessage : ISerializable
     {
         public TcpMessage()
         {
             GUID = Guid.NewGuid();
         }
 
-        public Guid GUID { get; set; }
+        internal TcpMessage(SerializationInfo info,
+            StreamingContext context)
+        {
+            GUID = (Guid)info.GetValue("GUID", typeof(Guid));
+            MessageBase = (byte[])info.GetValue("MessageBase", typeof(byte[]));
+            Sender = (string)info.GetValue("Sender", typeof(string));
+            Reciver = (string)info.GetValue("Reciver", typeof(string));
+        }
 
+        public Guid GUID { get; set; }
         public byte[] MessageBase { get; set; }
         public string Sender { get; set; }
         public string Reciver { get; set; }
+
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            info.AddValue("Reciver", Reciver, Reciver.GetType());
+            info.AddValue("Sender", Sender, Sender.GetType());
+            info.AddValue("MessageBase", MessageBase, MessageBase.GetType());
+            info.AddValue("GUID", GUID, GUID.GetType());
+        }
     }
 }

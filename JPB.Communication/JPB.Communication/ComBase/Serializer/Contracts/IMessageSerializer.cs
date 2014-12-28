@@ -22,6 +22,9 @@ using JPB.Communication.ComBase.Messages;
 
 namespace JPB.Communication.ComBase.Serializer.Contracts 
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public interface IMessageSerializer
     {
         /// <summary>

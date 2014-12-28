@@ -79,6 +79,11 @@ namespace JPB.Communication.ComBase
         /// </summary>
         public static readonly IMessageSerializer JsonMessageSerializer = new MessageJsonSerlalizer();
 
+        /// <summary>
+        /// A Full XML Serializer
+        /// </summary>
+        public static readonly IMessageSerializer FullXmlSerializer = new FullXmlSerializer();
+
         public static event MessageDelegate OnNewItemLoadedSuccess;
         public static event EventHandler<string> OnNewItemLoadedFail;
         /// <summary>

@@ -27,7 +27,7 @@ using System.Threading;
 
 namespace JPB.Communication.ComBase
 {
-    internal class DefaultTcpConnection : ConnectionBase, IDisposable, IDefaultTcpConnection
+    internal class DefaultTcpConnection : TcpConnectionBase, IDisposable
     {
         private readonly NetworkStream _stream;
         private readonly Socket sock;
@@ -51,7 +51,7 @@ namespace JPB.Communication.ComBase
         //}
 
         // Call this method to set this connection's socket up to receive data.
-        public void BeginReceive()
+        public override void BeginReceive()
         {
             if (sock == null)
                 throw new ArgumentException("No sock supplyed please call DefaultTcpConnection(NetworkStream stream)");
@@ -88,6 +88,7 @@ namespace JPB.Communication.ComBase
                 var compltearray = new byte[count];
                 for (int i = 0; i < count; i++)
                     compltearray.SetValue(buff[i], i);
+                
                 Parse(compltearray);
                 return true;
             }
