@@ -70,10 +70,10 @@ namespace JPB.Communication.ComBase
             OnNewLargeItemLoadedSuccess += TcpConnectionOnOnNewItemLoadedSuccess;
             Port = port;
 
-            TypeCallbacks = new Dictionary<Type, Action<object>>();
-            TypeCallbacks.Add(typeof(RequstMessage), WorkOn_RequestMessage);
-            TypeCallbacks.Add(typeof(MessageBase), WorkOn_MessageBase);
-            TypeCallbacks.Add(typeof(LargeMessage), WorkOn_LargeMessage);
+            _typeCallbacks = new Dictionary<Type, Action<object>>();
+            _typeCallbacks.Add(typeof(RequstMessage), WorkOn_RequestMessage);
+            _typeCallbacks.Add(typeof(MessageBase), WorkOn_MessageBase);
+            _typeCallbacks.Add(typeof(LargeMessage), WorkOn_LargeMessage);
         }
 
         internal TCPNetworkReceiver(ushort port)
@@ -117,7 +117,7 @@ namespace JPB.Communication.ComBase
         /// <summary>
         /// FOR INTERNAL USE ONLY
         /// </summary>
-        internal Dictionary<Type, Action<object>> TypeCallbacks;
+        internal Dictionary<Type, Action<object>> _typeCallbacks;
 
         private readonly List<Tuple<Action<LargeMessage>, object>> _largeMessages;
         private readonly List<Tuple<Action<MessageBase>, Guid>> _onetimeupdated;
@@ -132,6 +132,35 @@ namespace JPB.Communication.ComBase
         private bool _isWorking;
         private bool _incommingMessage;
 
+        /// <summary>
+        /// If Enabled this Receiver can handle streams and messages
+        /// 
+        /// </summary>
+        public bool LargeMessageSupport { get; set; }
+
+        public event Func<TCPNetworkReceiver, Socket, bool> OnCheckConnectionInbound;
+        /// <summary>
+        /// Is raised when a message is inside the buffer but not fully parsed
+        /// </summary>
+        public event EventHandler OnIncommingMessage;
+
+        /// <summary>
+        /// Enables or Disable the Auto Respond for long working Requests
+        /// </summary>
+        public bool AutoRespond { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool IsDisposing { get; private set; }
+
+        public override ushort Port { get; internal set; }
+
+        /// <summary>
+        /// If enabled a Incomming connection will be kept open and will be used for Outgoing and Incomming Trafic to that host
+        /// </summary>
+        public bool SharedConnection { get; set; }
+
         private void TcpConnectionOnOnNewItemLoadedSuccess(object mess, ushort port)
         {
             if (port == Port)
@@ -142,7 +171,7 @@ namespace JPB.Communication.ComBase
                 {
                     var type = messCopy.GetType();
 
-                    var handler = TypeCallbacks.FirstOrDefault(s => s.Key == type);
+                    var handler = _typeCallbacks.FirstOrDefault(s => s.Key == type);
 
                     if (!default(KeyValuePair<Type, Action<object>>).Equals(handler))
                     {
@@ -154,8 +183,8 @@ namespace JPB.Communication.ComBase
 
                 _isWorking = true;
                 var task = new Task(WorkOnItems);
-                task.Start();
                 task.ContinueWith(s => { _isWorking = false; });
+                task.Start();
             }
         }
 
@@ -213,25 +242,25 @@ namespace JPB.Communication.ComBase
 
                     try
                     {
-                        waiter = new Thread(() =>
+                        if (AutoRespond)
                         {
-                            while (true)
+                            waiter = new Thread(() =>
                             {
-                                if (result != null)
-                                    return;
-
-                                Thread.Sleep(TimeSpan.FromSeconds(10));
-
-                                if (result != null)
-                                    return;
-
-                                sender.SendNeedMoreTimeBackAsync(new RequstMessage()
+                                while (result == null)
                                 {
-                                    ResponseFor = requstInbound.Id
-                                }, requstInbound.Sender);
-                            }
-                        });
-                        waiter.Start();
+                                    Thread.Sleep(TimeSpan.FromSeconds(10));
+
+                                    if (result != null)
+                                        return;
+
+                                    sender.SendNeedMoreTimeBackAsync(new RequstMessage()
+                                    {
+                                        ResponseFor = requstInbound.Id
+                                    }, requstInbound.Sender);
+                                }
+                            });
+                            waiter.Start();
+                        }
 
                         result = tuple.Item1(requstInbound);
                     }
@@ -281,13 +310,7 @@ namespace JPB.Communication.ComBase
             }
         }
 
-        /// <summary>
-        /// If Enabled this Receiver can handle streams and messages
-        /// 
-        /// </summary>
-        public bool LargeMessageSupport { get; set; }
-
-        public event Func<TCPNetworkReceiver, Socket, bool> OnCheckConnectionInbound;
+   
 
         protected bool RaiseConnectionInbound(Socket sock)
         {
@@ -296,12 +319,6 @@ namespace JPB.Communication.ComBase
                 return handler(this, sock);
             return true;
         }
-
-
-        /// <summary>
-        /// Is raised when a message is inside the buffer but not fully parsed
-        /// </summary>
-        public event EventHandler OnIncommingMessage;
 
         /// <summary>
         /// Is raised when a message is inside the buffer but not fully parsed
@@ -330,10 +347,6 @@ namespace JPB.Communication.ComBase
 
         #endregion
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public bool IsDisposing { get; private set; }
 
         public void UnregisterChanged(Action<MessageBase> action, object state)
         {
@@ -447,7 +460,7 @@ namespace JPB.Communication.ComBase
             _autoResetEvent.Set();
         }
 
-        internal void OnConnectRequest(IAsyncResult result)
+        private void OnConnectRequest(IAsyncResult result)
         {
             IncommingMessage = true;
             var sock = ((Socket)result.AsyncState);
@@ -493,10 +506,13 @@ namespace JPB.Communication.ComBase
             }
         }
 
-        public override ushort Port { get; internal set; }
-        public bool SharedConnection { get; set; }
 
-        public TCPNetworkSender GetSharedSender(string ipOrHost)
+        /// <summary>
+        /// Returns a Sender or null
+        /// </summary>
+        /// <param name="ipOrHost"></param>
+        /// <returns></returns>
+        public TCPNetworkSender GetSharedSenderOrNull(string ipOrHost)
         {
             var firstOrDefault = SharedConnectionManager.Instance.Connections.FirstOrDefault(s => s.Item1 == ipOrHost);
             if (firstOrDefault == null)

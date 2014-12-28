@@ -395,6 +395,10 @@ namespace JPB.Communication.ComBase
                 var isConnected = SharedConnectionManager.Instance.GetSock(ipOrHost);
                 if (isConnected == null)
                 {
+                    if (!isConnected.Connected)
+                    {
+                        isConnected.Connect(ipOrHost, Port);
+                    }
                     return await CreateClientSock(ipOrHost, Port);
                 }
                 else

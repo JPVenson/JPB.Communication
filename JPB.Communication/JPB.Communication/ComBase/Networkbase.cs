@@ -64,15 +64,34 @@ namespace JPB.Communication.ComBase
         /// </summary>
         public IMessageSerializer Serlilizer { get; set; }
 
+        /// <summary>
+        /// The default Serializer
+        /// </summary>
         public static readonly IMessageSerializer DefaultMessageSerializer = new DefaultMessageSerlilizer();
+
+        /// <summary>
+        /// A Standart Serializer that compress the message ( good for large MessageBase objects )
+        /// </summary>
         public static readonly IMessageSerializer CompressedDefaultMessageSerializer = new BinaryCompressedMessageSerializer();
+
+        /// <summary>
+        /// A Standart JSON Serializer
+        /// </summary>
         public static readonly IMessageSerializer JsonMessageSerializer = new MessageJsonSerlalizer();
 
         public static event MessageDelegate OnNewItemLoadedSuccess;
         public static event EventHandler<string> OnNewItemLoadedFail;
+        /// <summary>
+        /// 
+        /// </summary>
         public static event EventHandler<TcpMessage> OnIncommingMessage;
         public static event MessageDelegate OnMessageSend;
         public static event LargeMessageDelegate OnNewLargeItemLoadedSuccess;
+
+        protected EventHandler<TcpMessage> IncommingMessage()
+        {
+            return OnIncommingMessage;
+        }
 
         /// <summary>
         /// 
