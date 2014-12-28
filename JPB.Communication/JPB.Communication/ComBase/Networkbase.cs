@@ -108,7 +108,7 @@ namespace JPB.Communication.ComBase
             try
             {
                 var handler = OnNewLargeItemLoadedSuccess;
-                var largeMessage = new LargeMessage(metaData, contendLoaded);
+                var largeMessage = new LargeMessage(metaData as StreamMetaMessage, contendLoaded);
                 if (handler != null)
                     handler(largeMessage, Port);
                 return largeMessage;

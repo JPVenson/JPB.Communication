@@ -10,6 +10,11 @@ namespace JPB.Communication.ComBase.Messages
     [Serializable]
     public class StreamMetaMessage : MessageBase
     {
+        public StreamMetaMessage()
+        {
+            
+        }
+
         internal StreamMetaMessage(SerializationInfo info,
             StreamingContext context)
             : base(info, context)

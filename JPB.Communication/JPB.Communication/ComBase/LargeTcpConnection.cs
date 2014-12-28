@@ -110,7 +110,7 @@ namespace JPB.Communication.ComBase
                     _streamData.Flush(rec);
                     _streamData.Write(bytes);
 
-                    if (_metaMessage.StreamSize <= _streamData.Length)
+                    if (_metaMessage.StreamSize >= _streamData.Length)
                     {
                         _sock.BeginReceive(
                             bytes, 0,

@@ -84,6 +84,12 @@ namespace JPB.Communication.ComBase
             if (rec == 0 || rec == 1)
             {
                 var buff = datarec.Get();
+                if (buff.Length <= 2)
+                {
+                    datarec.Clear();
+                    return false;
+                }
+
                 int count = buff.Count();
                 var compltearray = new byte[count];
                 for (int i = 0; i < count; i++)
