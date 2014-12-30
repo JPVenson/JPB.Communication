@@ -254,7 +254,7 @@ namespace JPB.Communication.ComBase
                             waiter.Abort();
                     }
 
-                    if (result == null)
+                    if (result != null)
                         break;
                 }
 
@@ -497,6 +497,14 @@ namespace JPB.Communication.ComBase
         public TCPNetworkSender GetSharedSenderOrNull(string ipOrHost)
         {
             var firstOrDefault = ConnectionPool.Instance.Connections.FirstOrDefault(s => s.Ip == ipOrHost);
+            if (firstOrDefault == null)
+                return null;
+            return firstOrDefault.TCPNetworkSender;
+        }
+
+        public TCPNetworkSender GetSharedSenderOrNull(string ipOrHost, ushort port)
+        {
+            var firstOrDefault = ConnectionPool.Instance.Connections.FirstOrDefault(s => s.Ip == ipOrHost && s.TCPNetworkSender.Port == port);
             if (firstOrDefault == null)
                 return null;
             return firstOrDefault.TCPNetworkSender;

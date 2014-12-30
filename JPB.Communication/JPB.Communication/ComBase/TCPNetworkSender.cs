@@ -338,12 +338,15 @@ namespace JPB.Communication.ComBase
 
                 SendOnStream(stream, client);
 
-                AwaitCallbackFromRemoteHost(client, true);
+                AwaitCallbackFromRemoteHost(client, false);
 
                 if (!SharedConnection)
                 {
                     openNetwork.Send(new byte[0]);
+                    Thread.Sleep(100);
+                    openNetwork.LingerState = new LingerOption(true, 60);
                     openNetwork.Close();
+                    openNetwork.Dispose();
                 }
             }
 
@@ -360,6 +363,16 @@ namespace JPB.Communication.ComBase
         #region Base Methods
 
         public bool UseExternalIpAsSender { get; set; }
+        
+        public async Task<TCPNetworkReceiver> InitSharedConnection(Socket ipOrHost)
+        {
+            if (!ipOrHost.Connected)
+            {
+                throw new ArgumentException("The socket must be connected");
+            }
+
+            return await ConnectionPool.Instance.InjectSocket(ipOrHost, this);
+        }
 
         public async Task<TCPNetworkReceiver> InitSharedConnection(string ipOrHost)
         {
@@ -424,7 +437,7 @@ namespace JPB.Communication.ComBase
         {
             if (this.SharedConnection)
             {
-                var isConnected = ConnectionPool.Instance.GetSock(ipOrHost);
+                var isConnected = ConnectionPool.Instance.GetSock(ipOrHost, Port);
                 if (isConnected != null)
                 {
                     if (!isConnected.Connected)
@@ -473,9 +486,9 @@ namespace JPB.Communication.ComBase
                 try
                 {
                     sock.Send(new byte[] { 0x00 });
-
                     //Nagles alg waits for 200 ms
                     Thread.Sleep(250);
+                    sock.Send(new byte[] { 0x00 });
                     if (wait)
                         sock.Receive(new byte[] { 0x00 });
                 }

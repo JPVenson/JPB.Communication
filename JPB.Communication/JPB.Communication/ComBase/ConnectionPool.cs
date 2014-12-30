@@ -81,9 +81,9 @@ namespace JPB.Communication.ComBase
         {
             var ip = ResolveIp(hostOrIp).ToString();
             var fod = Connections.FirstOrDefault(s => s.Ip == ip);
-            if(fod != null)
+            if (fod != null)
             {
-                if(fod.TCPNetworkSender.ConnectionOpen(hostOrIp))
+                if (fod.TCPNetworkSender.ConnectionOpen(hostOrIp))
                 {
                     return fod.TCPNetworkReceiver;
                 }
@@ -98,13 +98,20 @@ namespace JPB.Communication.ComBase
             {
                 ThrowSockedNotAvailbileHelper();
             }
+            var tcpNetworkReceiver = await InjectSocket(socket, sender);
+            return tcpNetworkReceiver;
+        }
 
-            var ipAddress = socket.LocalEndPoint as IPEndPoint;
-            var port1 = (ushort)ipAddress.Port;
-            var receiver = TCPNetworkReceiver.CreateReceiverInSharedState(port1, socket);
-            AddConnection(new ConnectionWrapper(ip, socket, receiver, sender));
+        internal async Task<TCPNetworkReceiver> InjectSocket(Socket sock, TCPNetworkSender sender)
+        {
+            var localIp = sock.LocalEndPoint as IPEndPoint;
+            var remoteIp = sock.RemoteEndPoint as IPEndPoint;
+            var port1 = (ushort)localIp.Port;
+            var receiver = TCPNetworkReceiver.CreateReceiverInSharedState(port1, sock);
+            AddConnection(new ConnectionWrapper(remoteIp.Address.ToString(), sock, receiver, sender));
             return receiver;
         }
+
         private void AddConnection(ConnectionWrapper connectionWrapper)
         {
             this.Connections.Add(connectionWrapper);
@@ -123,14 +130,14 @@ namespace JPB.Communication.ComBase
             {
                 Source = typeof(TCPNetworkSender).FullName
             };
-            networkInformationException.Data.Add("Description","");
+            networkInformationException.Data.Add("Description", "");
             throw networkInformationException;
         }
 
-        internal Socket GetSock(string ipOrHost)
+        internal Socket GetSock(string ipOrHost, ushort port)
         {
             string ip = ResolveIp(ipOrHost).ToString();
-            var fod = Connections.FirstOrDefault(s => s.Ip == ip);
+            var fod = Connections.FirstOrDefault(s => s.Ip == ip && s.TCPNetworkSender.Port == port);
             if (fod == null)
                 return null;
             return fod.Socket;

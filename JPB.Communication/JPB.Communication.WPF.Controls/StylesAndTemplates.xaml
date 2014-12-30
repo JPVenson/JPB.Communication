@@ -80,7 +80,7 @@
                 </Grid>
             </ScrollViewer>
 
-            <DataGrid AutoGenerateColumns="False" SelectedItem="{Binding SelectedNetworkAction}" ItemsSource="{Binding Path=TcpNetworkActionLog, Mode=OneWay}">
+            <DataGrid AutoGenerateColumns="False" SelectedItem="{Binding SelectedNetworkAction}" ItemsSource="{Binding Path=TcpNetworkActionLog, IsAsync=True, Mode=OneWay}">
                 <DataGrid.Columns>
                     <DataGridTextColumn Binding="{Binding TcpNetworkActionType, Mode=OneWay}" Header="Action" Width="Auto"/>
                     <DataGridTextColumn Binding="{Binding Content, Mode=OneWay}" Header="Content" Width="*"/>
