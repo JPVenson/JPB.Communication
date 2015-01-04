@@ -30,6 +30,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="JPB.WPFBase, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>3Th Party\JPB.WPFBase.dll</HintPath>
+    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
@@ -70,14 +74,15 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\WPFCommon\trunk\JPB.WPFBase\JPB.WPFBase.csproj">
-      <Project>{5070ce1a-c5f1-4b6e-bdea-c453224b8552}</Project>
-      <Name>JPB.WPFBase</Name>
-    </ProjectReference>
     <ProjectReference Include="..\JPB.Communication\JPB.Communication.csproj">
       <Project>{B9ECEDB9-6788-44FC-A88D-A8476F91FB6A}</Project>
       <Name>JPB.Communication</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <Content Include="3Th Party\JPB.WPFBase.dll" />
+    <Content Include="3Th Party\JPB.WPFBase.pdb" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
