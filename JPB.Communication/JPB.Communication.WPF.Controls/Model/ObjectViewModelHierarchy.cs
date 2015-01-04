@@ -1,6 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 
-namespace IEADPC.BatchControl.Managing.ViewModel
+namespace JPB.Communication.WPF.Controls.Model
 {
     public class ObjectViewModelHierarchy
     {

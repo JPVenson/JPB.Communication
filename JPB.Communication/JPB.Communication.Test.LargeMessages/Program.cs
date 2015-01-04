@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using JPB.Communication.ComBase;
 using JPB.Communication.ComBase.Messages;
+using JPB.Communication.ComBase.Messages.Wrapper;
 
 namespace JPB.Communication.Test.LargeMessages
 {
@@ -13,26 +14,10 @@ namespace JPB.Communication.Test.LargeMessages
     {
         static void Main(string[] args)
         {
+            var publicIp = NetworkInfoBase.GetPublicIp();
+            Console.WriteLine(publicIp);
+
             Console.WriteLine("Sender?");
-
-            //var consoleKeyInfo = Console.ReadKey();
-            //if (consoleKeyInfo.Key == ConsoleKey.N)
-            //{
-            //    Console.WriteLine("Wait for it");
-            //    NetworkFactory.Instance.InitCommonSenderAndReciver(1337, 1338);
-            //    NetworkFactory.Instance.Reciever.LargeMessageSupport = true;
-            //    NetworkFactory.Instance.Reciever.RegisterMessageBaseInbound(OnAction, "T");
-            //}
-            //else
-            //{
-            //    NetworkFactory.Instance.InitCommonSenderAndReciver(1338, 1337);
-            //    var fileStream = new FileStream(@"D:\LoadXmlTest.cs", FileMode.Open, FileAccess.Read, FileShare.Read);
-
-            //    NetworkFactory.Instance.Sender.SendStreamDataAsync(fileStream,
-            //        new MessageBase("META DATA INBOUND", "T"),
-            //        NetworkInfoBase.IpAddress.ToString());
-            //}
-
 
             NetworkFactory.Instance.InitCommonSenderAndReciver(1337, 1337);
             NetworkFactory.Instance.Reciever.LargeMessageSupport = true;
@@ -40,7 +25,7 @@ namespace JPB.Communication.Test.LargeMessages
             var fileStream = new FileStream(@"F:\SS_DL.dll", FileMode.Open, FileAccess.Read, FileShare.Read);
 
             NetworkFactory.Instance.Sender.SendStreamDataAsync(fileStream,
-                new MessageBase("META DATA INBOUND", "T"),
+                new StreamMetaMessage("META DATA INBOUND", "T"),
                 NetworkInfoBase.IpAddress.ToString());
 
             Console.ReadLine();

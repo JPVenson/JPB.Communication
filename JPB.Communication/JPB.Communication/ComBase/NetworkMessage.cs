@@ -24,14 +24,14 @@ using System.Runtime.Serialization;
 namespace JPB.Communication.ComBase
 {
     [Serializable]
-    public class TcpMessage : ISerializable
+    public class NetworkMessage : ISerializable
     {
-        public TcpMessage()
+        public NetworkMessage()
         {
             GUID = Guid.NewGuid();
         }
 
-        internal TcpMessage(SerializationInfo info,
+        internal NetworkMessage(SerializationInfo info,
             StreamingContext context)
         {
             GUID = (Guid)info.GetValue("GUID", typeof(Guid));

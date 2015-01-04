@@ -4,9 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using IEADPC.BatchControl.Managing.ViewModel;
 using JPB.Communication.ComBase;
 using JPB.Communication.ComBase.Messages;
+using JPB.Communication.ComBase.Messages.Wrapper;
+using JPB.Communication.ComBase.TCP;
 using JPB.Communication.WPF.Controls.Model;
 using JPB.Communication.WPF.Controls.View;
 using JPB.WPFBase.MVVM.DelegateCommand;
@@ -136,7 +137,7 @@ namespace JPB.Communication.WPF.Controls.ViewModel
             TcpNetworkActionLog.Add(new TcpNetworkAction(TcpNetworkActionType.Send, new { Port = port, Message = mess }));
         }
 
-        void Networkbase_OnIncommingMessage(object sender, TcpMessage e)
+        void Networkbase_OnIncommingMessage(object sender, NetworkMessage e)
         {
             TcpNetworkActionLog.Add(new TcpNetworkAction(TcpNetworkActionType.Incomming, new { (sender as Networkbase).Port, Message = e }));
         }

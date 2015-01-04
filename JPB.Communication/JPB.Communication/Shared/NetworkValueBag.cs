@@ -25,10 +25,12 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using JPB.Communication.ComBase;
 using JPB.Communication.ComBase.Messages;
+using JPB.Communication.ComBase.TCP;
 
 namespace JPB.Communication.Shared
 {
@@ -52,12 +54,11 @@ namespace JPB.Communication.Shared
 
     /// <summary>
     /// This class holds and Updates unsorted values that will be Synced over the Network
+    /// On a Pc, only one Network Value bag with the given guid can exists
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public class NetworkValueBag<T> :
         Networkbase,
-        ICollection<T>,
-        ICollection,
         IProducerConsumerCollection<T>,
         IList<T>,
         IList,
@@ -131,7 +132,7 @@ namespace JPB.Communication.Shared
             set { _localValues = value; }
         }
 
-        protected readonly TCPNetworkReceiver TcpNetworkReceiver;
+        protected readonly TCPNetworkReceiver TCPNetworkReceiver;
         protected readonly TCPNetworkSender TcpNetworkSernder;
 
         private volatile ICollection<T> _localValues;
@@ -159,31 +160,31 @@ namespace JPB.Communication.Shared
             LocalValues = new ObservableCollection<T>();
             SyncRoot = new object();
 
-            TcpNetworkReceiver = NetworkFactory.Instance.GetReceiver(port);
+            TCPNetworkReceiver = NetworkFactory.Instance.GetReceiver(port);
             TcpNetworkSernder = NetworkFactory.Instance.GetSender(port);
             RegisterCallbacks();
         }
 
         private void RegisterCallbacks()
         {
-            TcpNetworkReceiver.RegisterMessageBaseInbound(pPullAddMessage, NetworkCollectionProtocol.CollectionAdd);
-            TcpNetworkReceiver.RegisterMessageBaseInbound(pPullClearMessage, NetworkCollectionProtocol.CollectionReset);
-            TcpNetworkReceiver.RegisterMessageBaseInbound(pPullRemoveMessage, NetworkCollectionProtocol.CollectionRemove);
-            TcpNetworkReceiver.RegisterMessageBaseInbound(PullRegisterMessage, NetworkCollectionProtocol.CollectionRegisterUser);
-            TcpNetworkReceiver.RegisterMessageBaseInbound(PullUnRegisterMessage, NetworkCollectionProtocol.CollectionUnRegisterUser);
-            TcpNetworkReceiver.RegisterRequstHandler(PullGetCollectionMessage, NetworkCollectionProtocol.CollectionGetCollection);
-            TcpNetworkReceiver.RegisterRequstHandler(PullConnectMessage, NetworkCollectionProtocol.CollectionGetUsers);
+            TCPNetworkReceiver.RegisterMessageBaseInbound(pPullAddMessage, NetworkCollectionProtocol.CollectionAdd);
+            TCPNetworkReceiver.RegisterMessageBaseInbound(pPullClearMessage, NetworkCollectionProtocol.CollectionReset);
+            TCPNetworkReceiver.RegisterMessageBaseInbound(pPullRemoveMessage, NetworkCollectionProtocol.CollectionRemove);
+            TCPNetworkReceiver.RegisterMessageBaseInbound(PullRegisterMessage, NetworkCollectionProtocol.CollectionRegisterUser);
+            TCPNetworkReceiver.RegisterMessageBaseInbound(PullUnRegisterMessage, NetworkCollectionProtocol.CollectionUnRegisterUser);
+            TCPNetworkReceiver.RegisterRequstHandler(PullGetCollectionMessage, NetworkCollectionProtocol.CollectionGetCollection);
+            TCPNetworkReceiver.RegisterRequstHandler(PullConnectMessage, NetworkCollectionProtocol.CollectionGetUsers);
         }
 
         private void UnRegisterCallbacks()
         {
-            TcpNetworkReceiver.UnregisterChanged(pPullAddMessage, NetworkCollectionProtocol.CollectionAdd);
-            TcpNetworkReceiver.UnregisterChanged(pPullClearMessage, NetworkCollectionProtocol.CollectionReset);
-            TcpNetworkReceiver.UnregisterChanged(pPullRemoveMessage, NetworkCollectionProtocol.CollectionRemove);
-            TcpNetworkReceiver.UnregisterChanged(PullRegisterMessage, NetworkCollectionProtocol.CollectionRegisterUser);
-            TcpNetworkReceiver.UnregisterChanged(PullUnRegisterMessage, NetworkCollectionProtocol.CollectionUnRegisterUser);
-            TcpNetworkReceiver.UnRegisterRequstHandler(PullGetCollectionMessage, NetworkCollectionProtocol.CollectionGetCollection);
-            TcpNetworkReceiver.UnRegisterRequstHandler(PullConnectMessage, NetworkCollectionProtocol.CollectionGetUsers);
+            TCPNetworkReceiver.UnregisterChanged(pPullAddMessage, NetworkCollectionProtocol.CollectionAdd);
+            TCPNetworkReceiver.UnregisterChanged(pPullClearMessage, NetworkCollectionProtocol.CollectionReset);
+            TCPNetworkReceiver.UnregisterChanged(pPullRemoveMessage, NetworkCollectionProtocol.CollectionRemove);
+            TCPNetworkReceiver.UnregisterChanged(PullRegisterMessage, NetworkCollectionProtocol.CollectionRegisterUser);
+            TCPNetworkReceiver.UnregisterChanged(PullUnRegisterMessage, NetworkCollectionProtocol.CollectionUnRegisterUser);
+            TCPNetworkReceiver.UnRegisterRequstHandler(PullGetCollectionMessage, NetworkCollectionProtocol.CollectionGetCollection);
+            TCPNetworkReceiver.UnRegisterRequstHandler(PullConnectMessage, NetworkCollectionProtocol.CollectionGetUsers);
         }
 
         /// <summary>
@@ -268,7 +269,7 @@ new MessageBase() { InfoState = NetworkCollectionProtocol.CollectionRegisterUser
         public int Count { get { return LocalValues.Count; } }
         public object SyncRoot { get; protected set; }
         public bool IsReadOnly { get { return false; } }
-        public bool IsFixedSize { get; private set; }
+        public bool IsFixedSize { get { return false; } }
         public bool IsDisposing { get; protected set; }
 
         public bool Registerd { get; protected set; }
@@ -378,7 +379,7 @@ new MessageBase() { InfoState = NetworkCollectionProtocol.CollectionRegisterUser
             }
         }
 
-        protected async void SendPessage(string id, object value)
+        protected async Task SendPessage(string id, object value)
         {
             var mess = new MessageBase(new NetworkCollectionMessage(value)
             {
@@ -403,19 +404,19 @@ new MessageBase() { InfoState = NetworkCollectionProtocol.CollectionRegisterUser
             }
         }
 
-        protected async void PushAddMessage(T item)
+        protected async Task PushAddMessage(T item)
         {
-            SendPessage(NetworkCollectionProtocol.CollectionAdd, item);
+            await SendPessage(NetworkCollectionProtocol.CollectionAdd, item);
         }
 
-        protected async void PushClearMessage()
+        protected async Task PushClearMessage()
         {
-            SendPessage(NetworkCollectionProtocol.CollectionReset, default(T));
+            await SendPessage(NetworkCollectionProtocol.CollectionReset, default(T));
         }
 
-        protected async void PushRemoveMessage(T item)
+        protected async Task PushRemoveMessage(T item)
         {
-            SendPessage(NetworkCollectionProtocol.CollectionRemove, item);
+            await SendPessage(NetworkCollectionProtocol.CollectionRemove, item);
         }
 
         public IEnumerator<T> GetEnumerator()
@@ -437,7 +438,7 @@ new MessageBase() { InfoState = NetworkCollectionProtocol.CollectionRegisterUser
         {
             lock (SyncRoot)
             {
-                PushAddMessage(item);
+                PushAddMessage(item).Wait();
                 LocalValues.Add(item);
                 TriggerAdd(item);
             }
@@ -466,7 +467,7 @@ new MessageBase() { InfoState = NetworkCollectionProtocol.CollectionRegisterUser
         {
             lock (SyncRoot)
             {
-                PushClearMessage();
+                PushClearMessage().Wait();
                 LocalValues.Clear();
                 TriggerReset();
             }
@@ -482,6 +483,11 @@ new MessageBase() { InfoState = NetworkCollectionProtocol.CollectionRegisterUser
             return this.IndexOf((T)value);
         }
 
+        /// <summary>
+        /// Not Implemented
+        /// </summary>
+        /// <param name="index"></param>
+        /// <param name="value"></param>
         public void Insert(int index, object value)
         {
             throw new NotImplementedException();
@@ -544,7 +550,7 @@ new MessageBase() { InfoState = NetworkCollectionProtocol.CollectionRegisterUser
         {
             lock (SyncRoot)
             {
-                PushRemoveMessage(item);
+                PushRemoveMessage(item).Wait();
                 var remove = LocalValues.Remove(item);
                 if (remove)
                     TriggerRemove(item, IndexOf(item));

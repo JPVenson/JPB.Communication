@@ -47,11 +47,13 @@ namespace JPB.Communication.ComBase.Serializer
             static IlMergeBinder()
             {
                 TypnameToType = new Dictionary<string, Type>();
+                MessageBaseTypeName = typeof(MessageBase).FullName;
+                AdditionalLookups = new List<AssemblyName>();
             }
 
-            public static Dictionary<string, Type> TypnameToType { get; set; }
-            public readonly string MessageBaseTypeName = typeof(MessageBase).FullName;
-            public static readonly List<AssemblyName> AdditionalLookups = new List<AssemblyName>(); 
+            private static Dictionary<string, Type> TypnameToType { get; set; }
+            private static readonly string MessageBaseTypeName;
+            private static readonly List<AssemblyName> AdditionalLookups;
 
             public override Type BindToType(string assemblyName, string typeName)
             {
@@ -61,10 +63,13 @@ namespace JPB.Communication.ComBase.Serializer
                     return typeof(MessageBase);
                 }
 
+                //Optimistic Serach
                 if (TypnameToType.ContainsKey(typeName))
                 {
                     return TypnameToType[typeName];
                 }
+
+                //Search throu all known assemblys
                 var callingAssembly = Assembly.GetEntryAssembly();
                 foreach (var referencedAssembly in callingAssembly.GetReferencedAssemblies().Concat(AdditionalLookups))
                 {
@@ -91,9 +96,8 @@ namespace JPB.Communication.ComBase.Serializer
         }
 
         public bool IlMergeSupport { get; set; }
-        IlMergeBinder Binder { get; set; }
 
-        private Stream getStream(object validator)
+        private static Stream GetStream(object validator)
         {
             var target = string.Empty;
             Stream stream = null;
@@ -119,10 +123,11 @@ namespace JPB.Communication.ComBase.Serializer
         }
 
         internal static Encoding Encoding = System.Text.Encoding.UTF8;
+        private IlMergeBinder _binder;
 
-        public byte[] SerializeMessage(TcpMessage a)
+        public byte[] SerializeMessage(NetworkMessage a)
         {
-            using (var stream = getStream(a.MessageBase))
+            using (var stream = GetStream(a.MessageBase))
             {
                 var serializer = new XmlSerializer(a.GetType());
                 serializer.Serialize(stream, a);
@@ -147,26 +152,26 @@ namespace JPB.Communication.ComBase.Serializer
             if (IlMergeSupport)
             {
                 //what goes out maybe comes again in
-                Binder.AddOptimistic(mess.Message.GetType());
-                Binder.AddOptimistic(mess.InfoState.GetType());
+                _binder.AddOptimistic(mess.Message.GetType());
+                _binder.AddOptimistic(mess.InfoState.GetType());
             }
 
             //support for large objects
-            using (var stream = getStream(mess.Message))
+            using (var stream = GetStream(mess.Message))
             {
                 CreateFormatter().Serialize(stream, mess);
                 return getInfo(stream);
             }
         }
 
-        public TcpMessage DeSerializeMessage(byte[] source)
+        public NetworkMessage DeSerializeMessage(byte[] source)
         {
             try
             {
                 using (var textReader = new StringReader(ResolveStringContent(source)))
                 {
-                    var deserializer = new XmlSerializer(typeof(TcpMessage));
-                    var tcpMessage = (TcpMessage)deserializer.Deserialize(textReader);
+                    var deserializer = new XmlSerializer(typeof(NetworkMessage));
+                    var tcpMessage = (NetworkMessage)deserializer.Deserialize(textReader);
                     return tcpMessage;
                 }
             }

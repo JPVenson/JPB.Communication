@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.Linq;
 using JPB.Communication.ComBase;
 using JPB.Communication.ComBase.Messages;
+using JPB.Communication.ComBase.TCP;
 
 namespace JPB.Communication.Shared
 {

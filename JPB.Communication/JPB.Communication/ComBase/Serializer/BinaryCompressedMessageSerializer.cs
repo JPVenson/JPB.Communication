@@ -35,7 +35,7 @@ namespace JPB.Communication.ComBase.Serializer
 
         public static DefaultMessageSerlilizer DefaultMessageSerlilizer { get; set; }
 
-        public byte[] SerializeMessage(TcpMessage a)
+        public byte[] SerializeMessage(NetworkMessage a)
         {
             var mess = DefaultMessageSerlilizer.SerializeMessage(a);
             return Compress(mess);
@@ -46,7 +46,7 @@ namespace JPB.Communication.ComBase.Serializer
             return DefaultMessageSerlilizer.SerializeMessageContent(mess);
         }
 
-        public TcpMessage DeSerializeMessage(byte[] source)
+        public NetworkMessage DeSerializeMessage(byte[] source)
         {
             source = DeCompress(source);
             return DefaultMessageSerlilizer.DeSerializeMessage(source);

@@ -29,15 +29,16 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Sockets;
-using System.ServiceModel.Channels;
 using System.Threading;
 using System.Threading.Tasks;
 using JPB.Communication.ComBase.Messages;
 
-namespace JPB.Communication.ComBase
+namespace JPB.Communication.ComBase.TCP
 {
+    /// <summary>
+    /// A TCP sender
+    /// </summary>
     public sealed class TCPNetworkSender : Networkbase, IDisposable
     {
         internal TCPNetworkSender(ushort port)
@@ -53,9 +54,18 @@ namespace JPB.Communication.ComBase
         /// </summary>
         public TimeSpan Timeout { get; private set; }
 
-        public const string TraceCategory = "TCPNetworkSender";
+        /// <summary>
+        /// If set to true all future calls to a Remote host will be keept open and will be stored inside the ConnectionPool
+        /// </summary>
         public bool SharedConnection { get; set; }
 
+        /// <summary>
+        /// Will be invoked to observe Exceptions
+        /// </summary>
+        public static event EventHandler<Exception> OnCriticalException;
+        /// <summary>
+        /// Thread static
+        /// </summary>
         [ThreadStatic]
         public static Exception LastException;
 
@@ -64,8 +74,6 @@ namespace JPB.Communication.ComBase
             LastException = e;
             RaiseCriticalException(sender, e);
         }
-
-        public static event EventHandler<Exception> OnCriticalException;
 
         private static void RaiseCriticalException(object sender, Exception e)
         {
@@ -106,7 +114,6 @@ namespace JPB.Communication.ComBase
 
         /// <summary>
         /// Sends a message to multible Hosts
-        /// 
         /// </summary>
         /// <returns>all non reached hosts</returns>
         public Task<IEnumerable<string>> SendMultiMessageAsync(MessageBase message, params string[] ips)
@@ -309,7 +316,9 @@ namespace JPB.Communication.ComBase
         }
 
         ///  <summary>
-        /// WIP
+        /// This mehtod will send the content of the given stream to the given ip
+        /// To Support this the Remote host must set the TCP Reciever property SupportLargeMessages 
+        /// to true otherwise the message will be ignored
         ///  </summary>
         ///  <param name="stream"></param>
         ///  <param name="mess"></param>
@@ -343,8 +352,8 @@ namespace JPB.Communication.ComBase
                 if (!SharedConnection)
                 {
                     openNetwork.Send(new byte[0]);
-                    Thread.Sleep(100);
                     openNetwork.LingerState = new LingerOption(true, 60);
+                    openNetwork.Shutdown(SocketShutdown.Both);
                     openNetwork.Close();
                     openNetwork.Dispose();
                 }
@@ -362,8 +371,16 @@ namespace JPB.Communication.ComBase
 
         #region Base Methods
 
+        /// <summary>
+        /// If set to true the external IP of this host will be used as Sender property
+        /// </summary>
         public bool UseExternalIpAsSender { get; set; }
         
+        /// <summary>
+        /// Starts the injection of the given socket into the ConnectionPool
+        /// </summary>
+        /// <param name="ipOrHost"></param>
+        /// <returns></returns>
         public async Task<TCPNetworkReceiver> InitSharedConnection(Socket ipOrHost)
         {
             if (!ipOrHost.Connected)
@@ -374,6 +391,12 @@ namespace JPB.Communication.ComBase
             return await ConnectionPool.Instance.InjectSocket(ipOrHost, this);
         }
 
+        /// <summary>
+        /// Will create a new Connection from this Pc to the IpOrHost pc
+        /// When done and Successfull it will return a new Receiver instance that can be used to observe messages from the Remote host
+        /// </summary>
+        /// <param name="ipOrHost"></param>
+        /// <returns></returns>
         public async Task<TCPNetworkReceiver> InitSharedConnection(string ipOrHost)
         {
             UseExternalIpAsSender = true;
@@ -386,7 +409,7 @@ namespace JPB.Communication.ComBase
             return await CreateClientSockAsync(ip);
         }
 
-        private TcpMessage PrepareMessage(MessageBase message, string ip)
+        private NetworkMessage PrepareMessage(MessageBase message, string ip)
         {
             message.SendAt = DateTime.Now;
             if (string.IsNullOrEmpty(message.Sender) || !UseExternalIpAsSender)
@@ -399,39 +422,39 @@ namespace JPB.Communication.ComBase
             return Wrap(message);
         }
 
-        ///// <summary>
-        ///// Prepaired mehtod call that uses the Connect mehtod with multible IP addresses
-        ///// 
-        ///// Behavior is not tested
-        ///// WIP
-        ///// </summary>
-        ///// <param name="ip"></param>
-        ///// <param name="port"></param>
-        ///// <returns></returns>
-        //private static async Task<TcpClient> CreateClientSockAsync(IEnumerable<string> ip, ushort port)
-        //{
-        //    TcpClient client = null;
-        //    try
-        //    {
-        //        client = new TcpClient();
+        /// <summary>
+        /// Prepaired mehtod call that uses the Connect mehtod with multible IP addresses
+        /// 
+        /// Behavior is not tested | Shared connections are not supported
+        /// WIP
+        /// </summary>
+        /// <param name="ip"></param>
+        /// <param name="port"></param>
+        /// <returns></returns>
+        private static async Task<TcpClient> CreateClientSockAsync(IEnumerable<string> ip, ushort port)
+        {
+            TcpClient client = null;
+            try
+            {
+                client = new TcpClient();
 
-        //        //resolve DNS entrys
-        //        var ipAddresses =
-        //            ip
-        //            .Select(ConnectionPool.ResolveIp)
-        //            .AsParallel()
-        //            .ToArray();
+                //resolve DNS entrys
+                var ipAddresses =
+                    ip
+                    .Select(NetworkInfoBase.ResolveIp)
+                    .AsParallel()
+                    .ToArray();
 
-        //        await client.ConnectAsync(ipAddresses, port);
-        //        client.NoDelay = true;
-        //        return client;
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        SetException(client, e);
-        //        return null;
-        //    }
-        //}
+                await client.ConnectAsync(ipAddresses, port);
+                client.NoDelay = true;
+                return client;
+            }
+            catch (Exception e)
+            {
+                SetException(client, e);
+                return null;
+            }
+        }
 
         private async Task<Socket> CreateClientSockAsync(string ipOrHost)
         {
@@ -509,7 +532,7 @@ namespace JPB.Communication.ComBase
             } while (true);
         }
 
-        private void SendBaseAsync(TcpMessage message, Socket openNetwork)
+        private void SendBaseAsync(NetworkMessage message, Socket openNetwork)
         {
             var serialize = Serialize(message);
             if (!serialize.Any())

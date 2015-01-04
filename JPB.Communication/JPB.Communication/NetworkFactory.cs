@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using JPB.Communication.ComBase;
+using JPB.Communication.ComBase.TCP;
 
 namespace JPB.Communication
 {
@@ -74,16 +75,26 @@ namespace JPB.Communication
             get { return _instance; }
         }
 
+        /// <summary>
+        /// Returns a flat copy of all known tcp Receivers
+        /// </summary>
+        /// <returns></returns>
         public Dictionary<ushort, TCPNetworkReceiver> GetReceivers()
         {
             return _receivers.Select(s => s).ToDictionary(s => s.Key, s => s.Value);
         }
-
+        /// <summary>
+        /// Returns a flat copy of all known tcp senders
+        /// </summary>
+        /// <returns></returns>
         public Dictionary<ushort, TCPNetworkSender> GetSenders()
         {
             return _senders.Select(s => s).ToDictionary(s => s.Key, s => s.Value);
         }
 
+        /// <summary>
+        /// The Easy-To-Access Receiver that is created or pulled by InitCommonSenderAndReciver
+        /// </summary>
         public TCPNetworkReceiver Reciever
         {
             get
@@ -95,6 +106,9 @@ namespace JPB.Communication
             private set { _commonReciever = value; }
         }
 
+        /// <summary>
+        /// The Easy-To-Access Sender that is created or pulled by InitCommonSenderAndReciver
+        /// </summary>
         public TCPNetworkSender Sender
         {
             get
@@ -107,7 +121,7 @@ namespace JPB.Communication
         }
 
         /// <summary>
-        /// Object for syncron access
+        /// Object for sync access
         /// </summary>
         public object SyncRoot { get { return _mutex; } }
 

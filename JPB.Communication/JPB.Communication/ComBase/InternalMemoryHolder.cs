@@ -62,7 +62,6 @@ namespace JPB.Communication.ComBase
             return ForceSharedMem || Last.Length * _datarec.Count >= MaximumStoreageInMemory;
         }
 
-
         /// <summary>
         /// 
         /// </summary>

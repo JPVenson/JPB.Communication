@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using JPB.Communication.ComBase;
+using JPB.Communication.ComBase.TCP;
 using JPB.Communication.WPF.Controls.View;
 using JPB.WPFBase.MVVM.ViewModel;
 
@@ -14,7 +15,8 @@ namespace JPB.Communication.WPF.Controls.ViewModel
     {
         public ConnectionPoolViewModel()
         {
-            OpenConnections = new ThreadSaveObservableCollection<ConnectionWrapper>();
+            //not thread save
+            OpenConnections = new ThreadSaveObservableCollection<ConnectionWrapper>(ConnectionPool.Instance.GetConnections().SelectMany(s => s));
             ConnectionPool.Instance.OnConnectionCreated += Instance_OnConnectionCreated;
             ConnectionPool.Instance.OnConnectionClosed += InstanceOnOnConnectionClosed;
             ShowDetailMode = Visibility.Collapsed;

@@ -23,9 +23,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
-using System.Threading;
 
-namespace JPB.Communication.ComBase
+namespace JPB.Communication.ComBase.TCP
 {
     internal class DefaultTcpConnection : TcpConnectionBase, IDisposable
     {

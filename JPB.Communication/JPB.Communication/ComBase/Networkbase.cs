@@ -19,9 +19,11 @@
  */
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using JPB.Communication.ComBase.Messages;
+using JPB.Communication.ComBase.Messages.Wrapper;
 using JPB.Communication.ComBase.Serializer;
 using JPB.Communication.ComBase.Serializer.Contracts;
 
@@ -46,6 +48,15 @@ namespace JPB.Communication.ComBase
     /// </summary>
     public abstract class Networkbase
     {
+
+        static Networkbase()
+        {
+            DefaultMessageSerializer = new DefaultMessageSerlilizer();
+            CompressedDefaultMessageSerializer = new BinaryCompressedMessageSerializer();
+            JsonMessageSerializer = new MessageJsonSerlalizer();
+            FullXmlSerializer = new FullXmlSerializer();
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -54,46 +65,58 @@ namespace JPB.Communication.ComBase
             Serlilizer = DefaultMessageSerializer;
         }
 
+        public const string TraceCategory = "JPB.Communication";
+
         /// <summary>
         /// Defines the Port the Instance is working on
         /// </summary>
         public abstract ushort Port { get; internal set; }
 
         /// <summary>
-        /// When some Serlilizaion is requert this Interface will be used
+        /// When Serlilizaion is request this Interface will be used
         /// </summary>
-        public IMessageSerializer Serlilizer { get; set; }
+        public IMessageSerializer Serlilizer
+        {
+            get { return _serlilizer; }
+            set
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException("value", "Value cannot be null");
+                }
+                _serlilizer = value;
+            }
+        }
 
         /// <summary>
         /// The default Serializer
         /// </summary>
-        public static readonly IMessageSerializer DefaultMessageSerializer = new DefaultMessageSerlilizer();
+        public static readonly IMessageSerializer DefaultMessageSerializer;
 
         /// <summary>
         /// A Standart Serializer that compress the message ( good for large MessageBase objects )
         /// </summary>
-        public static readonly IMessageSerializer CompressedDefaultMessageSerializer = new BinaryCompressedMessageSerializer();
+        public static readonly IMessageSerializer CompressedDefaultMessageSerializer;
 
         /// <summary>
         /// A Standart JSON Serializer
         /// </summary>
-        public static readonly IMessageSerializer JsonMessageSerializer = new MessageJsonSerlalizer();
+        public static readonly IMessageSerializer JsonMessageSerializer;
 
         /// <summary>
         /// A Full XML Serializer
         /// </summary>
-        public static readonly IMessageSerializer FullXmlSerializer = new FullXmlSerializer();
+        public static readonly IMessageSerializer FullXmlSerializer;
+
+        private IMessageSerializer _serlilizer;
 
         public static event MessageDelegate OnNewItemLoadedSuccess;
         public static event EventHandler<string> OnNewItemLoadedFail;
-        /// <summary>
-        /// 
-        /// </summary>
-        public static event EventHandler<TcpMessage> OnIncommingMessage;
+        public static event EventHandler<NetworkMessage> OnIncommingMessage;
         public static event MessageDelegate OnMessageSend;
         public static event LargeMessageDelegate OnNewLargeItemLoadedSuccess;
 
-        protected EventHandler<TcpMessage> IncommingMessage()
+        protected EventHandler<NetworkMessage> IncommingMessageHandler()
         {
             return OnIncommingMessage;
         }
@@ -115,7 +138,7 @@ namespace JPB.Communication.ComBase
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Trace.WriteLine(string.Format("> Networkbase> RaiseNewLargeItemLoadedSuccess>{0}", e), TraceCategory);
                 return null;
             }
         }
@@ -130,11 +153,11 @@ namespace JPB.Communication.ComBase
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Trace.WriteLine(string.Format("> Networkbase> RaiseMessageSended>{0}", e), TraceCategory);
             }
         }
 
-        protected virtual void RaiseIncommingMessage(TcpMessage strReceived)
+        protected virtual void RaiseIncommingMessage(NetworkMessage strReceived)
         {
             try
             {
@@ -144,7 +167,7 @@ namespace JPB.Communication.ComBase
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Trace.WriteLine(string.Format("> Networkbase> RaiseIncommingMessage>{0}", e), TraceCategory);
             }
         }
 
@@ -158,7 +181,7 @@ namespace JPB.Communication.ComBase
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Trace.WriteLine(string.Format("> Networkbase> RaiseNewItemLoadedFail>{0}", e), TraceCategory);
             }
         }
 
@@ -172,11 +195,11 @@ namespace JPB.Communication.ComBase
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Trace.WriteLine(string.Format("> Networkbase> RaiseNewItemLoadedSuccess>{0}", e), TraceCategory);
             }
         }
 
-        public TcpMessage DeSerialize(byte[] source)
+        public NetworkMessage DeSerialize(byte[] source)
         {
             try
             {
@@ -188,7 +211,7 @@ namespace JPB.Communication.ComBase
             }
         }
 
-        public byte[] Serialize(TcpMessage a)
+        public byte[] Serialize(NetworkMessage a)
         {
             try
             {
@@ -222,9 +245,9 @@ namespace JPB.Communication.ComBase
             return this.Serlilizer.DeSerializeMessageContent(source);
         }
 
-        protected TcpMessage Wrap(MessageBase message)
+        protected NetworkMessage Wrap(MessageBase message)
         {
-            var mess = new TcpMessage();
+            var mess = new NetworkMessage();
             var saveMessageBaseAsBinary = SaveMessageBaseAsContent(message);
 
             if (!saveMessageBaseAsBinary.Any())

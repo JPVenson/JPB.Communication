@@ -38,7 +38,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup>
-    <SignAssembly>false</SignAssembly>
+    <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>JPB.Communication.Sig.pfx</AssemblyOriginatorKeyFile>
@@ -51,11 +51,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ComBase\ConnectionWrapper.cs" />
+    <Compile Include="ComBase\TCP\ConnectionWrapper.cs" />
+    <Compile Include="Contracts\INetworkReceiver.cs" />
     <Compile Include="ComBase\Messages\StreamMetaMessage.cs" />
     <Compile Include="ComBase\Serializer\Contracts\FullXmlSerializer.cs" />
-    <Compile Include="ComBase\TcpConnectionBase.cs" />
-    <Compile Include="ComBase\LargeTcpConnection.cs" />
+    <Compile Include="ComBase\TCP\TcpConnectionBase.cs" />
+    <Compile Include="ComBase\TCP\LargeTcpConnection.cs" />
     <Compile Include="ComBase\Messages\Wrapper\LargeMessage.cs" />
     <Compile Include="ComBase\Serializer\BinaryCompressedMessageSerializer.cs" />
     <Compile Include="ComBase\ConnectionBase.cs" />
@@ -67,12 +68,12 @@
     <Compile Include="ComBase\Messages\RequstMessage.cs" />
     <Compile Include="ComBase\Networkbase.cs" />
     <Compile Include="ComBase\NetworkInfoBase.cs" />
-    <Compile Include="ComBase\DefaultTcpConnection.cs" />
+    <Compile Include="ComBase\TCP\DefaultTcpConnection.cs" />
     <Compile Include="ComBase\ConnectionPool.cs" />
     <Compile Include="ComBase\StreamBuffer.cs" />
-    <Compile Include="ComBase\TcpMessage.cs" />
-    <Compile Include="ComBase\TCPNetworkReceiver.cs" />
-    <Compile Include="ComBase\TCPNetworkSender.cs" />
+    <Compile Include="ComBase\NetworkMessage.cs" />
+    <Compile Include="ComBase\TCP\TCPNetworkReceiver.cs" />
+    <Compile Include="ComBase\TCP\TCPNetworkSender.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="NetworkFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -85,6 +86,9 @@
   <ItemGroup>
     <None Include="JPB.Communication.licenseheader" />
     <None Include="JPB.Communication.Sig.pfx" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="ComBase\UDP\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

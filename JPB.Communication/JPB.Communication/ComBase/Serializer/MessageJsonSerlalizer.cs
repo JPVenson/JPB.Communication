@@ -29,11 +29,11 @@ namespace JPB.Communication.ComBase.Serializer
 {
     public class MessageJsonSerlalizer : IMessageSerializer
     {
-        public byte[] SerializeMessage(TcpMessage a)
+        public byte[] SerializeMessage(NetworkMessage a)
         {
             using (var memstream = new MemoryStream())
             {
-                var json = new DataContractJsonSerializer(typeof(TcpMessage));
+                var json = new DataContractJsonSerializer(typeof(NetworkMessage));
                 json.WriteObject(memstream, a);
                 return memstream.ToArray();
             }
@@ -49,12 +49,12 @@ namespace JPB.Communication.ComBase.Serializer
             }
         }
 
-        public TcpMessage DeSerializeMessage(byte[] source)
+        public NetworkMessage DeSerializeMessage(byte[] source)
         {
             using (var memstream = new MemoryStream(source))
             {
-                var json = new DataContractJsonSerializer(typeof(TcpMessage));
-                return (TcpMessage)json.ReadObject(memstream);
+                var json = new DataContractJsonSerializer(typeof(NetworkMessage));
+                return (NetworkMessage)json.ReadObject(memstream);
             }
         }
 

@@ -22,6 +22,7 @@ using System;
 using System.IO;
 using JPB.Communication.ComBase;
 using JPB.Communication.ComBase.Messages;
+using JPB.Communication.ComBase.Messages.Wrapper;
 
 namespace JPB.Communication.ComBase
 {
@@ -36,7 +37,7 @@ namespace JPB.Communication.ComBase
 
         internal bool Parse(byte[] received)
         {
-            TcpMessage item;
+            NetworkMessage item;
             try
             {
                 item = DeSerialize(received);
@@ -69,7 +70,7 @@ namespace JPB.Communication.ComBase
 
         internal LargeMessage ParseLargeObject(byte[] received, Func<Stream> completed)
         {
-            TcpMessage item;
+            NetworkMessage item;
             try
             {
                 item = DeSerialize(received);

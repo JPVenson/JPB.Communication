@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using JPB.Communication.ComBase;
+using JPB.Communication.ComBase.TCP;
 using JPB.WPFBase.MVVM.ViewModel;
 
 namespace JPB.Communication.WPF.Controls.ViewModel

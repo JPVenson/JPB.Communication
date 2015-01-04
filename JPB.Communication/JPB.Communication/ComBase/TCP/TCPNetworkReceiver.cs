@@ -21,21 +21,22 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using JPB.Communication.ComBase.Messages;
+using JPB.Communication.ComBase.Messages.Wrapper;
+using JPB.Communication.Contracts;
 
-namespace JPB.Communication.ComBase
+namespace JPB.Communication.ComBase.TCP
 {
     /// <summary>
     /// A Manged wrapper with callback functions for a Socket
     /// It will observe and serlilze the content of incomming data from the Socket
     /// </summary>
-    public sealed class TCPNetworkReceiver : Networkbase, IDisposable
+    public sealed class TCPNetworkReceiver : Networkbase, IDisposable, INetworkReceiver
     {
         internal static TCPNetworkReceiver CreateReceiverInSharedState(ushort portInfo, Socket sock)
         {
@@ -290,9 +291,7 @@ namespace JPB.Communication.ComBase
             }
         }
 
-
-
-        protected bool RaiseConnectionInbound(Socket sock)
+        private bool RaiseConnectionInbound(Socket sock)
         {
             var handler = OnCheckConnectionInbound;
             if (handler != null)
@@ -303,32 +302,17 @@ namespace JPB.Communication.ComBase
         /// <summary>
         /// Is raised when a message is inside the buffer but not fully parsed
         /// </summary>
-        protected void RaiseIncommingMessage()
+        private void RaiseIncommingMessage()
         {
             var handler = OnIncommingMessage;
             if (handler != null)
                 handler(this, EventArgs.Empty);
         }
 
-        #region Implementation of IDisposable
-
-        public void Dispose()
-        {
-            if (IsDisposing)
-                return;
-
-            IsDisposing = true;
-            if (_autoResetEvent != null)
-                _autoResetEvent.WaitOne();
-            if (_listenerSocket != null)
-                _listenerSocket.Dispose();
-
-            NetworkFactory.Instance._receivers.Remove(Port);
-        }
-
-        #endregion
-
-
+        /// <summary>
+        /// Removes a delegate from the Handler list
+        /// </summary>
+        /// <param name="action"></param>
         public void UnregisterChanged(Action<MessageBase> action, object state)
         {
             var enumerable = _updated.FirstOrDefault(s => s.Item1 == action && s.Item2 == state);
@@ -338,6 +322,10 @@ namespace JPB.Communication.ComBase
             }
         }
 
+        /// <summary>
+        /// Removes a delegate from the Handler list
+        /// </summary>
+        /// <param name="action"></param>
         public void UnregisterChanged(Action<MessageBase> action)
         {
             var enumerable = _updated.FirstOrDefault(s => s.Item1 == action);
@@ -387,7 +375,10 @@ namespace JPB.Communication.ComBase
             _requestHandler.Add(new Tuple<Func<RequstMessage, object>, object>(action, state));
         }
 
-
+        /// <summary>
+        /// Removes a delegate from the Handler list
+        /// </summary>
+        /// <param name="action"></param>
         public void UnRegisterRequstHandler(Func<RequstMessage, object> action, object state)
         {
             var enumerable = _requestHandler.FirstOrDefault(s => s.Item1 == action && state == s.Item2);
@@ -397,6 +388,10 @@ namespace JPB.Communication.ComBase
             }
         }
 
+        /// <summary>
+        /// Removes a delegate from the Handler list
+        /// </summary>
+        /// <param name="action"></param>
         public void UnRegisterRequstHandler(Func<RequstMessage, object> action)
         {
             var enumerable = _requestHandler.FirstOrDefault(s => s.Item1 == action);
@@ -494,7 +489,7 @@ namespace JPB.Communication.ComBase
         /// </summary>
         /// <param name="ipOrHost"></param>
         /// <returns></returns>
-        public TCPNetworkSender GetSharedSenderOrNull(string ipOrHost)
+        public TCPNetworkSender GetFirstSharedSenderOrNull(string ipOrHost)
         {
             var firstOrDefault = ConnectionPool.Instance.Connections.FirstOrDefault(s => s.Ip == ipOrHost);
             if (firstOrDefault == null)
@@ -502,12 +497,30 @@ namespace JPB.Communication.ComBase
             return firstOrDefault.TCPNetworkSender;
         }
 
-        public TCPNetworkSender GetSharedSenderOrNull(string ipOrHost, ushort port)
+        public TCPNetworkSender GetFirstSharedSenderOrNull(string ipOrHost, ushort port)
         {
             var firstOrDefault = ConnectionPool.Instance.Connections.FirstOrDefault(s => s.Ip == ipOrHost && s.TCPNetworkSender.Port == port);
             if (firstOrDefault == null)
                 return null;
             return firstOrDefault.TCPNetworkSender;
         }
+
+        #region Implementation of IDisposable
+
+        public void Dispose()
+        {
+            if (IsDisposing)
+                return;
+
+            IsDisposing = true;
+            if (_autoResetEvent != null)
+                _autoResetEvent.WaitOne();
+            if (_listenerSocket != null)
+                _listenerSocket.Dispose();
+
+            NetworkFactory.Instance._receivers.Remove(Port);
+        }
+
+        #endregion
     }
 }

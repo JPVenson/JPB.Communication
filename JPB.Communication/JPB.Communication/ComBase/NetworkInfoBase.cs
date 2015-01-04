@@ -30,11 +30,20 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Text.RegularExpressions;
 
 namespace JPB.Communication.ComBase 
 {
+    /// <summary>
+    /// This class contains informations and Mehtods for IP resolution
+    /// </summary>
     public static class NetworkInfoBase
     {
+        static NetworkInfoBase()
+        {
+            IpCheckUrl = "http://checkip.dyndns.org/";
+        }
+
         private static IPAddress _ip;
         private static IPAddress _exIp;
 
@@ -62,6 +71,19 @@ namespace JPB.Communication.ComBase
             }
         }
 
+        /// <summary>
+        /// Uses the NetworkInfoBase.ResolveDistantIp to resvoles an IP
+        /// </summary>
+        /// <param name="host"></param>
+        /// <returns></returns>
+        public static IPAddress ResolveIp(string host)
+        {
+            return RaiseResolveDistantIp(Dns.GetHostAddresses(host), host);
+        }
+
+        /// <summary>
+        /// Returns the Cached last external IpAddress 
+        /// </summary>
         public static IPAddress IpAddressExternal
         {
             get
@@ -71,27 +93,47 @@ namespace JPB.Communication.ComBase
                     return _exIp;
                 }
 
-                _exIp = IPAddress.Parse(GetPublicIP());
+                _exIp = IPAddress.Parse(GetPublicIp());
                 return _exIp;
             }
         }
 
-        public static string GetPublicIP()
+        public static string IpCheckUrl { get; set; }
+
+        public static readonly String IPADDRESS_PATTERN =
+            @"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b";
+
+        /// <summary>
+        /// Uses IpCheckUrl for IP check
+        /// </summary>
+        /// <returns></returns>
+        public static string GetPublicIp()
         {
             String direction = "";
-            WebRequest request = WebRequest.Create("http://checkip.dyndns.org/");
+            WebRequest request = WebRequest.Create(IpCheckUrl);
             using (WebResponse response = request.GetResponse())
             using (StreamReader stream = new StreamReader(response.GetResponseStream()))
             {
                 direction = stream.ReadToEnd();
             }
 
-            //Search for the ip in the html
-            int first = direction.IndexOf("Address: ") + 9;
-            int last = direction.LastIndexOf("</body>");
-            direction = direction.Substring(first, last - first);
+            var match = Regex.Match(direction, IPADDRESS_PATTERN);
 
-            return direction;
+            if (!match.Success)
+            {
+                throw new KeyNotFoundException(String.Format("Not able to find an ip address inside the Response from '{0}'", IpCheckUrl));
+            }
+
+            var ipAddress = match.Value;
+
+            var address = IPAddress.Parse(ipAddress);
+
+            if (!IpAddressExternal.Equals(address))
+            {
+                _exIp = address;
+            }
+
+            return ipAddress;
         }
 
         /// <summary>
@@ -101,6 +143,9 @@ namespace JPB.Communication.ComBase
 
         internal static IPAddress RaiseResolveOwnIp(IPAddress[] addresses)
         {
+            if (addresses.Length == 1)
+                return addresses.First();
+
             var handler = ResolveOwnIp;
             if (handler != null)
                 return handler(addresses);
@@ -124,7 +169,7 @@ namespace JPB.Communication.ComBase
         }
 
         /// <summary>
-        /// Not a Comment!
+        /// /*No Comment!*/
         /// </summary>
         /// <param name="addresses"></param>
         /// <returns></returns>

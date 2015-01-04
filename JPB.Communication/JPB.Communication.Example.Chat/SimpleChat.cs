@@ -19,17 +19,12 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using JPB.Communication.ComBase;
 using JPB.Communication.ComBase.Messages;
-using JPB.Communication.Shared;
 
-namespace JPB.Communication.Example.ChatOverNetworkCollection
+namespace JPB.Communication.Example.Chat
 {
-    public class Program2
+    public class SimpleChat
     {
         static void Main2(string[] args)
         {
