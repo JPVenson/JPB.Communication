@@ -41,7 +41,7 @@
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>JPB.Communication.Sig.pfx</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>JPB.Communication.Key.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -84,6 +84,7 @@
     <Compile Include="Shared\SeriellTaskFactory.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="JPB.Communication.Key.pfx" />
     <None Include="JPB.Communication.licenseheader" />
     <None Include="JPB.Communication.Sig.pfx" />
   </ItemGroup>
