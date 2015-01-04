@@ -38,8 +38,15 @@ namespace JPB.Communication.Example.Chat
         /// <param name="args"></param>
         static void Main(string[] args)
         {
+            //new SimpleChat();
+            new Program();
+        }
+
+
+        public Program()
+        {
             //Maybe multible network Adapters ... on what do we want to Recieve?
-            
+
             NetworkInfoBase.ResolveOwnIp += NetworkInfoBaseOnResolveOwnIp;
             Console.Title = string.Format("This: {0}", NetworkInfoBase.IpAddress.ToString());
             Console.Clear();
@@ -56,8 +63,7 @@ namespace JPB.Communication.Example.Chat
                 //This mehtod will create or return an instance for the spezific port
                 .GetReceiver(port);
 
-            tcpNetworkReceiver.LargeMessageSupport = false;
-
+            
             //Register the callback that will be invoked when a new message is incomming that contains the InfoState ( Contract ) we defined
             tcpNetworkReceiver.RegisterMessageBaseInbound(OnIncommingMessage, ChatMessageContract);
 
@@ -68,7 +74,12 @@ namespace JPB.Communication.Example.Chat
             //create a Sender on the same port the same way we did on the Receiver
             var tcpNetworkSender = NetworkFactory.Instance.GetSender(port);
 
-            Console.WriteLine("Server IP or Hostname:"); 
+            //If you want to alter control the Process of Serilation set this interface but remember that both Sender and Receiver must use the same otherwise they will not able to work
+            //In this case we are using one of the Predefined Serializers
+            tcpNetworkReceiver.Serlilizer = Networkbase.NetDataSerializer;
+            tcpNetworkSender.Serlilizer = tcpNetworkReceiver.Serlilizer;
+
+            Console.WriteLine("Server IP or Hostname:");
             bool serverOnline = false;
             string server = null;
             var input = string.Empty;

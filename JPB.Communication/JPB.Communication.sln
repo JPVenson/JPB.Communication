@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JPB.Communication.Test.Sing
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JPB.Communication.WPF.Controls", "JPB.Communication.WPF.Controls\JPB.Communication.WPF.Controls.csproj", "{9C1EBE04-A332-4CD6-91DB-4CB0EBAB5293}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JPB.Communication.Forms.Controls", "JPB.Communication.Forms.Controls\JPB.Communication.Forms.Controls.csproj", "{0C07D02D-7434-4650-ABC2-4A94C29F0E72}"
+EndProject
 Global
 	GlobalSection(SubversionScc) = preSolution
 		Svn-Managed = True
@@ -51,6 +53,10 @@ Global
 		{9C1EBE04-A332-4CD6-91DB-4CB0EBAB5293}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9C1EBE04-A332-4CD6-91DB-4CB0EBAB5293}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9C1EBE04-A332-4CD6-91DB-4CB0EBAB5293}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0C07D02D-7434-4650-ABC2-4A94C29F0E72}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C07D02D-7434-4650-ABC2-4A94C29F0E72}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C07D02D-7434-4650-ABC2-4A94C29F0E72}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C07D02D-7434-4650-ABC2-4A94C29F0E72}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

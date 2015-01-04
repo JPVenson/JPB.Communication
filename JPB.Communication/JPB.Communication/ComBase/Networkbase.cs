@@ -48,13 +48,14 @@ namespace JPB.Communication.ComBase
     /// </summary>
     public abstract class Networkbase
     {
-
         static Networkbase()
         {
             DefaultMessageSerializer = new DefaultMessageSerlilizer();
             CompressedDefaultMessageSerializer = new BinaryCompressedMessageSerializer();
-            JsonMessageSerializer = new MessageJsonSerlalizer();
+            //JsonMessageSerializer = new MessageJsonSerlalizer();
             FullXmlSerializer = new FullXmlSerializer();
+            SoapSerializer = new SoapSerializer();
+            NetDataSerializer = new NetContractSerializer();
         }
 
         /// <summary>
@@ -101,7 +102,17 @@ namespace JPB.Communication.ComBase
         /// <summary>
         /// A Standart JSON Serializer
         /// </summary>
-        public static readonly IMessageSerializer JsonMessageSerializer;
+        //public static readonly IMessageSerializer JsonMessageSerializer;
+
+        /// <summary>
+        /// A Standart Soap Serializer
+        /// </summary>
+        public static readonly IMessageSerializer SoapSerializer;
+
+        /// <summary>
+        /// A Standart NetData Serializer
+        /// </summary>
+        public static readonly IMessageSerializer NetDataSerializer;
 
         /// <summary>
         /// A Full XML Serializer

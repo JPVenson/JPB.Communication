@@ -17,21 +17,34 @@
 
  https://github.com/JPVenson/JPB.Communication/blob/master/LICENSE
  */
-using System;
+
 using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
+using System.Text;
 using System.Xml.Serialization;
 using JPB.Communication.ComBase.Messages;
+using JPB.Communication.ComBase.Serializer.Contracts;
 
-namespace JPB.Communication.ComBase.Serializer.Contracts
+namespace JPB.Communication.ComBase.Serializer
 {
     public class FullXmlSerializer : IMessageSerializer
     {
+        public bool IlMergeSupport { get; set; }
+
+        private XmlSerializer GetSerializer<T>()
+        {
+            var serilizer = new XmlSerializer(typeof (T));
+            if (IlMergeSupport)
+            {
+                //TODO IMPLIEMNT SerializationBinder
+            }
+            return serilizer;
+        }
+
         public byte[] SerializeMessage(NetworkMessage a)
         {
             using (var memst = new MemoryStream())
             {
-                var formatter = new XmlSerializer(typeof(NetworkMessage));
+                var formatter = GetSerializer<NetworkMessage>();
                 formatter.Serialize(memst, a);
                 return memst.ToArray();
             }
@@ -41,10 +54,7 @@ namespace JPB.Communication.ComBase.Serializer.Contracts
         {
             using (var memst = new MemoryStream())
             {
-                var formatter = new XmlSerializer(typeof(MessageBase), new[]
-                {
-                    mess.GetType()
-                });
+                var formatter = GetSerializer<MessageBase>();
                 formatter.Serialize(memst, mess);
                 return memst.ToArray();
             }
@@ -54,7 +64,7 @@ namespace JPB.Communication.ComBase.Serializer.Contracts
         {
             using (var memst = new MemoryStream(source))
             {
-                var formatter = new XmlSerializer(typeof(NetworkMessage));
+                var formatter = GetSerializer<NetworkMessage>();
                 var deserialize = (NetworkMessage)formatter.Deserialize(memst);
                 return deserialize;
             }
@@ -64,7 +74,7 @@ namespace JPB.Communication.ComBase.Serializer.Contracts
         {
             using (var memst = new MemoryStream(source))
             {
-                var formatter = new XmlSerializer(typeof(MessageBase));
+                var formatter = GetSerializer<MessageBase>();
                 var deserialize = (MessageBase)formatter.Deserialize(memst);
                 return deserialize;
             }
@@ -72,7 +82,7 @@ namespace JPB.Communication.ComBase.Serializer.Contracts
 
         public string ResolveStringContent(byte[] message)
         {
-            throw new System.NotImplementedException();
+            return Encoding.ASCII.GetString(message);
         }
     }
 }

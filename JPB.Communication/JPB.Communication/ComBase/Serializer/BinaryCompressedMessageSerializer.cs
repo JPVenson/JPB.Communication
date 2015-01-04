@@ -26,11 +26,25 @@ using JPB.Communication.ComBase.Serializer.Contracts;
 
 namespace JPB.Communication.ComBase.Serializer
 {
+    /// <summary>
+    /// Uses the Default Serlilizer but compresses the output by using the GZipStream
+    /// </summary>
     public class BinaryCompressedMessageSerializer : IMessageSerializer
     {
+        private bool _ilMergeSupport;
+
         static BinaryCompressedMessageSerializer()
         {
             DefaultMessageSerlilizer = new DefaultMessageSerlilizer();
+        }
+
+        public bool IlMergeSupport
+        {
+            get { return DefaultMessageSerlilizer.IlMergeSupport; }
+            set
+            {
+                DefaultMessageSerlilizer.IlMergeSupport = value;
+            }
         }
 
         public static DefaultMessageSerlilizer DefaultMessageSerlilizer { get; set; }
@@ -82,13 +96,24 @@ namespace JPB.Communication.ComBase.Serializer
         /// </summary>
         public static byte[] DeCompress(byte[] raw)
         {
-            using (var memory = new MemoryStream())
+            using (var stream = new GZipStream(new MemoryStream(raw), CompressionMode.Decompress))
             {
-                using (var gzip = new GZipStream(memory, CompressionMode.Decompress, true))
+                const int size = 4096;
+                byte[] buffer = new byte[size];
+                using (var memory = new MemoryStream())
                 {
-                    gzip.Write(raw, 0, raw.Length);
+                    int count = 0;
+                    do
+                    {
+                        count = stream.Read(buffer, 0, size);
+                        if (count > 0)
+                        {
+                            memory.Write(buffer, 0, count);
+                        }
+                    }
+                    while (count > 0);
+                    return memory.ToArray();
                 }
-                return memory.ToArray();
             }
         }
     }

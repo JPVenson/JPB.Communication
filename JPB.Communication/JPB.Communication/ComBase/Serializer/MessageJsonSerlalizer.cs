@@ -18,6 +18,7 @@
  https://github.com/JPVenson/JPB.Communication/blob/master/LICENSE
  */
 
+using System;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
@@ -41,6 +42,7 @@ namespace JPB.Communication.ComBase.Serializer
 
         public byte[] SerializeMessageContent(MessageBase mess)
         {
+            mess.RecievedAt = DateTime.Now;
             using (var memstream = new MemoryStream())
             {
                 var json = new DataContractJsonSerializer(typeof(MessageBase));

@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Runtime.Remoting.Messaging;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -37,12 +38,13 @@ namespace JPB.Communication.ComBase.Serializer
 {
     /// <summary>
     /// Contains a Mixed Message Serlilizer that Converts the Message as XML and the Content to Binary
+    /// Is able to work with objects that are in the same namespace but in diferent Assemablys like when using ILMerge
+    /// After 20 mb of message size the content of the message will be paged to the disc
     /// </summary>
     public class DefaultMessageSerlilizer : IMessageSerializer
     {
         //IL MERGE OR RENAMING SUPPORT
-
-        private sealed class IlMergeBinder : SerializationBinder
+        internal sealed class IlMergeBinder : SerializationBinder
         {
             static IlMergeBinder()
             {
@@ -71,18 +73,21 @@ namespace JPB.Communication.ComBase.Serializer
 
                 //Search throu all known assemblys
                 var callingAssembly = Assembly.GetEntryAssembly();
-                foreach (var referencedAssembly in callingAssembly.GetReferencedAssemblies().Concat(AdditionalLookups))
-                {
-                    var assembly = Assembly.Load(referencedAssembly);
-                    var type = assembly.GetType(typeName);
-                    if (type != null)
-                    {
-                        TypnameToType.Add(typeName, type);
-                        return type;
-                    }
-                }
+                var current = Assembly.GetExecutingAssembly();
 
-                return null;
+                var firstOrDefault = callingAssembly.GetReferencedAssemblies().Concat(new[]
+                {
+                    current.GetName(),
+                    callingAssembly.GetName()
+                })
+                    .Select(Assembly.Load)
+                    .Select(assembly => assembly.GetType(typeName)).FirstOrDefault(type => type != null);
+
+                if (firstOrDefault != null)
+                {
+                    TypnameToType.Add(typeName, firstOrDefault);
+                }
+                return firstOrDefault;
             }
 
             public void AddOptimistic(Type type)
@@ -96,13 +101,14 @@ namespace JPB.Communication.ComBase.Serializer
         }
 
         public bool IlMergeSupport { get; set; }
+        public bool PrevendDiscPageing { get; set; }
 
-        private static Stream GetStream(object validator)
+        private Stream GetStream(object validator)
         {
             var target = string.Empty;
             Stream stream = null;
 
-            if (validator is Array && (validator as Array).LongLength > (InternalMemoryHolder.MaximumStoreageInMemory * 4))
+            if (!PrevendDiscPageing && (validator is Array && (validator as Array).LongLength > (InternalMemoryHolder.MaximumStoreageInMemory * 4)))
             {
                 target = Path.GetTempFileName();
                 stream = new FileStream(target, FileMode.Open);
@@ -140,9 +146,11 @@ namespace JPB.Communication.ComBase.Serializer
             var binaryFormatter = new BinaryFormatter()
             {
                 AssemblyFormat = FormatterAssemblyStyle.Simple,
-                FilterLevel = TypeFilterLevel.Low,
+                FilterLevel = TypeFilterLevel.Full,
                 TypeFormat = FormatterTypeStyle.TypesWhenNeeded
             };
+
+            binaryFormatter.Context = new StreamingContext(StreamingContextStates.CrossMachine);
 
             return binaryFormatter;
         }

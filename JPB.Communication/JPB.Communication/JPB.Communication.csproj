@@ -47,14 +47,17 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Runtime.Serialization.Formatters.Soap" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ComBase\Serializer\NetContractSerializer.cs" />
+    <Compile Include="ComBase\Serializer\SoapSerializer.cs" />
     <Compile Include="ComBase\TCP\ConnectionWrapper.cs" />
     <Compile Include="Contracts\INetworkReceiver.cs" />
     <Compile Include="ComBase\Messages\StreamMetaMessage.cs" />
-    <Compile Include="ComBase\Serializer\Contracts\FullXmlSerializer.cs" />
+    <Compile Include="ComBase\Serializer\FullXmlSerializer.cs" />
     <Compile Include="ComBase\TCP\TcpConnectionBase.cs" />
     <Compile Include="ComBase\TCP\LargeTcpConnection.cs" />
     <Compile Include="ComBase\Messages\Wrapper\LargeMessage.cs" />
@@ -86,7 +89,6 @@
   <ItemGroup>
     <None Include="JPB.Communication.Key.pfx" />
     <None Include="JPB.Communication.licenseheader" />
-    <None Include="JPB.Communication.Sig.pfx" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="ComBase\UDP\" />
