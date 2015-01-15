@@ -438,7 +438,7 @@ new MessageBase() { InfoState = NetworkCollectionProtocol.CollectionRegisterUser
         {
             lock (SyncRoot)
             {
-                PushAddMessage(item).Wait();
+                PushAddMessage(item);
                 LocalValues.Add(item);
                 TriggerAdd(item);
             }
@@ -467,7 +467,7 @@ new MessageBase() { InfoState = NetworkCollectionProtocol.CollectionRegisterUser
         {
             lock (SyncRoot)
             {
-                PushClearMessage().Wait();
+                PushClearMessage();
                 LocalValues.Clear();
                 TriggerReset();
             }
@@ -542,7 +542,7 @@ new MessageBase() { InfoState = NetworkCollectionProtocol.CollectionRegisterUser
 
         public T this[int index]
         {
-            get { return this.ElementAt(index); }
+            get { return this.LocalValues.ElementAt(index); }
             set { this.Insert(index, value); }
         }
 
@@ -550,7 +550,7 @@ new MessageBase() { InfoState = NetworkCollectionProtocol.CollectionRegisterUser
         {
             lock (SyncRoot)
             {
-                PushRemoveMessage(item).Wait();
+                PushRemoveMessage(item);
                 var remove = LocalValues.Remove(item);
                 if (remove)
                     TriggerRemove(item, IndexOf(item));

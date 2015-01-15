@@ -48,6 +48,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="HasValueToVisibiltyConverter.cs" />
+    <Compile Include="Intigration\BindableNetworkValueBag.cs" />
     <Compile Include="Model\ObjectViewModel.cs" />
     <Compile Include="Model\ObjectViewModelHierarchy.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
