@@ -28,7 +28,7 @@ using JPB.Communication.ComBase.TCP;
 namespace JPB.Communication.Shared
 {
     /// <summary>
-    /// this queue will manage Multibe message Deliverys
+    /// this queue will manage multi message Deliverys
     /// The message will be Send in the Order FIFO
     /// 
     /// </summary>
@@ -51,6 +51,9 @@ namespace JPB.Communication.Shared
         private TCPNetworkSender _sender;
         private SeriellTaskFactory _internal;
 
+        /// <summary>
+        /// Attach to this Event to get the currently send message and all Receivers that were unable to receive
+        /// </summary>
         public new event Action<MessageDeliveryQueue, MessageBase, string[]> OnMessageSend;
 
         protected virtual void RaiseMessageSend(MessageBase mess, string[] unreacheble)

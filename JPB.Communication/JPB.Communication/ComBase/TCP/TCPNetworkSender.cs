@@ -508,10 +508,9 @@ namespace JPB.Communication.ComBase.TCP
                 tryCount++;
                 try
                 {
-                    sock.Send(new byte[] { 0x00 });
-                    //Nagles alg waits for 200 ms
                     Thread.Sleep(250);
                     sock.Send(new byte[] { 0x00 });
+                    //Nagles alg waits for 200 ms
                     if (wait)
                         sock.Receive(new byte[] { 0x00 });
                 }
@@ -544,7 +543,6 @@ namespace JPB.Communication.ComBase.TCP
             AwaitCallbackFromRemoteHost(openNetwork, false);
             if (!SharedConnection)
             {
-                openNetwork.Send(new byte[0]);
                 openNetwork.Close();
             }
         }

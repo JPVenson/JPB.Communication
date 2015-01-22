@@ -25,7 +25,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using JPB.Communication.ComBase;
@@ -35,26 +34,8 @@ using JPB.Communication.ComBase.TCP;
 namespace JPB.Communication.Shared
 {
     /// <summary>
-    /// Guid Container
-    /// </summary>
-    public static class NetworkListControler
-    {
-        static NetworkListControler()
-        {
-            Guids = new List<string>();
-        }
-
-        internal static List<string> Guids;
-
-        public static IEnumerable<string> GetGuids()
-        {
-            return Guids.ToArray();
-        }
-    }
-
-    /// <summary>
     /// This class holds and Updates unsorted values that will be Synced over the Network
-    /// On a Pc, only one Network Value bag with the given guid can exists
+    /// On a Pc, only one Network Value bag with the given guid and port can exists
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public class NetworkValueBag<T> :
@@ -146,12 +127,6 @@ namespace JPB.Communication.Shared
         protected NetworkValueBag(ushort port, string guid)
         {
             RegisterCollecion(guid);
-
-            //objects that Impliments or Contains a Serializable Attribute are supported
-            //if (!typeof(T).IsValueType && !typeof(T).IsPrimitive)
-            //{
-            //    throw new TypeLoadException("Typeof T must be a Value type ... please use the NonValue collection");
-            //}
 
             CollectionRecievers = new List<string>();
 
@@ -264,7 +239,7 @@ new MessageBase() { InfoState = NetworkCollectionProtocol.CollectionRegisterUser
             }
         }
 
-        public override ushort Port { get; internal set; }
+        public override sealed ushort Port { get; internal set; }
         public string Guid { get; protected set; }
         public int Count { get { return LocalValues.Count; } }
         public object SyncRoot { get; protected set; }

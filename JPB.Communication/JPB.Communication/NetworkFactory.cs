@@ -24,6 +24,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using JPB.Communication.ComBase;
 using JPB.Communication.ComBase.TCP;
+using JPB.Communication.ComBase.UDP;
 
 namespace JPB.Communication
 {
@@ -33,6 +34,7 @@ namespace JPB.Communication
     {
         private static NetworkFactory _instance = new NetworkFactory();
         internal Dictionary<ushort, TCPNetworkReceiver> _receivers;
+        internal Dictionary<ushort, UdpNetworkReceiver> _receiversUdp;
         internal Dictionary<ushort, TCPNetworkSender> _senders;
         private TCPNetworkReceiver _commonReciever;
         private TCPNetworkSender _commonSender;
@@ -42,6 +44,7 @@ namespace JPB.Communication
 
         public event EventHandler<TCPNetworkSender> OnSenderCreate;
         public event EventHandler<TCPNetworkReceiver> OnReceiverCreate;
+        public event EventHandler<UdpNetworkReceiver> OnReceiverCreateUdp;
 
         internal virtual void RaiseSenderCreate(TCPNetworkSender item)
         {
@@ -59,6 +62,16 @@ namespace JPB.Communication
                 return;
 
             var handler = OnReceiverCreate;
+            if (handler != null)
+                handler(this, item);
+        }
+
+        internal virtual void RaiseReceiverCreate(UdpNetworkReceiver item)
+        {
+            if (!ShouldRaiseEvents)
+                return;
+
+            var handler = OnReceiverCreateUdp;
             if (handler != null)
                 handler(this, item);
         }

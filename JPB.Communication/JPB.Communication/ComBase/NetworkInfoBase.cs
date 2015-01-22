@@ -46,30 +46,7 @@ namespace JPB.Communication.ComBase
 
         private static IPAddress _ip;
         private static IPAddress _exIp;
-
-        /// <summary>
-        /// Easy access to your preferred network Interface 
-        /// </summary>
-        public static IPAddress IpAddress
-        {
-            get
-            {
-                if (_ip != null)
-                    return _ip;
-
-                var firstOrDefault = Dns.GetHostEntry(Dns.GetHostName());
-                //.AddressList.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork);
-                if (firstOrDefault.AddressList.Length > 1)
-                {
-                    _ip = RaiseResolveOwnIp(firstOrDefault.AddressList);
-                }
-                else
-                {
-                    _ip = ResolveAddressByMySelf____Again____IfYouNeedSomethingToBeDoneRightDoItByYourSelf(firstOrDefault.AddressList);
-                }
-                return _ip;
-            }
-        }
+      
 
         /// <summary>
         /// Uses the NetworkInfoBase.ResolveDistantIp to resvoles an IP
@@ -110,9 +87,9 @@ namespace JPB.Communication.ComBase
         public static string GetPublicIp()
         {
             String direction = "";
-            WebRequest request = WebRequest.Create(IpCheckUrl);
-            using (WebResponse response = request.GetResponse())
-            using (StreamReader stream = new StreamReader(response.GetResponseStream()))
+            var request = WebRequest.Create(IpCheckUrl);
+            using (var response = request.GetResponse())
+            using (var stream = new StreamReader(response.GetResponseStream()))
             {
                 direction = stream.ReadToEnd();
             }
@@ -128,7 +105,7 @@ namespace JPB.Communication.ComBase
 
             var address = IPAddress.Parse(ipAddress);
 
-            if (!IpAddressExternal.Equals(address))
+            if (_exIp == null || !_exIp.Equals(address))
             {
                 _exIp = address;
             }
@@ -166,6 +143,30 @@ namespace JPB.Communication.ComBase
             if (handler != null)
                 return handler(addresses, hostName);
             return ResolveAddressByMySelf____Again____IfYouNeedSomethingToBeDoneRightDoItByYourSelf(addresses);
+        }
+
+        /// <summary>
+        /// Easy access to your preferred network Interface 
+        /// </summary>
+        public static IPAddress IpAddress
+        {
+            get
+            {
+                if (_ip != null)
+                    return _ip;
+
+                var firstOrDefault = Dns.GetHostEntry(Dns.GetHostName());
+                //.AddressList.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork);
+                if (firstOrDefault.AddressList.Length > 1)
+                {
+                    _ip = RaiseResolveOwnIp(firstOrDefault.AddressList);
+                }
+                else
+                {
+                    _ip = ResolveAddressByMySelf____Again____IfYouNeedSomethingToBeDoneRightDoItByYourSelf(firstOrDefault.AddressList);
+                }
+                return _ip;
+            }
         }
 
         /// <summary>

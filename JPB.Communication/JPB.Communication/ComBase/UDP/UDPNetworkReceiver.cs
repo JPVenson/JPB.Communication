@@ -1,24 +1,4 @@
-﻿/*
- Created by Jean-Pierre Bachmann
- Visit my GitHub page at:
- 
- https://github.com/JPVenson/
-
- Please respect the Code and Work of other Programers an Read the license carefully
-
- GNU AFFERO GENERAL PUBLIC LICENSE
-                       Version 3, 19 November 2007
-
- Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
- Everyone is permitted to copy and distribute verbatim copies
- of this license document, but changing it is not allowed.
-
- READ THE FULL LICENSE AT:
-
- https://github.com/JPVenson/JPB.Communication/blob/master/LICENSE
- */
-
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,32 +7,27 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using JPB.Communication.ComBase.Messages;
-using JPB.Communication.ComBase.Messages.Wrapper;
-using JPB.Communication.Contracts;
+using JPB.Communication.ComBase.TCP;
 
-namespace JPB.Communication.ComBase.TCP
+namespace JPB.Communication.ComBase.UDP
 {
-    /// <summary>
-    /// A Manged wrapper with callback functions for a Socket
-    /// It will observe and serlilze the content of incomming data from the Socket
-    /// </summary>
-    public sealed class TCPNetworkReceiver : NetworkReceiverBase
+    public class UdpNetworkReceiver : NetworkReceiverBase
     {
-        internal static TCPNetworkReceiver CreateReceiverInSharedState(ushort portInfo, Socket sock)
+        internal static UdpNetworkReceiver CreateReceiverInSharedState(ushort portInfo, Socket sock)
         {
-            var inst = new TCPNetworkReceiver(portInfo, sock);
+            var inst = new UdpNetworkReceiver(portInfo, sock);
             inst.StartListener(sock);
 
             lock (NetworkFactory.Instance._mutex)
             {
-                NetworkFactory.Instance._receivers.Add(portInfo, inst);
+                NetworkFactory.Instance._receiversUdp.Add(portInfo, inst);
                 NetworkFactory.Instance.RaiseReceiverCreate(inst);
             }
 
             return inst;
         }
 
-        private TCPNetworkReceiver(ushort port, Socket sock = null)
+        private UdpNetworkReceiver(ushort port, Socket sock = null)
         {
             _workeritems = new ConcurrentQueue<Action>();
 
@@ -62,12 +37,12 @@ namespace JPB.Communication.ComBase.TCP
             _typeCallbacks.Add(typeof(RequstMessage), WorkOn_RequestMessage);
         }
 
-        internal TCPNetworkReceiver(ushort port)
+        internal UdpNetworkReceiver(ushort port)
             : this(port, null)
         {
             _listenerSocket = new Socket(IPAddress.Any.AddressFamily,
-                               SocketType.Stream,
-                               ProtocolType.Tcp);
+                               SocketType.Dgram,
+                               ProtocolType.Udp);
 
             _listenerSocket.SetIPProtectionLevel(IPProtectionLevel.Unrestricted);
 
@@ -88,7 +63,7 @@ namespace JPB.Communication.ComBase.TCP
         /// FOR INTERNAL USE ONLY
         /// </summary>
         internal Dictionary<Type, Action<object>> _typeCallbacks;
-        
+
         internal readonly Socket _listenerSocket;
 
         private readonly ConcurrentQueue<Action> _workeritems;
@@ -103,7 +78,7 @@ namespace JPB.Communication.ComBase.TCP
         /// </summary>
         public bool LargeMessageSupport { get; set; }
 
-        public event Func<TCPNetworkReceiver, Socket, bool> OnCheckConnectionInbound;
+        public event Func<UdpNetworkReceiver, Socket, bool> OnCheckConnectionInbound;
         /// <summary>
         /// Is raised when a message is inside the buffer but not fully parsed
         /// </summary>
@@ -261,7 +236,7 @@ namespace JPB.Communication.ComBase.TCP
                 handler(this, EventArgs.Empty);
         }
 
-     
+
 
         private void WorkOnItems()
         {
@@ -301,7 +276,8 @@ namespace JPB.Communication.ComBase.TCP
                     var firstOrDefault = ConnectionPool.Instance.Connections.FirstOrDefault(s => endAccept == s.Socket);
                     if (firstOrDefault == null)
                     {
-                        ConnectionPool.Instance.AddConnection(endAccept, this);
+                        //TODO IMP
+                        //ConnectionPool.Instance.AddConnection(endAccept, this);
                     }
                 }
 

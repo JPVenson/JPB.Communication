@@ -41,7 +41,7 @@
     <SignAssembly>false</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>JPB.Communication.Key.pfx</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>JPB.Communication.2.0.key.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -52,9 +52,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ComBase\NetworkReceiverBase.cs" />
     <Compile Include="ComBase\Serializer\NetContractSerializer.cs" />
     <Compile Include="ComBase\Serializer\SoapSerializer.cs" />
     <Compile Include="ComBase\TCP\ConnectionWrapper.cs" />
+    <Compile Include="ComBase\UDP\UDPNetworkReceiver.cs" />
     <Compile Include="Contracts\INetworkReceiver.cs" />
     <Compile Include="ComBase\Messages\StreamMetaMessage.cs" />
     <Compile Include="ComBase\Serializer\FullXmlSerializer.cs" />
@@ -83,16 +85,15 @@
     <Compile Include="Shared\MessageDeliveryQueue.cs" />
     <Compile Include="Shared\NetworkCollectionMessage.cs" />
     <Compile Include="Shared\NetworkCollectionProtocol.cs" />
+    <Compile Include="Shared\NetworkListControler.cs" />
     <Compile Include="Shared\NetworkValueBag.cs" />
     <Compile Include="Shared\SeriellTaskFactory.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="JPB.Communication.Key.pfx" />
+    <None Include="JPB.Communication.2.0.key.pfx" />
     <None Include="JPB.Communication.licenseheader" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="ComBase\UDP\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

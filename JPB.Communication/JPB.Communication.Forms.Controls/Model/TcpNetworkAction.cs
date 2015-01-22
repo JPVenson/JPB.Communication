@@ -1,4 +1,4 @@
-﻿namespace JPB.Communication.WPF.Controls.Model
+﻿namespace JPB.Communication.Forms.Controls.Model
 {
     public class TcpNetworkAction
     {
