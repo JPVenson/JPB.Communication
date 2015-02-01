@@ -27,7 +27,7 @@ using JPB.Communication.ComBase.Serializer.Contracts;
 namespace JPB.Communication.ComBase.Serializer
 {
     /// <summary>
-    /// Uses the Default Serlilizer but compresses the output by using the GZipStream
+    ///     Uses the Default Serlilizer but compresses the output by using the GZipStream
     /// </summary>
     public class BinaryCompressedMessageSerializer : IMessageSerializer
     {
@@ -41,17 +41,14 @@ namespace JPB.Communication.ComBase.Serializer
         public bool IlMergeSupport
         {
             get { return DefaultMessageSerlilizer.IlMergeSupport; }
-            set
-            {
-                DefaultMessageSerlilizer.IlMergeSupport = value;
-            }
+            set { DefaultMessageSerlilizer.IlMergeSupport = value; }
         }
 
         public static DefaultMessageSerlilizer DefaultMessageSerlilizer { get; set; }
 
         public byte[] SerializeMessage(NetworkMessage a)
         {
-            var mess = DefaultMessageSerlilizer.SerializeMessage(a);
+            byte[] mess = DefaultMessageSerlilizer.SerializeMessage(a);
             return Compress(mess);
         }
 
@@ -77,7 +74,7 @@ namespace JPB.Communication.ComBase.Serializer
         }
 
         /// <summary>
-        /// Compresses byte array to new byte array.
+        ///     Compresses byte array to new byte array.
         /// </summary>
         public static byte[] Compress(byte[] raw)
         {
@@ -92,14 +89,14 @@ namespace JPB.Communication.ComBase.Serializer
         }
 
         /// <summary>
-        /// UnCompresses byte array to new byte array.
+        ///     UnCompresses byte array to new byte array.
         /// </summary>
         public static byte[] DeCompress(byte[] raw)
         {
             using (var stream = new GZipStream(new MemoryStream(raw), CompressionMode.Decompress))
             {
                 const int size = 4096;
-                byte[] buffer = new byte[size];
+                var buffer = new byte[size];
                 using (var memory = new MemoryStream())
                 {
                     int count = 0;
@@ -110,8 +107,7 @@ namespace JPB.Communication.ComBase.Serializer
                         {
                             memory.Write(buffer, 0, count);
                         }
-                    }
-                    while (count > 0);
+                    } while (count > 0);
                     return memory.ToArray();
                 }
             }

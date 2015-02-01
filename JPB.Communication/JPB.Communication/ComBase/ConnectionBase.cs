@@ -20,7 +20,6 @@
 
 using System;
 using System.IO;
-using JPB.Communication.ComBase;
 using JPB.Communication.ComBase.Messages;
 using JPB.Communication.ComBase.Messages.Wrapper;
 
@@ -28,11 +27,6 @@ namespace JPB.Communication.ComBase
 {
     internal abstract class ConnectionBase : Networkbase
     {
-        protected ConnectionBase()
-        {
-
-        }
-
         public const string ErrorDueParse = "ERR / Message is Corrupt";
 
         internal bool Parse(byte[] received)
@@ -45,7 +39,7 @@ namespace JPB.Communication.ComBase
                 if (item != null)
                 {
                     RaiseIncommingMessage(item);
-                    var loadMessageBaseFromBinary = base.LoadMessageBaseFromBinary(item.MessageBase);
+                    MessageBase loadMessageBaseFromBinary = base.LoadMessageBaseFromBinary(item.MessageBase);
                     RaiseNewItemLoadedSuccess(loadMessageBaseFromBinary);
                     return true;
                 }
@@ -56,7 +50,7 @@ namespace JPB.Communication.ComBase
                 string source;
                 try
                 {
-                    source = this.Serlilizer.ResolveStringContent(received);
+                    source = Serlilizer.ResolveStringContent(received);
                 }
                 catch (Exception)
                 {
@@ -78,7 +72,7 @@ namespace JPB.Communication.ComBase
                 if (item != null)
                 {
                     RaiseIncommingMessage(item);
-                    var loadMessageBaseFromBinary = base.LoadMessageBaseFromBinary(item.MessageBase);
+                    MessageBase loadMessageBaseFromBinary = base.LoadMessageBaseFromBinary(item.MessageBase);
                     return RaiseNewLargeItemLoadedSuccess(loadMessageBaseFromBinary, completed);
                 }
                 return null;
@@ -88,7 +82,7 @@ namespace JPB.Communication.ComBase
                 string source;
                 try
                 {
-                    source = this.Serlilizer.ResolveStringContent(received);
+                    source = Serlilizer.ResolveStringContent(received);
                 }
                 catch (Exception)
                 {

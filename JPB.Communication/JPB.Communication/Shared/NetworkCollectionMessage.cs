@@ -25,14 +25,8 @@ namespace JPB.Communication.Shared
     [Serializable]
     public class NetworkCollectionMessage
     {
-        private object _value;
         private string _guid;
-
-        public string Guid
-        {
-            get { return _guid; }
-            set { _guid = value; }
-        }
+        private object _value;
 
         public NetworkCollectionMessage()
         {
@@ -41,6 +35,12 @@ namespace JPB.Communication.Shared
         public NetworkCollectionMessage(object value)
         {
             _value = value;
+        }
+
+        public string Guid
+        {
+            get { return _guid; }
+            set { _guid = value; }
         }
 
 

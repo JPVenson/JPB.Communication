@@ -17,53 +17,64 @@
 
  https://github.com/JPVenson/JPB.Communication/blob/master/LICENSE
  */
+
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
-using System.Net.Sockets;
-using System.Text;
 using System.Threading.Tasks;
 using System.Timers;
 using JPB.Communication.ComBase.TCP;
+using JPB.Communication.Contracts;
 
 namespace JPB.Communication.ComBase
 {
     /// <summary>
-    /// Stores open Connections
+    ///     Stores open Connections
     /// </summary>
     public class ConnectionPool
     {
+        private static ConnectionPool _instance;
+        private readonly Timer _stateTimer;
+
         private ConnectionPool()
         {
             Connections = new List<ConnectionWrapper>();
             _stateTimer = new Timer();
             _stateTimer.AutoReset = false;
-            _stateTimer.Elapsed += socketStateCheck;
+            _stateTimer.Elapsed += ISocketStateCheck;
             _stateTimer.Interval = 5000;
             _stateTimer.Start();
         }
 
-        private void socketStateCheck(object state, ElapsedEventArgs elapsedEventArgs)
+        public static ConnectionPool Instance
+        {
+            get { return _instance ?? (_instance = new ConnectionPool()); }
+        }
+
+        /// <summary>
+        /// </summary>
+        internal List<ConnectionWrapper> Connections { get; private set; }
+
+        private void ISocketStateCheck(object state, ElapsedEventArgs elapsedEventArgs)
         {
             try
             {
                 _stateTimer.Stop();
-                foreach (var connectionWrapper in Connections.ToArray())
+                foreach (ConnectionWrapper connectionWrapper in Connections.ToArray())
                 {
                     if (!connectionWrapper.Socket.Connected)
                     {
                         Connections.Remove(connectionWrapper);
-                        this.RaiseConnectionClosed(connectionWrapper);
+                        RaiseConnectionClosed(connectionWrapper);
                     }
                 }
             }
             catch (Exception)
             {
-                Trace.WriteLine(">ConnectionPool >socketStateCheck >Error due Timer check", Networkbase.TraceCategory);
+                Trace.WriteLine(">ConnectionPool >ISocketStateCheck >Error due Timer check", Networkbase.TraceCategory);
             }
             finally
             {
@@ -71,46 +82,33 @@ namespace JPB.Communication.ComBase
             }
         }
 
-        private readonly Timer _stateTimer;
-
-        private static ConnectionPool _instance;
-
-        public static ConnectionPool Instance
-        {
-            get { return _instance ?? (_instance = new ConnectionPool()); }
-        }
         /// <summary>
-        /// Is invoked when a connection is created
-        /// this can caused by an incomming or a Shared connection from this side
+        ///     Is invoked when a connection is created
+        ///     this can caused by an incomming or a Shared connection from this side
         /// </summary>
         public event EventHandler<ConnectionWrapper> OnConnectionCreated;
 
         protected virtual void RaiseConnectionCreated(ConnectionWrapper item)
         {
-            var handler = OnConnectionCreated;
+            EventHandler<ConnectionWrapper> handler = OnConnectionCreated;
             if (handler != null)
                 handler(this, item);
         }
 
         /// <summary>
-        /// Is invoked when a connection is closed from this or Remote side
+        ///     Is invoked when a connection is closed from this or Remote side
         /// </summary>
         public event EventHandler<ConnectionWrapper> OnConnectionClosed;
 
         protected virtual void RaiseConnectionClosed(ConnectionWrapper item)
         {
-            var handler = OnConnectionClosed;
+            EventHandler<ConnectionWrapper> handler = OnConnectionClosed;
             if (handler != null)
                 handler(this, item);
         }
 
         /// <summary>
-        /// 
-        /// </summary>
-        internal List<ConnectionWrapper> Connections { get; private set; }
-
-        /// <summary>
-        /// Returns a Flat copy of all Connections that are existing
+        ///     Returns a Flat copy of all Connections that are existing
         /// </summary>
         /// <returns></returns>
         public ILookup<string, ConnectionWrapper> GetConnections()
@@ -118,7 +116,7 @@ namespace JPB.Communication.ComBase
             return Connections.ToLookup(s => s.Ip);
         }
 
-        internal Socket GetSockForIpOrNull(string hostOrIp)
+        internal ISocket GetSockForIpOrNull(string hostOrIp)
         {
             IPAddress ipAddress;
             if (!IPAddress.TryParse(hostOrIp, out ipAddress))
@@ -126,7 +124,7 @@ namespace JPB.Communication.ComBase
                 ipAddress = NetworkInfoBase.ResolveIp(hostOrIp);
             }
 
-            var fod = Connections.FirstOrDefault(s => s.Ip == ipAddress.ToString());
+            ConnectionWrapper fod = Connections.FirstOrDefault(s => s.Ip == ipAddress.ToString());
 
             if (fod == null)
             {
@@ -137,8 +135,8 @@ namespace JPB.Communication.ComBase
 
         internal async Task<TCPNetworkReceiver> ConnectToHost(string hostOrIp, ushort port)
         {
-            var ip = NetworkInfoBase.ResolveIp(hostOrIp).ToString();
-            var fod = Connections.FirstOrDefault(s => s.Ip == ip);
+            string ip = NetworkInfoBase.ResolveIp(hostOrIp).ToString();
+            ConnectionWrapper fod = Connections.FirstOrDefault(s => s.Ip == ip);
             if (fod != null)
             {
                 if (fod.TCPNetworkSender.ConnectionOpen(hostOrIp))
@@ -148,65 +146,65 @@ namespace JPB.Communication.ComBase
                 fod.TCPNetworkReceiver.Dispose();
                 fod.TCPNetworkSender.Dispose();
                 Connections.Remove(fod);
-                this.RaiseConnectionClosed(fod);
+                RaiseConnectionClosed(fod);
             }
 
-            var sender = NetworkFactory.Instance.GetSender(port);
-            var socket = await sender._InitSharedConnection(ip);
-            if (socket == null)
+            TCPNetworkSender sender = NetworkFactory.Instance.GetSender(port);
+            ISocket ISocket = await sender._InitSharedConnection(ip);
+            if (ISocket == null)
             {
                 ThrowSockedNotAvailbileHelper();
             }
-            var tcpNetworkReceiver = await InjectSocket(socket, sender);
+            TCPNetworkReceiver tcpNetworkReceiver = await InjectISocket(ISocket, sender);
             return tcpNetworkReceiver;
         }
 
-        internal async Task<TCPNetworkReceiver> InjectSocket(Socket sock, TCPNetworkSender sender)
+        internal async Task<TCPNetworkReceiver> InjectISocket(ISocket sock, TCPNetworkSender sender)
         {
-            var localIp = sock.LocalEndPoint as IPEndPoint;
-            var remoteIp = sock.RemoteEndPoint as IPEndPoint;
-            var port1 = (ushort)localIp.Port;
-            var receiver = TCPNetworkReceiver.CreateReceiverInSharedState(port1, sock);
+            IPEndPoint localIp = sock.LocalEndPoint;
+            IPEndPoint remoteIp = sock.RemoteEndPoint;
+            var port1 = (ushort) localIp.Port;
+            TCPNetworkReceiver receiver = TCPNetworkReceiver.CreateReceiverInSharedState(port1, sock);
             AddConnection(new ConnectionWrapper(remoteIp.Address.ToString(), sock, receiver, sender));
             return receiver;
         }
 
         private void AddConnection(ConnectionWrapper connectionWrapper)
         {
-            this.Connections.Add(connectionWrapper);
-            this.RaiseConnectionCreated(connectionWrapper);
+            Connections.Add(connectionWrapper);
+            RaiseConnectionCreated(connectionWrapper);
         }
 
         [Obsolete]
-        private void AddConnection(string ip, Socket socket, TCPNetworkReceiver receiver, TCPNetworkSender sender)
+        private void AddConnection(string ip, ISocket ISocket, TCPNetworkReceiver receiver, TCPNetworkSender sender)
         {
-            var connectionWrapper = new ConnectionWrapper(ip, socket, receiver, sender);
+            var connectionWrapper = new ConnectionWrapper(ip, ISocket, receiver, sender);
             AddConnection(connectionWrapper);
         }
 
         private void ThrowSockedNotAvailbileHelper()
         {
-            var networkInformationException = new NetworkInformationException()
+            var networkInformationException = new NetworkInformationException
             {
-                Source = typeof(TCPNetworkSender).FullName
+                Source = typeof (TCPNetworkSender).FullName
             };
             networkInformationException.Data.Add("Description", "The creation of the Socked was not successfull");
             throw networkInformationException;
         }
 
-        internal Socket GetSock(string ipOrHost, ushort port)
+        internal ISocket GetSock(string ipOrHost, ushort port)
         {
             string ip = NetworkInfoBase.ResolveIp(ipOrHost).ToString();
-            var fod = Connections.FirstOrDefault(s => s.Ip == ip && s.TCPNetworkSender.Port == port);
+            ConnectionWrapper fod = Connections.FirstOrDefault(s => s.Ip == ip && s.TCPNetworkSender.Port == port);
             if (fod == null)
                 return null;
             return fod.Socket;
         }
 
-        internal void AddConnection(Socket endAccept, TCPNetworkReceiver tcpNetworkReceiver)
+        internal void AddConnection(ISocket endAccept, TCPNetworkReceiver tcpNetworkReceiver)
         {
             var ipEndPoint = endAccept.RemoteEndPoint as IPEndPoint;
-            var senderForRemotePort = NetworkFactory.Instance.GetSender((ushort)ipEndPoint.Port);
+            TCPNetworkSender senderForRemotePort = NetworkFactory.Instance.GetSender((ushort) ipEndPoint.Port);
 
             AddConnection(
                 new ConnectionWrapper(ipEndPoint.Address.ToString(), endAccept,

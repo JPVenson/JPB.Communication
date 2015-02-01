@@ -20,13 +20,12 @@
 
 using System;
 using System.IO;
-using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.Text;
 using JPB.Communication.ComBase.Messages;
 using JPB.Communication.ComBase.Serializer.Contracts;
 
-namespace JPB.Communication.ComBase.Serializer 
+namespace JPB.Communication.ComBase.Serializer
 {
     public class MessageJsonSerlalizer : IMessageSerializer
     {
@@ -34,7 +33,7 @@ namespace JPB.Communication.ComBase.Serializer
         {
             using (var memstream = new MemoryStream())
             {
-                var json = new DataContractJsonSerializer(typeof(NetworkMessage));
+                var json = new DataContractJsonSerializer(typeof (NetworkMessage));
                 json.WriteObject(memstream, a);
                 return memstream.ToArray();
             }
@@ -45,7 +44,7 @@ namespace JPB.Communication.ComBase.Serializer
             mess.RecievedAt = DateTime.Now;
             using (var memstream = new MemoryStream())
             {
-                var json = new DataContractJsonSerializer(typeof(MessageBase));
+                var json = new DataContractJsonSerializer(typeof (MessageBase));
                 json.WriteObject(memstream, mess);
                 return memstream.ToArray();
             }
@@ -55,8 +54,8 @@ namespace JPB.Communication.ComBase.Serializer
         {
             using (var memstream = new MemoryStream(source))
             {
-                var json = new DataContractJsonSerializer(typeof(NetworkMessage));
-                return (NetworkMessage)json.ReadObject(memstream);
+                var json = new DataContractJsonSerializer(typeof (NetworkMessage));
+                return (NetworkMessage) json.ReadObject(memstream);
             }
         }
 
@@ -64,8 +63,8 @@ namespace JPB.Communication.ComBase.Serializer
         {
             using (var memstream = new MemoryStream(source))
             {
-                var json = new DataContractJsonSerializer(typeof(MessageBase));
-                return (MessageBase)json.ReadObject(memstream);
+                var json = new DataContractJsonSerializer(typeof (MessageBase));
+                return (MessageBase) json.ReadObject(memstream);
             }
         }
 

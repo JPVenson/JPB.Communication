@@ -27,22 +27,19 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.Serialization;
-using System.Xml;
-using System.Xml.Schema;
-using System.Xml.Serialization;
 
 namespace JPB.Communication.ComBase.Messages
 {
     /// <summary>
-    /// The Base object that can be transferred
-    /// To ensure a valid Serliazion every inherited class should impliment its own ISerializable Implimentation
+    ///     The Base object that can be transferred
+    ///     To ensure a valid Serliazion every inherited class should impliment its own ISerializable Implimentation
     /// </summary>
     [Serializable]
     [DebuggerStepThrough]
     public class MessageBase : ISerializable, ICloneable
     {
-        private object _message;
         private object _infoState;
+        private object _message;
 
         public MessageBase()
         {
@@ -71,17 +68,17 @@ namespace JPB.Communication.ComBase.Messages
         internal MessageBase(SerializationInfo info,
             StreamingContext context)
         {
-            Message = info.GetValue("Message", typeof(object));
-            InfoState = info.GetValue("InfoState", typeof(object));
-            Id = (Guid)info.GetValue("ID", typeof(Guid));
-            RecievedAt = (DateTime)info.GetValue("RecievedAt", typeof(DateTime));
+            Message = info.GetValue("Message", typeof (object));
+            InfoState = info.GetValue("InfoState", typeof (object));
+            Id = (Guid) info.GetValue("ID", typeof (Guid));
+            RecievedAt = (DateTime) info.GetValue("RecievedAt", typeof (DateTime));
 
-            Sender = (string)info.GetValue("Sender", typeof(string));
-            Reciver = (string)info.GetValue("Reciver", typeof(string));
+            Sender = (string) info.GetValue("Sender", typeof (string));
+            Reciver = (string) info.GetValue("Reciver", typeof (string));
         }
 
         /// <summary>
-        /// The Content we want to send
+        ///     The Content we want to send
         /// </summary>
         public object Message
         {
@@ -95,7 +92,7 @@ namespace JPB.Communication.ComBase.Messages
         }
 
         /// <summary>
-        /// The Contract to identify this message on the Distent PC
+        ///     The Contract to identify this message on the Distent PC
         /// </summary>
         public object InfoState
         {
@@ -109,35 +106,49 @@ namespace JPB.Communication.ComBase.Messages
         }
 
         /// <summary>
-        /// The information about the Original Sender
-        /// Is used to identify a Routed message
-        /// Readonly
+        ///     The information about the Original Sender
+        ///     Is used to identify a Routed message
+        ///     Readonly
         /// </summary>
         public string Sender { get; set; }
 
         /// <summary>
-        /// The information about the Original Sender
-        /// Is used to identify a Routed message
-        /// Readonly
+        ///     The information about the Original Sender
+        ///     Is used to identify a Routed message
+        ///     Readonly
         /// </summary>
         public string Reciver { get; set; }
 
         /// <summary>
-        /// The ID of this message
-        /// Is used to clearly identify this message over the network
-        /// Readonly
+        ///     The ID of this message
+        ///     Is used to clearly identify this message over the network
+        ///     Readonly
         /// </summary>
         public Guid Id { get; set; }
 
         /// <summary>
-        /// Readonly
+        ///     Readonly
         /// </summary>
         public DateTime RecievedAt { get; set; }
 
         /// <summary>
-        /// Readonly
+        ///     Readonly
         /// </summary>
         public DateTime SendAt { get; set; }
+
+        public object Clone()
+        {
+            var obje = MemberwiseClone() as MessageBase;
+            if (obje != null)
+            {
+                obje.Id = Guid.NewGuid();
+                return obje;
+            }
+            return new MessageBase(Message)
+            {
+                InfoState = InfoState
+            };
+        }
 
         public virtual void GetObjectData(SerializationInfo info, StreamingContext context)
         {
@@ -153,20 +164,6 @@ namespace JPB.Communication.ComBase.Messages
             info.AddValue("InfoState", InfoState, InfoState.GetType());
             info.AddValue("ID", Id, Id.GetType());
             info.AddValue("RecievedAt", RecievedAt, RecievedAt.GetType());
-        }
-
-        public object Clone()
-        {
-            var obje = this.MemberwiseClone() as MessageBase;
-            if (obje != null)
-            {
-                obje.Id = Guid.NewGuid();
-                return obje;
-            }
-            return new MessageBase(Message)
-            {
-                InfoState = InfoState
-            };
         }
     }
 }

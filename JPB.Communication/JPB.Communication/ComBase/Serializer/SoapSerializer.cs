@@ -10,21 +10,11 @@ namespace JPB.Communication.ComBase.Serializer
     {
         public bool IlMergeSupport { get; set; }
 
-        private SoapFormatter GetSerializer<T>()
-        {
-            var serilizer = new SoapFormatter();
-            if (IlMergeSupport)
-            {
-                serilizer.Binder = new DefaultMessageSerlilizer.IlMergeBinder();
-            }
-            return serilizer;
-        }
-
         public byte[] SerializeMessage(NetworkMessage a)
         {
             using (var memst = new MemoryStream())
             {
-                var formatter = GetSerializer<NetworkMessage>();
+                SoapFormatter formatter = GetSerializer<NetworkMessage>();
                 formatter.Serialize(memst, a);
                 return memst.ToArray();
             }
@@ -34,7 +24,7 @@ namespace JPB.Communication.ComBase.Serializer
         {
             using (var memst = new MemoryStream())
             {
-                var formatter = GetSerializer<MessageBase>();
+                SoapFormatter formatter = GetSerializer<MessageBase>();
                 formatter.Serialize(memst, mess);
                 return memst.ToArray();
             }
@@ -44,8 +34,8 @@ namespace JPB.Communication.ComBase.Serializer
         {
             using (var memst = new MemoryStream(source))
             {
-                var formatter = GetSerializer<NetworkMessage>();
-                var deserialize = (NetworkMessage)formatter.Deserialize(memst);
+                SoapFormatter formatter = GetSerializer<NetworkMessage>();
+                var deserialize = (NetworkMessage) formatter.Deserialize(memst);
                 return deserialize;
             }
         }
@@ -54,8 +44,8 @@ namespace JPB.Communication.ComBase.Serializer
         {
             using (var memst = new MemoryStream(source))
             {
-                var formatter = GetSerializer<MessageBase>();
-                var deserialize = (MessageBase)formatter.Deserialize(memst);
+                SoapFormatter formatter = GetSerializer<MessageBase>();
+                var deserialize = (MessageBase) formatter.Deserialize(memst);
                 return deserialize;
             }
         }
@@ -63,6 +53,16 @@ namespace JPB.Communication.ComBase.Serializer
         public string ResolveStringContent(byte[] message)
         {
             return Encoding.ASCII.GetString(message);
+        }
+
+        private SoapFormatter GetSerializer<T>()
+        {
+            var serilizer = new SoapFormatter();
+            if (IlMergeSupport)
+            {
+                serilizer.Binder = new DefaultMessageSerlilizer.IlMergeBinder();
+            }
+            return serilizer;
         }
     }
 }

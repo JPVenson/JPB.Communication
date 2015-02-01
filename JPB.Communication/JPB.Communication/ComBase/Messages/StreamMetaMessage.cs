@@ -17,12 +17,9 @@
 
  https://github.com/JPVenson/JPB.Communication/blob/master/LICENSE
  */
+
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace JPB.Communication.ComBase.Messages
 {
@@ -31,24 +28,21 @@ namespace JPB.Communication.ComBase.Messages
     {
         public StreamMetaMessage()
         {
-
         }
 
         public StreamMetaMessage(object mess, object infoState)
             : base(mess, infoState)
         {
-
         }
 
         internal StreamMetaMessage(SerializationInfo info,
             StreamingContext context)
             : base(info, context)
         {
-            StreamSize = (long)info.GetValue("StreamSize", typeof(long));
+            StreamSize = (long) info.GetValue("StreamSize", typeof (long));
         }
 
         /// <summary>
-        /// 
         /// </summary>
         public long StreamSize { get; internal set; }
 

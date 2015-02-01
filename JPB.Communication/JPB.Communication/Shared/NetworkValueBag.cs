@@ -33,9 +33,27 @@ using JPB.Communication.ComBase.TCP;
 
 namespace JPB.Communication.Shared
 {
+    ///// <summary>
+    /////     Guid Container
+    ///// </summary>
+    //public static class NetworkListControler
+    //{
+    //    internal static List<string> Guids;
+
+    //    static NetworkListControler()
+    //    {
+    //        Guids = new List<string>();
+    //    }
+
+    //    public static IEnumerable<string> GetGuids()
+    //    {
+    //        return Guids.ToArray();
+    //    }
+    //}
+
     /// <summary>
-    /// This class holds and Updates unsorted values that will be Synced over the Network
-    /// On a Pc, only one Network Value bag with the given guid and port can exists
+    ///     This class holds and Updates unsorted values that will be Synced over the Network
+    ///     On a Pc, only one Network Value bag with the given guid can exists
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public class NetworkValueBag<T> :
@@ -46,87 +64,25 @@ namespace JPB.Communication.Shared
         INotifyCollectionChanged,
         IDisposable
     {
-        /// <summary>
-        /// Creates a new Instance of the NetworkValueBag
-        /// </summary>
-        /// <param name="port"></param>
-        /// <param name="guid"></param>
-        /// <returns></returns>
-        public static NetworkValueBag<T> CreateNetworkValueCollection(ushort port, string guid)
-        {
-            return new NetworkValueBag<T>(port, guid);
-        }
-
-        /// <summary>
-        /// Must be called to ensure a Single Usage of an GUID
-        /// </summary>
-        /// <param name="guid"></param>
-        /// <exception cref="ArgumentException"></exception>
-        protected static void RegisterCollecion(string guid)
-        {
-            if (NetworkListControler.Guids.Contains(guid))
-            {
-                throw new ArgumentException(@"This guid is in use. Please use a global _Uniq_ Identifier", "guid");
-            }
-            NetworkListControler.Guids.Add(guid);
-        }
-
-        /// <summary>
-        /// Gets a non tracking version of all items that are stored on the server
-        /// </summary>
-        /// <param name="host"></param>
-        /// <param name="port"></param>
-        /// <param name="guid"></param>
-        /// <returns></returns>
-        public static async Task<ICollection<T>> GetCollection(string host, ushort port, string guid)
-        {
-            var sender = await NetworkFactory.Instance.GetSender(port).SendRequstMessage<T[]>(new RequstMessage
-            {
-                InfoState = NetworkCollectionProtocol.CollectionGetCollection,
-                Message = guid
-            }, host);
-
-            return sender;
-        }
-
-        /// <summary>
-        /// if this is not the first Host that Maintains the target Collection we are initly connectet
-        /// </summary>
-        public string ConnectedToHost { get; protected set; }
-
-        /// <summary>
-        /// All other PC's that Contains a NetworkValueBag with the desiered GUID.
-        /// When Add,Remove,Clear is invoked this PC's will be notifyed to do the same
-        /// </summary>
-        public List<string> CollectionRecievers
-        {
-            get { return _collectionRecievers; }
-            protected set { _collectionRecievers = value; }
-        }
-
-        /// <summary>
-        /// The Internal collection that contains the values
-        /// </summary>
-        protected ICollection<T> LocalValues
-        {
-            get { return _localValues; }
-            set { _localValues = value; }
-        }
-
         protected readonly TCPNetworkReceiver TCPNetworkReceiver;
         protected readonly TCPNetworkSender TcpNetworkSernder;
 
-        private volatile ICollection<T> _localValues;
         private volatile List<string> _collectionRecievers;
+        private volatile ICollection<T> _localValues;
 
         /// <summary>
-        /// 
         /// </summary>
         /// <param name="port"></param>
         /// <param name="guid"></param>
         protected NetworkValueBag(ushort port, string guid)
         {
             RegisterCollecion(guid);
+
+            //objects that Impliments or Contains a Serializable Attribute are supported
+            //if (!typeof(T).IsValueType && !typeof(T).IsPrimitive)
+            //{
+            //    throw new TypeLoadException("Typeof T must be a Value type ... please use the NonValue collection");
+            //}
 
             CollectionRecievers = new List<string>();
 
@@ -140,14 +96,323 @@ namespace JPB.Communication.Shared
             RegisterCallbacks();
         }
 
+        /// <summary>
+        ///     if this is not the first Host that Maintains the target Collection we are initly connectet
+        /// </summary>
+        public string ConnectedToHost { get; protected set; }
+
+        /// <summary>
+        ///     All other PC's that Contains a NetworkValueBag with the desiered GUID.
+        ///     When Add,Remove,Clear is invoked this PC's will be notifyed to do the same
+        /// </summary>
+        public List<string> CollectionRecievers
+        {
+            get { return _collectionRecievers; }
+            protected set { _collectionRecievers = value; }
+        }
+
+        /// <summary>
+        ///     The Internal collection that contains the values
+        /// </summary>
+        protected ICollection<T> LocalValues
+        {
+            get { return _localValues; }
+            set { _localValues = value; }
+        }
+
+        public override ushort Port { get; internal set; }
+        public string Guid { get; protected set; }
+
+        public bool IsDisposing { get; protected set; }
+
+        public bool Registerd { get; protected set; }
+
+        public void Dispose()
+        {
+            if (IsDisposing)
+                return;
+
+            IsDisposing = true;
+
+            PushUnRegisterMessage();
+            UnRegisterCallbacks();
+
+            NetworkListControler.Guids.Remove(Guid);
+            LocalValues = null;
+            CollectionRecievers = null;
+        }
+
+        public bool IsFixedSize
+        {
+            get { return false; }
+        }
+
+        public int Add(object value)
+        {
+            lock (SyncRoot)
+            {
+                Add((T) value);
+                return Count;
+            }
+        }
+
+        /// <summary>
+        ///     Not thread save
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public bool Contains(object value)
+        {
+            return Contains((T) value);
+        }
+
+        /// <summary>
+        ///     Not thread save
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public int IndexOf(object value)
+        {
+            return IndexOf((T) value);
+        }
+
+        /// <summary>
+        ///     Not Implemented
+        /// </summary>
+        /// <param name="index"></param>
+        /// <param name="value"></param>
+        public void Insert(int index, object value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Remove(object value)
+        {
+            Remove((T) value);
+        }
+
+        object IList.this[int index]
+        {
+            get { return this[index]; }
+            set { this[index] = (T) value; }
+        }
+
+        public bool IsReadOnly
+        {
+            get { return false; }
+        }
+
+        public virtual void Add(T item)
+        {
+            lock (SyncRoot)
+            {
+                PushAddMessage(item);
+                LocalValues.Add(item);
+                TriggerAdd(item);
+            }
+        }
+
+        public void Clear()
+        {
+            lock (SyncRoot)
+            {
+                PushClearMessage();
+                LocalValues.Clear();
+                TriggerReset();
+            }
+        }
+
+        public int IndexOf(T item)
+        {
+            int result = -1;
+            for (int i = 0; i < LocalValues.Count; i++)
+            {
+                T localValue = this[i];
+
+                if (localValue.Equals(item))
+                {
+                    result = i;
+                    break;
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
+        ///     To be Supported
+        ///     throw new NotImplementedException();
+        /// </summary>
+        /// <param name="index"></param>
+        /// <param name="item"></param>
+        public void Insert(int index, T item)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        ///     To be Supported
+        /// </summary>
+        /// <param name="index"></param>
+        public void RemoveAt(int index)
+        {
+            Remove(this[index]);
+        }
+
+        public T this[int index]
+        {
+            get { return LocalValues.ElementAt(index); }
+            set { Insert(index, value); }
+        }
+
+        public bool Remove(T item)
+        {
+            lock (SyncRoot)
+            {
+                PushRemoveMessage(item);
+                bool remove = LocalValues.Remove(item);
+                if (remove)
+                    TriggerRemove(item, IndexOf(item));
+                return remove;
+            }
+        }
+
+        public bool Contains(T item)
+        {
+            lock (SyncRoot)
+            {
+                return LocalValues.Contains(item);
+            }
+        }
+
+        public event NotifyCollectionChangedEventHandler CollectionChanged;
+
+        public int Count
+        {
+            get { return LocalValues.Count; }
+        }
+
+        public object SyncRoot { get; protected set; }
+
+        public bool IsSynchronized
+        {
+            get { return !Monitor.IsEntered(SyncRoot); }
+        }
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            T[] array;
+            lock (SyncRoot)
+            {
+                array = ToArray();
+            }
+            return array.Cast<T>().GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public void CopyTo(T[] array, int arrayIndex)
+        {
+            lock (SyncRoot)
+            {
+                LocalValues.CopyTo(array, arrayIndex);
+            }
+        }
+
+        public bool TryAdd(T item)
+        {
+            lock (SyncRoot)
+            {
+                Add(item);
+                return Contains(item);
+            }
+        }
+
+        public bool TryTake(out T item)
+        {
+            lock (SyncRoot)
+            {
+                item = this[Count];
+            }
+            return true;
+        }
+
+        public T[] ToArray()
+        {
+            lock (SyncRoot)
+            {
+                return LocalValues.ToArray();
+            }
+        }
+
+        public void CopyTo(Array array, int index)
+        {
+            lock (SyncRoot)
+            {
+                for (int i = index; i < LocalValues.Count; i++)
+                {
+                    T localValue = LocalValues.ElementAt(i);
+                    array.SetValue(localValue, i);
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Creates a new Instance of the NetworkValueBag
+        /// </summary>
+        /// <param name="port"></param>
+        /// <param name="guid"></param>
+        /// <returns></returns>
+        public static NetworkValueBag<T> CreateNetworkValueCollection(ushort port, string guid)
+        {
+            return new NetworkValueBag<T>(port, guid);
+        }
+
+        /// <summary>
+        ///     Must be called to ensure a Single Usage of an GUID
+        /// </summary>
+        /// <param name="guid"></param>
+        /// <exception cref="ArgumentException"></exception>
+        protected static void RegisterCollecion(string guid)
+        {
+            if (NetworkListControler.Guids.Contains(guid))
+            {
+                throw new ArgumentException(@"This guid is in use. Please use a global _Uniq_ Identifier", "guid");
+            }
+            NetworkListControler.Guids.Add(guid);
+        }
+
+        /// <summary>
+        ///     Gets a non tracking version of all items that are stored on the server
+        /// </summary>
+        /// <param name="host"></param>
+        /// <param name="port"></param>
+        /// <param name="guid"></param>
+        /// <returns></returns>
+        public static async Task<ICollection<T>> GetCollection(string host, ushort port, string guid)
+        {
+            T[] sender = await NetworkFactory.Instance.GetSender(port).SendRequstMessage<T[]>(new RequstMessage
+            {
+                InfoState = NetworkCollectionProtocol.CollectionGetCollection,
+                Message = guid
+            }, host);
+
+            return sender;
+        }
+
         private void RegisterCallbacks()
         {
             TCPNetworkReceiver.RegisterMessageBaseInbound(pPullAddMessage, NetworkCollectionProtocol.CollectionAdd);
             TCPNetworkReceiver.RegisterMessageBaseInbound(pPullClearMessage, NetworkCollectionProtocol.CollectionReset);
             TCPNetworkReceiver.RegisterMessageBaseInbound(pPullRemoveMessage, NetworkCollectionProtocol.CollectionRemove);
-            TCPNetworkReceiver.RegisterMessageBaseInbound(PullRegisterMessage, NetworkCollectionProtocol.CollectionRegisterUser);
-            TCPNetworkReceiver.RegisterMessageBaseInbound(PullUnRegisterMessage, NetworkCollectionProtocol.CollectionUnRegisterUser);
-            TCPNetworkReceiver.RegisterRequstHandler(PullGetCollectionMessage, NetworkCollectionProtocol.CollectionGetCollection);
+            TCPNetworkReceiver.RegisterMessageBaseInbound(PullRegisterMessage,
+                NetworkCollectionProtocol.CollectionRegisterUser);
+            TCPNetworkReceiver.RegisterMessageBaseInbound(PullUnRegisterMessage,
+                NetworkCollectionProtocol.CollectionUnRegisterUser);
+            TCPNetworkReceiver.RegisterRequstHandler(PullGetCollectionMessage,
+                NetworkCollectionProtocol.CollectionGetCollection);
             TCPNetworkReceiver.RegisterRequstHandler(PullConnectMessage, NetworkCollectionProtocol.CollectionGetUsers);
         }
 
@@ -157,13 +422,15 @@ namespace JPB.Communication.Shared
             TCPNetworkReceiver.UnregisterChanged(pPullClearMessage, NetworkCollectionProtocol.CollectionReset);
             TCPNetworkReceiver.UnregisterChanged(pPullRemoveMessage, NetworkCollectionProtocol.CollectionRemove);
             TCPNetworkReceiver.UnregisterChanged(PullRegisterMessage, NetworkCollectionProtocol.CollectionRegisterUser);
-            TCPNetworkReceiver.UnregisterChanged(PullUnRegisterMessage, NetworkCollectionProtocol.CollectionUnRegisterUser);
-            TCPNetworkReceiver.UnRegisterRequstHandler(PullGetCollectionMessage, NetworkCollectionProtocol.CollectionGetCollection);
+            TCPNetworkReceiver.UnregisterChanged(PullUnRegisterMessage,
+                NetworkCollectionProtocol.CollectionUnRegisterUser);
+            TCPNetworkReceiver.UnRegisterRequstHandler(PullGetCollectionMessage,
+                NetworkCollectionProtocol.CollectionGetCollection);
             TCPNetworkReceiver.UnRegisterRequstHandler(PullConnectMessage, NetworkCollectionProtocol.CollectionGetUsers);
         }
 
         /// <summary>
-        /// Callback for CollectionGetUsers
+        ///     Callback for CollectionGetUsers
         /// </summary>
         /// <param name="arg"></param>
         /// <returns></returns>
@@ -172,50 +439,50 @@ namespace JPB.Communication.Shared
             if (arg.Message is string && arg.Message == Guid)
                 lock (SyncRoot)
                 {
-                    if (!this.CollectionRecievers.Contains(arg.Sender))
+                    if (!CollectionRecievers.Contains(arg.Sender))
                     {
-                        this.CollectionRecievers.Add(arg.Sender);
+                        CollectionRecievers.Add(arg.Sender);
                     }
-                    if (!this.CollectionRecievers.Contains(NetworkInfoBase.IpAddress.ToString()))
+                    if (!CollectionRecievers.Contains(NetworkInfoBase.IpAddress.ToString()))
                     {
-                        this.CollectionRecievers.Add(NetworkInfoBase.IpAddress.ToString());
+                        CollectionRecievers.Add(NetworkInfoBase.IpAddress.ToString());
                     }
-                    return this.CollectionRecievers.ToArray();
+                    return CollectionRecievers.ToArray();
                 }
             return null;
         }
 
         /// <summary>
-        /// Connects this Collection to one Host inside the NetworkCollection
-        /// After the Connect this instance will get:
-        /// All Other existing Users
-        /// A Copy of the Current Network List
+        ///     Connects this Collection to one Host inside the NetworkCollection
+        ///     After the Connect this instance will get:
+        ///     All Other existing Users
+        ///     A Copy of the Current Network List
         /// </summary>
         /// <param name="host"></param>
         /// <returns></returns>
         public virtual async Task<bool> Connect(string host)
         {
-            var collection = GetCollection(host, this.Port, Guid);
+            Task<ICollection<T>> collection = GetCollection(host, Port, Guid);
 
             ConnectedToHost = host;
-            var sendRequstMessage = await TcpNetworkSernder.SendRequstMessage<string[]>(
-                new RequstMessage() { InfoState = NetworkCollectionProtocol.CollectionGetUsers, Message = Guid }, host);
+            string[] sendRequstMessage = await TcpNetworkSernder.SendRequstMessage<string[]>(
+                new RequstMessage {InfoState = NetworkCollectionProtocol.CollectionGetUsers, Message = Guid}, host);
 
-            var users = sendRequstMessage;
+            string[] users = sendRequstMessage;
 
             if (users == null)
             {
                 return false;
             }
 
-            this.CollectionRecievers = new List<string>(users);
+            CollectionRecievers = new List<string>(users);
 #pragma warning disable 4014
             TcpNetworkSernder.SendMultiMessageAsync(
 #pragma warning restore 4014
-new MessageBase() { InfoState = NetworkCollectionProtocol.CollectionRegisterUser }, users);
+                new MessageBase {InfoState = NetworkCollectionProtocol.CollectionRegisterUser}, users);
             Registerd = true;
 
-            foreach (var item in await collection)
+            foreach (T item in await collection)
             {
                 LocalValues.Add(item);
                 TriggerAdd(item);
@@ -224,7 +491,7 @@ new MessageBase() { InfoState = NetworkCollectionProtocol.CollectionRegisterUser
         }
 
         /// <summary>
-        /// Callback for CollectionGetCollection
+        ///     Callback for CollectionGetCollection
         /// </summary>
         /// <param name="arg"></param>
         /// <returns></returns>
@@ -237,21 +504,6 @@ new MessageBase() { InfoState = NetworkCollectionProtocol.CollectionRegisterUser
             {
                 return LocalValues.ToArray();
             }
-        }
-
-        public override sealed ushort Port { get; internal set; }
-        public string Guid { get; protected set; }
-        public int Count { get { return LocalValues.Count; } }
-        public object SyncRoot { get; protected set; }
-        public bool IsReadOnly { get { return false; } }
-        public bool IsFixedSize { get { return false; } }
-        public bool IsDisposing { get; protected set; }
-
-        public bool Registerd { get; protected set; }
-
-        public bool IsSynchronized
-        {
-            get { return !Monitor.IsEntered(SyncRoot); }
         }
 
         protected void PullRegisterMessage(MessageBase obj)
@@ -312,8 +564,8 @@ new MessageBase() { InfoState = NetworkCollectionProtocol.CollectionRegisterUser
                 {
                     lock (SyncRoot)
                     {
-                        LocalValues.Add((T)mess.Value);
-                        TriggerAdd((T)mess.Value);
+                        LocalValues.Add((T) mess.Value);
+                        TriggerAdd((T) mess.Value);
                     }
                 }
             }
@@ -344,9 +596,9 @@ new MessageBase() { InfoState = NetworkCollectionProtocol.CollectionRegisterUser
                 {
                     lock (SyncRoot)
                     {
-                        var value = (T)mess.Value;
-                        var indexOf = IndexOf(value);
-                        var remove = LocalValues.Remove(value);
+                        var value = (T) mess.Value;
+                        int indexOf = IndexOf(value);
+                        bool remove = LocalValues.Remove(value);
                         if (remove)
                             TriggerRemove(value, indexOf);
                     }
@@ -371,7 +623,7 @@ new MessageBase() { InfoState = NetworkCollectionProtocol.CollectionRegisterUser
             }
 
             //Possible long term work
-            var sendMultiMessage = await TcpNetworkSernder.SendMultiMessageAsync(mess, ips);
+            IEnumerable<string> sendMultiMessage = await TcpNetworkSernder.SendMultiMessageAsync(mess, ips);
 
             lock (SyncRoot)
             {
@@ -394,201 +646,6 @@ new MessageBase() { InfoState = NetworkCollectionProtocol.CollectionRegisterUser
             await SendPessage(NetworkCollectionProtocol.CollectionRemove, item);
         }
 
-        public IEnumerator<T> GetEnumerator()
-        {
-            T[] array;
-            lock (SyncRoot)
-            {
-                array = ToArray();
-            }
-            return array.Cast<T>().GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
-        public virtual void Add(T item)
-        {
-            lock (SyncRoot)
-            {
-                PushAddMessage(item);
-                LocalValues.Add(item);
-                TriggerAdd(item);
-            }
-        }
-
-        public int Add(object value)
-        {
-            lock (SyncRoot)
-            {
-                this.Add((T)value);
-                return Count;
-            }
-        }
-
-        /// <summary>
-        /// Not thread save
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public bool Contains(object value)
-        {
-            return this.Contains((T)value);
-        }
-
-        public void Clear()
-        {
-            lock (SyncRoot)
-            {
-                PushClearMessage();
-                LocalValues.Clear();
-                TriggerReset();
-            }
-        }
-
-        /// <summary>
-        /// Not thread save
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public int IndexOf(object value)
-        {
-            return this.IndexOf((T)value);
-        }
-
-        /// <summary>
-        /// Not Implemented
-        /// </summary>
-        /// <param name="index"></param>
-        /// <param name="value"></param>
-        public void Insert(int index, object value)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Remove(object value)
-        {
-            this.Remove((T)value);
-        }
-
-        public int IndexOf(T item)
-        {
-            int result = -1;
-            for (int i = 0; i < LocalValues.Count; i++)
-            {
-                var localValue = this[i];
-
-                if (localValue.Equals(item))
-                {
-                    result = i;
-                    break;
-                }
-            }
-            return result;
-        }
-
-        /// <summary>
-        /// To be Supported
-        /// throw new NotImplementedException();
-        /// </summary>
-        /// <param name="index"></param>
-        /// <param name="item"></param>
-        public void Insert(int index, T item)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// To be Supported
-        /// </summary>
-        /// <param name="index"></param>
-        public void RemoveAt(int index)
-        {
-            this.Remove(this[index]);
-        }
-
-        object IList.this[int index]
-        {
-            get { return this[index]; }
-            set { this[index] = (T)value; }
-        }
-
-        public T this[int index]
-        {
-            get { return this.LocalValues.ElementAt(index); }
-            set { this.Insert(index, value); }
-        }
-
-        public bool Remove(T item)
-        {
-            lock (SyncRoot)
-            {
-                PushRemoveMessage(item);
-                var remove = LocalValues.Remove(item);
-                if (remove)
-                    TriggerRemove(item, IndexOf(item));
-                return remove;
-            }
-        }
-
-        public bool Contains(T item)
-        {
-            lock (SyncRoot)
-            {
-                return LocalValues.Contains(item);
-            }
-        }
-
-        public void CopyTo(T[] array, int arrayIndex)
-        {
-            lock (SyncRoot)
-            {
-                LocalValues.CopyTo(array, arrayIndex);
-            }
-        }
-
-        public bool TryAdd(T item)
-        {
-            lock (SyncRoot)
-            {
-                this.Add(item);
-                return this.Contains(item);
-            }
-        }
-
-        public bool TryTake(out T item)
-        {
-            lock (SyncRoot)
-            {
-                item = this[this.Count];
-            }
-            return true;
-        }
-
-        public T[] ToArray()
-        {
-            lock (SyncRoot)
-            {
-                return LocalValues.ToArray();
-            }
-        }
-
-        public void CopyTo(Array array, int index)
-        {
-            lock (SyncRoot)
-            {
-                for (int i = index; i < LocalValues.Count; i++)
-                {
-                    var localValue = LocalValues.ElementAt(i);
-                    array.SetValue(localValue, i);
-                }
-            }
-        }
-
-        public event NotifyCollectionChangedEventHandler CollectionChanged;
-
         protected virtual void TriggerAdd(T added)
         {
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, added));
@@ -596,7 +653,8 @@ new MessageBase() { InfoState = NetworkCollectionProtocol.CollectionRegisterUser
 
         protected virtual void TriggerRemove(T removed, int result)
         {
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, removed, result));
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, removed,
+                result));
         }
 
         protected virtual void TriggerReset()
@@ -606,14 +664,14 @@ new MessageBase() { InfoState = NetworkCollectionProtocol.CollectionRegisterUser
 
         protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
-            var handler = CollectionChanged;
+            NotifyCollectionChangedEventHandler handler = CollectionChanged;
             if (handler != null)
                 handler(this, e);
         }
 
         public virtual async Task<bool> Reload()
         {
-            var collection = await GetCollection(ConnectedToHost, 1337, Guid);
+            ICollection<T> collection = await GetCollection(ConnectedToHost, 1337, Guid);
             lock (SyncRoot)
             {
                 LocalValues.Clear();
@@ -621,28 +679,13 @@ new MessageBase() { InfoState = NetworkCollectionProtocol.CollectionRegisterUser
                 if (collection == null)
                     return false;
 
-                foreach (var item in collection)
+                foreach (T item in collection)
                 {
                     LocalValues.Add(item);
                 }
 
                 return true;
             }
-        }
-
-        public void Dispose()
-        {
-            if (IsDisposing)
-                return;
-
-            IsDisposing = true;
-
-            PushUnRegisterMessage();
-            UnRegisterCallbacks();
-
-            NetworkListControler.Guids.Remove(Guid);
-            LocalValues = null;
-            CollectionRecievers = null;
         }
 
         ~NetworkValueBag()

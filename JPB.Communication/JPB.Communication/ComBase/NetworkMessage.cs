@@ -34,10 +34,10 @@ namespace JPB.Communication.ComBase
         internal NetworkMessage(SerializationInfo info,
             StreamingContext context)
         {
-            GUID = (Guid)info.GetValue("GUID", typeof(Guid));
-            MessageBase = (byte[])info.GetValue("MessageBase", typeof(byte[]));
-            Sender = (string)info.GetValue("Sender", typeof(string));
-            Reciver = (string)info.GetValue("Reciver", typeof(string));
+            GUID = (Guid) info.GetValue("GUID", typeof (Guid));
+            MessageBase = (byte[]) info.GetValue("MessageBase", typeof (byte[]));
+            Sender = (string) info.GetValue("Sender", typeof (string));
+            Reciver = (string) info.GetValue("Reciver", typeof (string));
         }
 
         public Guid GUID { get; set; }

@@ -30,24 +30,57 @@ using JPB.Communication.ComBase.Serializer.Contracts;
 namespace JPB.Communication.ComBase
 {
     /// <summary>
-    /// Delegate for Incomming or Outging messages
+    ///     Delegate for Incomming or Outging messages
     /// </summary>
     /// <param name="mess"></param>
     /// <param name="port"></param>
     public delegate void MessageDelegate(MessageBase mess, ushort port);
 
     /// <summary>
-    /// Delegate for Incomming or Outging messages
+    ///     Delegate for Incomming or Outging messages
     /// </summary>
     /// <param name="mess"></param>
     /// <param name="port"></param>
     public delegate void LargeMessageDelegate(LargeMessage mess, ushort port);
 
     /// <summary>
-    /// The base class for Multible Network instances
+    ///     The base class for Multible Network instances
     /// </summary>
     public abstract class Networkbase
     {
+        public const string TraceCategory = "JPB.Communication";
+
+        /// <summary>
+        ///     The default Serializer
+        /// </summary>
+        public static readonly IMessageSerializer DefaultMessageSerializer;
+
+        /// <summary>
+        ///     A Standart Serializer that compress the message ( good for large MessageBase objects )
+        /// </summary>
+        public static readonly IMessageSerializer CompressedDefaultMessageSerializer;
+
+        //public static readonly IMessageSerializer JsonMessageSerializer;
+        /// <summary>
+        ///     A Standart JSON Serializer
+        /// </summary>
+        /// <summary>
+        ///     A Standart Soap Serializer
+        /// </summary>
+        public static readonly IMessageSerializer SoapSerializer;
+
+        /// <summary>
+        ///     A Standart NetData Serializer
+        /// </summary>
+        public static readonly IMessageSerializer NetDataSerializer;
+
+        /// <summary>
+        ///     A Full XML Serializer
+        /// </summary>
+        public static readonly IMessageSerializer FullXmlSerializer;
+
+        private IMessageSerializer _serlilizer;
+
         static Networkbase()
         {
             DefaultMessageSerializer = new DefaultMessageSerlilizer();
@@ -59,22 +92,19 @@ namespace JPB.Communication.ComBase
         }
 
         /// <summary>
-        /// 
         /// </summary>
         protected Networkbase()
         {
             Serlilizer = DefaultMessageSerializer;
         }
 
-        public const string TraceCategory = "JPB.Communication";
-
         /// <summary>
-        /// Defines the Port the Instance is working on
+        ///     Defines the Port the Instance is working on
         /// </summary>
         public abstract ushort Port { get; internal set; }
 
         /// <summary>
-        /// When Serlilizaion is request this Interface will be used
+        ///     When Serlilizaion is request this Interface will be used
         /// </summary>
         public IMessageSerializer Serlilizer
         {
@@ -89,38 +119,6 @@ namespace JPB.Communication.ComBase
             }
         }
 
-        /// <summary>
-        /// The default Serializer
-        /// </summary>
-        public static readonly IMessageSerializer DefaultMessageSerializer;
-
-        /// <summary>
-        /// A Standart Serializer that compress the message ( good for large MessageBase objects )
-        /// </summary>
-        public static readonly IMessageSerializer CompressedDefaultMessageSerializer;
-
-        /// <summary>
-        /// A Standart JSON Serializer
-        /// </summary>
-        //public static readonly IMessageSerializer JsonMessageSerializer;
-
-        /// <summary>
-        /// A Standart Soap Serializer
-        /// </summary>
-        public static readonly IMessageSerializer SoapSerializer;
-
-        /// <summary>
-        /// A Standart NetData Serializer
-        /// </summary>
-        public static readonly IMessageSerializer NetDataSerializer;
-
-        /// <summary>
-        /// A Full XML Serializer
-        /// </summary>
-        public static readonly IMessageSerializer FullXmlSerializer;
-
-        private IMessageSerializer _serlilizer;
-
         public static event MessageDelegate OnNewItemLoadedSuccess;
         public static event EventHandler<string> OnNewItemLoadedFail;
         public static event EventHandler<NetworkMessage> OnIncommingMessage;
@@ -133,7 +131,6 @@ namespace JPB.Communication.ComBase
         }
 
         /// <summary>
-        /// 
         /// </summary>
         /// <param name="metaData"></param>
         /// <param name="contendLoaded"></param>
@@ -141,7 +138,7 @@ namespace JPB.Communication.ComBase
         {
             try
             {
-                var handler = OnNewLargeItemLoadedSuccess;
+                LargeMessageDelegate handler = OnNewLargeItemLoadedSuccess;
                 var largeMessage = new LargeMessage(metaData as StreamMetaMessage, contendLoaded);
                 if (handler != null)
                     handler(largeMessage, Port);
@@ -158,7 +155,7 @@ namespace JPB.Communication.ComBase
         {
             try
             {
-                var handler = OnMessageSend;
+                MessageDelegate handler = OnMessageSend;
                 if (handler != null)
                     handler(message, Port);
             }
@@ -172,7 +169,7 @@ namespace JPB.Communication.ComBase
         {
             try
             {
-                var handler = OnIncommingMessage;
+                EventHandler<NetworkMessage> handler = OnIncommingMessage;
                 if (handler != null)
                     handler(this, strReceived);
             }
@@ -186,7 +183,7 @@ namespace JPB.Communication.ComBase
         {
             try
             {
-                var handler = OnNewItemLoadedFail;
+                EventHandler<string> handler = OnNewItemLoadedFail;
                 if (handler != null)
                     handler(this, strReceived);
             }
@@ -200,7 +197,7 @@ namespace JPB.Communication.ComBase
         {
             try
             {
-                var handler = OnNewItemLoadedSuccess;
+                MessageDelegate handler = OnNewItemLoadedSuccess;
                 if (handler != null)
                     handler(loadMessageBaseFromBinary, Port);
             }
@@ -214,7 +211,7 @@ namespace JPB.Communication.ComBase
         {
             try
             {
-                return this.Serlilizer.DeSerializeMessage(source);
+                return Serlilizer.DeSerializeMessage(source);
             }
             catch (Exception e)
             {
@@ -226,7 +223,7 @@ namespace JPB.Communication.ComBase
         {
             try
             {
-                return this.Serlilizer.SerializeMessage(a);
+                return Serlilizer.SerializeMessage(a);
             }
             catch (Exception e)
             {
@@ -235,7 +232,6 @@ namespace JPB.Communication.ComBase
         }
 
         /// <summary>
-        /// 
         /// </summary>
         /// <param name="A"></param>
         /// <returns></returns>
@@ -243,7 +239,7 @@ namespace JPB.Communication.ComBase
         {
             try
             {
-                return this.Serlilizer.SerializeMessageContent(A);
+                return Serlilizer.SerializeMessageContent(A);
             }
             catch (Exception e)
             {
@@ -253,13 +249,13 @@ namespace JPB.Communication.ComBase
 
         public MessageBase LoadMessageBaseFromBinary(byte[] source)
         {
-            return this.Serlilizer.DeSerializeMessageContent(source);
+            return Serlilizer.DeSerializeMessageContent(source);
         }
 
         protected NetworkMessage Wrap(MessageBase message)
         {
             var mess = new NetworkMessage();
-            var saveMessageBaseAsBinary = SaveMessageBaseAsContent(message);
+            byte[] saveMessageBaseAsBinary = SaveMessageBaseAsContent(message);
 
             if (!saveMessageBaseAsBinary.Any())
                 return null;

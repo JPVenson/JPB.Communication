@@ -23,12 +23,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Runtime.Remoting.Messaging;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.ServiceModel.Channels;
 using System.Text;
 using System.Xml.Serialization;
 using JPB.Communication.ComBase.Messages;
@@ -37,78 +34,90 @@ using JPB.Communication.ComBase.Serializer.Contracts;
 namespace JPB.Communication.ComBase.Serializer
 {
     /// <summary>
-    /// Contains a Mixed Message Serlilizer that Converts the Message as XML and the Content to Binary
-    /// Is able to work with objects that are in the same namespace but in diferent Assemablys like when using ILMerge
-    /// After 20 mb of message size the content of the message will be paged to the disc
+    ///     Contains a Mixed Message Serlilizer that Converts the Message as XML and the Content to Binary
+    ///     Is able to work with objects that are in the same namespace but in diferent Assemablys like when using ILMerge
+    ///     After 20 mb of message size the content of the message will be paged to the disc
     /// </summary>
     public class DefaultMessageSerlilizer : IMessageSerializer
     {
         //IL MERGE OR RENAMING SUPPORT
-        internal sealed class IlMergeBinder : SerializationBinder
-        {
-            static IlMergeBinder()
-            {
-                TypnameToType = new Dictionary<string, Type>();
-                MessageBaseTypeName = typeof(MessageBase).FullName;
-                AdditionalLookups = new List<AssemblyName>();
-            }
 
-            private static Dictionary<string, Type> TypnameToType { get; set; }
-            private static readonly string MessageBaseTypeName;
-            private static readonly List<AssemblyName> AdditionalLookups;
-
-            public override Type BindToType(string assemblyName, string typeName)
-            {
-                //Native support for MessageBase
-                if (MessageBaseTypeName == typeName)
-                {
-                    return typeof(MessageBase);
-                }
-
-                //Optimistic Serach
-                if (TypnameToType.ContainsKey(typeName))
-                {
-                    return TypnameToType[typeName];
-                }
-
-                //Search throu all known assemblys
-                var callingAssembly = Assembly.GetEntryAssembly();
-                var current = Assembly.GetExecutingAssembly();
-
-                var firstOrDefault = callingAssembly.GetReferencedAssemblies().Concat(new[]
-                {
-                    current.GetName(),
-                    callingAssembly.GetName()
-                })
-                    .Select(Assembly.Load)
-                    .Select(assembly => assembly.GetType(typeName)).FirstOrDefault(type => type != null);
-
-                if (firstOrDefault != null)
-                {
-                    TypnameToType.Add(typeName, firstOrDefault);
-                }
-                return firstOrDefault;
-            }
-
-            public void AddOptimistic(Type type)
-            {
-                var fullName = type.FullName;
-                if (!TypnameToType.ContainsKey(fullName) && !fullName.Contains("System") && !fullName.Contains("mscorlib"))
-                {
-                    TypnameToType.Add(type.FullName, type);
-                }
-            }
-        }
-
+        internal static Encoding Encoding = Encoding.UTF8;
+        private IlMergeBinder _binder;
         public bool IlMergeSupport { get; set; }
         public bool PrevendDiscPageing { get; set; }
 
+        public byte[] SerializeMessage(NetworkMessage a)
+        {
+            using (Stream stream = GetStream(a.MessageBase))
+            {
+                var serializer = new XmlSerializer(a.GetType());
+                serializer.Serialize(stream, a);
+                return getInfo(stream);
+            }
+        }
+
+        public byte[] SerializeMessageContent(MessageBase mess)
+        {
+            if (IlMergeSupport)
+            {
+                //what goes out maybe comes again in
+                _binder.AddOptimistic(mess.Message.GetType());
+                _binder.AddOptimistic(mess.InfoState.GetType());
+            }
+
+            //support for large objects
+            using (Stream stream = GetStream(mess.Message))
+            {
+                CreateFormatter().Serialize(stream, mess);
+                return getInfo(stream);
+            }
+        }
+
+        public NetworkMessage DeSerializeMessage(byte[] source)
+        {
+            try
+            {
+                using (var textReader = new StringReader(ResolveStringContent(source)))
+                {
+                    var deserializer = new XmlSerializer(typeof (NetworkMessage));
+                    var tcpMessage = (NetworkMessage) deserializer.Deserialize(textReader);
+                    return tcpMessage;
+                }
+            }
+            catch (Exception e)
+            {
+                return null;
+            }
+        }
+
+        public MessageBase DeSerializeMessageContent(byte[] source)
+        {
+            using (var memst = new MemoryStream(source))
+            {
+                BinaryFormatter binaryFormatter = CreateFormatter();
+                if (IlMergeSupport)
+                {
+                    binaryFormatter.Binder = new IlMergeBinder();
+                }
+                var deserialize = (MessageBase) binaryFormatter.Deserialize(memst);
+                return deserialize;
+            }
+        }
+
+        public string ResolveStringContent(byte[] message)
+        {
+            return (Encoding.GetString(message, 0, message.Length));
+        }
+
         private Stream GetStream(object validator)
         {
-            var target = string.Empty;
+            string target = string.Empty;
             Stream stream = null;
 
-            if (!PrevendDiscPageing && (validator is Array && (validator as Array).LongLength > (InternalMemoryHolder.MaximumStoreageInMemory * 4)))
+            if (!PrevendDiscPageing &&
+                (validator is Array &&
+                 (validator as Array).LongLength > (InternalMemoryHolder.MaximumStoreageInMemory*4)))
             {
                 target = Path.GetTempFileName();
                 stream = new FileStream(target, FileMode.Open);
@@ -128,22 +137,9 @@ namespace JPB.Communication.ComBase.Serializer
             return array;
         }
 
-        internal static Encoding Encoding = System.Text.Encoding.UTF8;
-        private IlMergeBinder _binder;
-
-        public byte[] SerializeMessage(NetworkMessage a)
-        {
-            using (var stream = GetStream(a.MessageBase))
-            {
-                var serializer = new XmlSerializer(a.GetType());
-                serializer.Serialize(stream, a);
-                return getInfo(stream);
-            }
-        }
-
         private BinaryFormatter CreateFormatter()
         {
-            var binaryFormatter = new BinaryFormatter()
+            var binaryFormatter = new BinaryFormatter
             {
                 AssemblyFormat = FormatterAssemblyStyle.Simple,
                 FilterLevel = TypeFilterLevel.Full,
@@ -155,57 +151,62 @@ namespace JPB.Communication.ComBase.Serializer
             return binaryFormatter;
         }
 
-        public byte[] SerializeMessageContent(MessageBase mess)
+        internal sealed class IlMergeBinder : SerializationBinder
         {
-            if (IlMergeSupport)
+            private static readonly string MessageBaseTypeName;
+            private static readonly List<AssemblyName> AdditionalLookups;
+
+            static IlMergeBinder()
             {
-                //what goes out maybe comes again in
-                _binder.AddOptimistic(mess.Message.GetType());
-                _binder.AddOptimistic(mess.InfoState.GetType());
+                TypnameToType = new Dictionary<string, Type>();
+                MessageBaseTypeName = typeof (MessageBase).FullName;
+                AdditionalLookups = new List<AssemblyName>();
             }
 
-            //support for large objects
-            using (var stream = GetStream(mess.Message))
-            {
-                CreateFormatter().Serialize(stream, mess);
-                return getInfo(stream);
-            }
-        }
+            private static Dictionary<string, Type> TypnameToType { get; set; }
 
-        public NetworkMessage DeSerializeMessage(byte[] source)
-        {
-            try
+            public override Type BindToType(string assemblyName, string typeName)
             {
-                using (var textReader = new StringReader(ResolveStringContent(source)))
+                //Native support for MessageBase
+                if (MessageBaseTypeName == typeName)
                 {
-                    var deserializer = new XmlSerializer(typeof(NetworkMessage));
-                    var tcpMessage = (NetworkMessage)deserializer.Deserialize(textReader);
-                    return tcpMessage;
+                    return typeof (MessageBase);
+                }
+
+                //Optimistic Serach
+                if (TypnameToType.ContainsKey(typeName))
+                {
+                    return TypnameToType[typeName];
+                }
+
+                //Search throu all known assemblys
+                Assembly callingAssembly = Assembly.GetEntryAssembly();
+                Assembly current = Assembly.GetExecutingAssembly();
+
+                Type firstOrDefault = callingAssembly.GetReferencedAssemblies().Concat(new[]
+                {
+                    current.GetName(),
+                    callingAssembly.GetName()
+                })
+                    .Select(Assembly.Load)
+                    .Select(assembly => assembly.GetType(typeName)).FirstOrDefault(type => type != null);
+
+                if (firstOrDefault != null)
+                {
+                    TypnameToType.Add(typeName, firstOrDefault);
+                }
+                return firstOrDefault;
+            }
+
+            public void AddOptimistic(Type type)
+            {
+                string fullName = type.FullName;
+                if (!TypnameToType.ContainsKey(fullName) && !fullName.Contains("System") &&
+                    !fullName.Contains("mscorlib"))
+                {
+                    TypnameToType.Add(type.FullName, type);
                 }
             }
-            catch (Exception e)
-            {
-                return null;
-            }
-        }
-
-        public MessageBase DeSerializeMessageContent(byte[] source)
-        {
-            using (var memst = new MemoryStream(source))
-            {
-                var binaryFormatter = CreateFormatter();
-                if (IlMergeSupport)
-                {
-                    binaryFormatter.Binder = new IlMergeBinder();
-                }
-                var deserialize = (MessageBase)binaryFormatter.Deserialize(memst);
-                return deserialize;
-            }
-        }
-
-        public string ResolveStringContent(byte[] message)
-        {
-            return (Encoding.GetString(message, 0, message.Length));
         }
     }
 }

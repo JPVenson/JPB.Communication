@@ -33,10 +33,10 @@ namespace JPB.Communication.Shared
 {
     public class SeriellTaskFactory
     {
+        private readonly object _syncRoot;
         private Thread _thread;
 
         private bool _working;
-        private object _syncRoot;
 
 
         public SeriellTaskFactory()

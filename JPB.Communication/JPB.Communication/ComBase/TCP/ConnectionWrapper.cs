@@ -17,51 +17,50 @@
 
  https://github.com/JPVenson/JPB.Communication/blob/master/LICENSE
  */
+
 using System;
-using System.Net.Sockets;
+using JPB.Communication.Contracts;
 
 namespace JPB.Communication.ComBase.TCP
 {
     /// <summary>
-    /// 
     /// </summary>
     public class ConnectionWrapper : IComparable<ConnectionWrapper>
     {
         /// <summary>
-        /// 
         /// </summary>
         /// <param name="tcpNetworkSender"></param>
         /// <param name="tcpNetworkReceiver"></param>
-        /// <param name="socket"></param>
+        /// <param name="ISocket"></param>
         /// <param name="ip"></param>
-        public ConnectionWrapper(string ip, Socket socket, TCPNetworkReceiver tcpNetworkReceiver, TCPNetworkSender tcpNetworkSender)
+        public ConnectionWrapper(string ip, ISocket ISocket, TCPNetworkReceiver tcpNetworkReceiver,
+            TCPNetworkSender tcpNetworkSender)
         {
             Ip = ip;
-            Socket = socket;
+            Socket = ISocket;
             TCPNetworkReceiver = tcpNetworkReceiver;
             TCPNetworkSender = tcpNetworkSender;
         }
 
         /// <summary>
-        /// 
         /// </summary>
         public string Ip { get; private set; }
+
         /// <summary>
-        /// 
         /// </summary>
-        public Socket Socket { get; private set; }
+        public ISocket Socket { get; private set; }
+
         /// <summary>
-        /// 
         /// </summary>
         public TCPNetworkReceiver TCPNetworkReceiver { get; private set; }
+
         /// <summary>
-        /// 
         /// </summary>
         public TCPNetworkSender TCPNetworkSender { get; private set; }
 
         public int CompareTo(ConnectionWrapper other)
         {
-            return System.String.Compare(Ip, other.Ip, System.StringComparison.Ordinal);
+            return String.Compare(Ip, other.Ip, StringComparison.Ordinal);
         }
     }
 }

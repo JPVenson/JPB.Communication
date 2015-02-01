@@ -17,6 +17,7 @@
 
  https://github.com/JPVenson/JPB.Communication/blob/master/LICENSE
  */
+
 namespace JPB.Communication.ComBase.TCP
 {
     internal abstract class TcpConnectionBase : ConnectionBase

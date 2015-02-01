@@ -56,7 +56,6 @@
     <Compile Include="ComBase\Serializer\NetContractSerializer.cs" />
     <Compile Include="ComBase\Serializer\SoapSerializer.cs" />
     <Compile Include="ComBase\TCP\ConnectionWrapper.cs" />
-    <Compile Include="ComBase\UDP\UDPNetworkReceiver.cs" />
     <Compile Include="Contracts\INetworkReceiver.cs" />
     <Compile Include="ComBase\Messages\StreamMetaMessage.cs" />
     <Compile Include="ComBase\Serializer\FullXmlSerializer.cs" />
@@ -79,6 +78,9 @@
     <Compile Include="ComBase\NetworkMessage.cs" />
     <Compile Include="ComBase\TCP\TCPNetworkReceiver.cs" />
     <Compile Include="ComBase\TCP\TCPNetworkSender.cs" />
+    <Compile Include="Contracts\ISocket.cs" />
+    <Compile Include="Contracts\ISocketFactory.cs" />
+    <Compile Include="Contracts\WinRtSocket.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="NetworkFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -93,7 +95,9 @@
     <None Include="JPB.Communication.2.0.key.pfx" />
     <None Include="JPB.Communication.licenseheader" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="ComBase\UDP\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

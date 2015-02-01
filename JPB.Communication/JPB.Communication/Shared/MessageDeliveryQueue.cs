@@ -17,6 +17,7 @@
 
  https://github.com/JPVenson/JPB.Communication/blob/master/LICENSE
  */
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -28,15 +29,17 @@ using JPB.Communication.ComBase.TCP;
 namespace JPB.Communication.Shared
 {
     /// <summary>
-    /// this queue will manage multi message Deliverys
-    /// The message will be Send in the Order FIFO
-    /// 
+    ///     this queue will manage Multibe message Deliverys
+    ///     The message will be Send in the Order FIFO
     /// </summary>
     public class MessageDeliveryQueue :
         Networkbase,
-        ICollection, 
+        ICollection,
         IEnumerable
     {
+        private readonly SeriellTaskFactory _internal;
+        private readonly TCPNetworkSender _sender;
+
         public MessageDeliveryQueue(ushort port)
         {
             Port = port;
@@ -48,17 +51,36 @@ namespace JPB.Communication.Shared
         public override sealed ushort Port { get; internal set; }
         public ICollection<string> Receivers { get; private set; }
 
-        private TCPNetworkSender _sender;
-        private SeriellTaskFactory _internal;
+        public IEnumerator GetEnumerator()
+        {
+            return _internal.ConcurrentQueue.GetEnumerator();
+        }
 
-        /// <summary>
-        /// Attach to this Event to get the currently send message and all Receivers that were unable to receive
-        /// </summary>
+        public void CopyTo(Array array, int index)
+        {
+            _internal.ConcurrentQueue.ToArray().CopyTo(array, index);
+        }
+
+        public int Count
+        {
+            get { return _internal.ConcurrentQueue.Count; }
+        }
+
+        public object SyncRoot
+        {
+            get { return (Receivers as ICollection).SyncRoot; }
+        }
+
+        public bool IsSynchronized
+        {
+            get { return (Receivers as ICollection).IsSynchronized; }
+        }
+
         public new event Action<MessageDeliveryQueue, MessageBase, string[]> OnMessageSend;
 
         protected virtual void RaiseMessageSend(MessageBase mess, string[] unreacheble)
         {
-            var handler = OnMessageSend;
+            Action<MessageDeliveryQueue, MessageBase, string[]> handler = OnMessageSend;
             if (handler != null)
                 handler(this, mess, unreacheble);
         }
@@ -75,7 +97,7 @@ namespace JPB.Communication.Shared
             if (infoState == null)
                 throw new ArgumentNullException("infoState");
 
-            this.ForceSendMessage(new MessageBase(message)
+            ForceSendMessage(new MessageBase(message)
             {
                 InfoState = infoState
             });
@@ -86,51 +108,16 @@ namespace JPB.Communication.Shared
             if (mess == null)
                 throw new ArgumentNullException("mess");
 
-            var unreachable = _sender.SendMultiMessage(mess, this.Receivers.ToArray()).ToArray();
+            string[] unreachable = _sender.SendMultiMessage(mess, Receivers.ToArray()).ToArray();
             RaiseMessageSend(mess, unreachable);
 
             lock (SyncRoot)
             {
-                foreach (var item in unreachable)
+                foreach (string item in unreachable)
                 {
                     Receivers.Remove(item);
                 }
             }
         }
-
-        public IEnumerator GetEnumerator()
-        {
-            return _internal.ConcurrentQueue.GetEnumerator();
-        }
-
-        public void CopyTo(Array array, int index)
-        {
-            _internal.ConcurrentQueue.ToArray().CopyTo(array, index);
-        }
-
-        public int Count
-        {
-            get
-            {
-                return _internal.ConcurrentQueue.Count;
-            }
-        }
-
-        public object SyncRoot
-        {
-            get
-            {
-                return (Receivers as ICollection).SyncRoot;
-            }
-        }
-
-        public bool IsSynchronized
-        {
-            get
-            {
-                return (Receivers as ICollection).IsSynchronized;
-            }
-        }
-
     }
 }

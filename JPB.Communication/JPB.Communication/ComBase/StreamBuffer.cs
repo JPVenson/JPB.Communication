@@ -17,26 +17,56 @@
 
  https://github.com/JPVenson/JPB.Communication/blob/master/LICENSE
  */
+
 using System.IO;
 using System.Threading.Tasks;
 
 namespace JPB.Communication.ComBase
 {
     /// <summary>
-    /// Buffers a Chunck in Memory and allows the Adjustment of the bytes that are conent
-    /// Due the fact that we are init a buffer with a fixed size but the complete size of written bytes are not that high we got some empty space at the end
+    ///     Buffers a Chunck in Memory and allows the Adjustment of the bytes that are conent
+    ///     Due the fact that we are init a buffer with a fixed size but the complete size of written bytes are not that high
+    ///     we got some empty space at the end
     /// </summary>
     public class StreamBuffer : Stream
     {
-        public StreamBuffer()
-        {
-            UnderlyingStream = new FileStream(Path.GetTempFileName(), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
-        }
-
         public readonly FileStream UnderlyingStream;
 
+        private Task _writeAsync;
+
+        public StreamBuffer()
+        {
+            UnderlyingStream = new FileStream(Path.GetTempFileName(), FileMode.OpenOrCreate, FileAccess.ReadWrite,
+                FileShare.ReadWrite);
+        }
+
         public byte[] Last { get; private set; }
-        Task _writeAsync;
+
+        public override bool CanRead
+        {
+            get { return false; }
+        }
+
+        public override bool CanSeek
+        {
+            get { return false; }
+        }
+
+        public override bool CanWrite
+        {
+            get { return true; }
+        }
+
+        public override long Length
+        {
+            get { return UnderlyingStream.Length; }
+        }
+
+        public override long Position
+        {
+            get { return -1; }
+            set { }
+        }
 
         public override void Flush()
         {
@@ -44,7 +74,7 @@ namespace JPB.Communication.ComBase
         }
 
         /// <summary>
-        /// Possible Blocking
+        ///     Possible Blocking
         /// </summary>
         /// <param name="adjustContent"></param>
         public void Flush(int adjustContent)
@@ -81,32 +111,6 @@ namespace JPB.Communication.ComBase
         public void Write(byte[] buffer)
         {
             Last = buffer;
-        }
-
-        public override bool CanRead
-        {
-            get { return false; }
-        }
-
-        public override bool CanSeek
-        {
-            get { return false; }
-        }
-
-        public override bool CanWrite
-        {
-            get { return true; }
-        }
-
-        public override long Length
-        {
-            get { return UnderlyingStream.Length; }
-        }
-
-        public override long Position
-        {
-            get { return -1; }
-            set { }
         }
     }
 }

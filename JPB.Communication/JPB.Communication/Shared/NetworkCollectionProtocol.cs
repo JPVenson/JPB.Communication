@@ -21,7 +21,7 @@
 namespace JPB.Communication.Shared
 {
     /// <summary>
-    /// A static collection of the Network Contracts that are used be the Collection classes
+    ///     A static collection of the Network Contracts that are used be the Collection classes
     /// </summary>
     public static class NetworkCollectionProtocol
     {
