@@ -11,7 +11,7 @@ using JPB.Communication.ComBase;
 using JPB.Communication.ComBase.Messages;
 using JPB.Communication.ComBase.Messages.Wrapper;
 using JPB.Communication.ComBase.TCP;
-using JPB.Communication.WPF.Controls.Model;
+using JPB.Communication.Forms.Controls.Model;
 
 namespace JPB.Communication.Forms.Controls
 {
