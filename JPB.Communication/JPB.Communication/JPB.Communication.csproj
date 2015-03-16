@@ -88,6 +88,7 @@
     <Compile Include="Shared\NetworkCollectionMessage.cs" />
     <Compile Include="Shared\NetworkCollectionProtocol.cs" />
     <Compile Include="Shared\NetworkListControler.cs" />
+    <Compile Include="Shared\NetworkObjectIntigraion.cs" />
     <Compile Include="Shared\NetworkValueBag.cs" />
     <Compile Include="Shared\SeriellTaskFactory.cs" />
   </ItemGroup>
