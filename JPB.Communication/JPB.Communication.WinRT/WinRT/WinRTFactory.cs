@@ -28,5 +28,11 @@ namespace JPB.Communication.WinRT.WinRT
             if (TraceMessage != null)
                 TraceMessage(sender, arg);
         }
+
+
+        public PCLIntigration.Contracts.Factorys.IDNSFactory DnsFactory
+        {
+            get { return new DnsFactory(); }
+        }
     }
 }

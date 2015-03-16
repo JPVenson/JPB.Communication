@@ -9,7 +9,11 @@ namespace JPB.Communication.PCLIntigration.Shared.CrossPlatform
 {
     public class PclTrace
     {
-        public TextWriter LogWriter { get; private set; }
+        public static TextWriter LogWriter { get; private set; }
+
+        public const string CategoryLineTemplate = "{0} -> {1}";
+
+        private static PclTrace _instance = new PclTrace();
 
         public PclTrace(TextWriter writer)
         {
@@ -25,41 +29,41 @@ namespace JPB.Communication.PCLIntigration.Shared.CrossPlatform
                 (LogWriter as StreamWriter).AutoFlush = true;
         }
 
-        public async Task WriteAsync(string message)
+        public static async Task WriteAsync(string message)
         {
             if (LogWriter != null) await LogWriter.WriteAsync(message);
             OnMessageWritten(new PclTraceWriteEventArgs(message));
         }
 
-        public async Task WriteLineAsync(string message)
+        public static async Task WriteLineAsync(string message)
         {
             if (LogWriter != null) await LogWriter.WriteLineAsync(message);
             OnMessageWritten(new PclTraceWriteEventArgs(message));
         }
 
-        public void Write(string message)
+        public static void Write(string message)
         {
             if (LogWriter != null) LogWriter.Write(message);
             OnMessageWritten(new PclTraceWriteEventArgs(message));
         }
 
-        public void WriteLine(string message)
+        public static void WriteLine(string message)
         {
             if (LogWriter != null) LogWriter.WriteLine(message);
             OnMessageWritten(new PclTraceWriteEventArgs(message));
         }
 
-        protected virtual void OnMessageWritten(PclTraceWriteEventArgs args)
+        public static void WriteLine(string message, string category)
         {
-            NetworkFactory.PlatformFactory.RaiseTraceMessage(this, args);
+            if (LogWriter != null) LogWriter.WriteLine(CategoryLineTemplate, category, message);
+            OnMessageWritten(new PclTraceWriteEventArgs(message));
         }
 
-        internal static void WriteLine(string p, string TraceCategory)
+        protected static void OnMessageWritten(PclTraceWriteEventArgs args)
         {
-            throw new NotImplementedException();
+            NetworkFactory.PlatformFactory.RaiseTraceMessage(_instance, args);
         }
     }
-
 
     public class PclTraceWriteEventArgs : EventArgs
     {

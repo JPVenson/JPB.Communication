@@ -30,6 +30,7 @@ using System.Text;
 using System.Xml.Serialization;
 using JPB.Communication.ComBase.Messages;
 using JPB.Communication.ComBase.Serializer.Contracts;
+using JPB.Communication.PCLIntigration.Shared.CrossPlatform;
 
 namespace JPB.Communication.ComBase.Serializer
 {
@@ -87,6 +88,7 @@ namespace JPB.Communication.ComBase.Serializer
             }
             catch (Exception e)
             {
+                PclTrace.WriteLine(e.ToString(), Networkbase.TraceCategoryCriticalSerilization);
                 return null;
             }
         }

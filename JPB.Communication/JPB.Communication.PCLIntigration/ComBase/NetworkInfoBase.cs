@@ -64,7 +64,7 @@ namespace JPB.Communication.ComBase
                 if (_ip != null)
                     return _ip;
 
-                var firstOrDefault = Dns.GetHostEntry(Dns.GetHostName());
+                var firstOrDefault = DnsAdapter.GetHostEntry(DnsAdapter.GetHostName());
                 //.AddressList.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork);
                 if (firstOrDefault.AddressList.Length > 1)
                 {
@@ -93,10 +93,7 @@ namespace JPB.Communication.ComBase
                     return _exIp;
                 }
 
-                var blockingCall = GetPublicIp();
-                blockingCall.Wait();
-
-                _exIp = IPAddress.Parse(blockingCall.Result);
+                _exIp = IPAddress.Parse(GetPublicIp());
                 return _exIp;
             }
         }
@@ -110,7 +107,7 @@ namespace JPB.Communication.ComBase
         /// <returns></returns>
         public static IPAddress ResolveIp(string host)
         {
-            return RaiseResolveDistantIp(Dns.GetHostAddresses(host), host);
+            return RaiseResolveDistantIp(DnsAdapter.GetHostAddresses(host), host);
         }
 
         public class RequestState
@@ -135,7 +132,7 @@ namespace JPB.Communication.ComBase
         ///     Uses IpCheckUrl for IP check
         /// </summary>
         /// <returns></returns>
-        public async static Task<string> GetPublicIp()
+        public static string GetPublicIp()
         {
             String direction = "";
             HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(IpCheckUrl);

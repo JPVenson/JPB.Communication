@@ -24,5 +24,11 @@ namespace JPB.Communication.WinRT
         {
             return new IPAddress() { Address = address.ToString() };
         }
+
+        public static IPHostEntry AsGeneric(this System.Net.IPHostEntry entry)
+        {
+            return new IPHostEntry() { AddressList = entry.AddressList.Select(s => s.AsGeneric()).ToArray() };
+        }
+
     }
 }

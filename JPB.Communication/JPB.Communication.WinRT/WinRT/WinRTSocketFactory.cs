@@ -11,26 +11,29 @@ namespace JPB.Communication.WinRT.WinRT
     {
         public ISocket CreateAndConnect(string ipOrHost, ushort port)
         {
-            var sock = new WinRtSocket();
-            sock.Connect(ipOrHost, port);
-            return sock;
+            var sock = WinRtSocket.Create();
+            sock.Wait();
+            sock.Result.Connect(ipOrHost, port);
+            return sock.Result;
         }
 
         public async Task<ISocket> CreateAndConnectAsync(string ipOrHost, ushort port)
         {
-            var sock = new WinRtSocket();
+            var sock = await WinRtSocket.Create();
             await sock.ConnectAsync(ipOrHost, port);
             return sock;
         }
 
         public ISocket Create()
         {
-            return new WinRtSocket();
+            var sock = WinRtSocket.Create();
+            sock.Wait();
+            return sock.Result;
         }
 
         public async Task<ISocket> CreateAsync()
         {
-            return new WinRtSocket();
+            return await WinRtSocket.Create();
         }
     }
 }

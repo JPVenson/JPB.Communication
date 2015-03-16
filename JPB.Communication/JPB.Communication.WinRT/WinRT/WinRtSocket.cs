@@ -13,14 +13,23 @@ namespace JPB.Communication.WinRT
     /// </summary>
     public class WinRtSocket : ISocket
     {
-        public WinRtSocket()
-            : this(new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP))
-        {
-        }
-
-        public WinRtSocket(Socket sock)
+        private WinRtSocket(Socket sock)
         {
             _sock = sock;
+        }
+
+        public static Task<ISocket> Create(Socket sock = null)
+        {
+           var taskCreate =  new Task<ISocket>(() =>
+            {
+                if (sock == null)
+                    sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
+
+                var rtSock = new WinRtSocket(sock);
+                return rtSock;
+            });
+           taskCreate.Start();
+           return taskCreate;
         }
 
         private readonly Socket _sock;
@@ -133,5 +142,5 @@ namespace JPB.Communication.WinRT
     }
 
 
-   
+
 }

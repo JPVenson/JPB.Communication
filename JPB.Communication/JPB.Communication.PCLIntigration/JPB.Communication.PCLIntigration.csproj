@@ -33,6 +33,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>false</SignAssembly>
+  </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .NET Framework is automatically included -->
     <None Include="app.config" />
@@ -44,7 +47,9 @@
     <Compile Include="ComBase\ConnectionPool.cs" />
     <Compile Include="ComBase\InternalMemoryHolder.cs" />
     <Compile Include="Contracts\Dns.cs" />
-    <Compile Include="Contracts\IPAddress.cs" />
+    <Compile Include="Contracts\Factorys\IDNSFactory.cs" />
+    <Compile Include="Contracts\Factorys\IIPaddressFactory.cs" />
+    <Compile Include="Contracts\Intigration\IPAddress.cs" />
     <Compile Include="ComBase\Messages\MessageBase.cs" />
     <Compile Include="ComBase\Messages\RequstMessage.cs" />
     <Compile Include="ComBase\Messages\StreamMetaMessage.cs" />
@@ -64,11 +69,11 @@
     <Compile Include="ComBase\TCP\TCPNetworkReceiver.cs" />
     <Compile Include="ComBase\TCP\TCPNetworkSender.cs" />
     <Compile Include="Contracts\INetworkReceiver.cs" />
-    <Compile Include="Contracts\IPEndPoint.cs" />
-    <Compile Include="Contracts\IPHostEntry.cs" />
-    <Compile Include="Contracts\IPlatformFactory.cs" />
-    <Compile Include="Contracts\ISocket.cs" />
-    <Compile Include="Contracts\ISocketFactory.cs" />
+    <Compile Include="Contracts\Intigration\IPEndPoint.cs" />
+    <Compile Include="Contracts\Intigration\IPHostEntry.cs" />
+    <Compile Include="Contracts\Factorys\IPlatformFactory.cs" />
+    <Compile Include="Contracts\Intigration\ISocket.cs" />
+    <Compile Include="Contracts\Factorys\ISocketFactory.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="NetworkFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -79,6 +84,7 @@
     <Compile Include="Shared\NetworkListControler.cs" />
     <Compile Include="Shared\NetworkValueBag.cs" />
     <Compile Include="Shared\SeriellTaskFactory.cs" />
+    <Compile Include="Shared\SynchronizedCollection.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.Net.Http.Extensions">

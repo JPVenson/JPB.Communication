@@ -54,6 +54,8 @@
     <Compile Include="Serilizer\NetContractSerializer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Serilizer\SoapSerializer.cs" />
+    <Compile Include="WinRT\DnsFactory.cs" />
+    <Compile Include="WinRT\IPAddressFactory.cs" />
     <Compile Include="WinRT\WinRTExtentions.cs" />
     <Compile Include="WinRT\WinRTSocket.cs" />
     <Compile Include="WinRT\WinRTFactory.cs" />

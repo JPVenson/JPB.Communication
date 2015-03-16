@@ -34,6 +34,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using JPB.Communication.ComBase.Messages;
 using JPB.Communication.Contracts;
+using JPB.Communication.PCLIntigration.Shared.CrossPlatform;
 
 namespace JPB.Communication.ComBase.TCP
 {
@@ -415,7 +416,7 @@ namespace JPB.Communication.ComBase.TCP
                 throw new ArgumentException("The Socket must be connected");
             }
 
-            return await ConnectionPool.Instance.InjectISocket(ipOrHost, this);
+            return ConnectionPool.Instance.InjectISocket(ipOrHost, this);
         }
 
         /// <summary>
@@ -503,26 +504,7 @@ namespace JPB.Communication.ComBase.TCP
 
         private async Task<ISocket> CreateClientSock(string ipOrHost, ushort port)
         {
-            try
-            {
-                return _sockType.CreateAndConnect(ipOrHost, port);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-            //var client = new TcpClient();
-            //try
-            //{
-            //    client.NoDelay = true;
-            //    await client.ConnectAsync(ipOrHost, port);
-            //    return client.Client;
-            //}
-            //catch (Exception e)
-            //{
-            //    SetException(client, e);
-            //    return null;
-            //}
+            return await _sockType.CreateAndConnectAsync(ipOrHost, port);
         }
 
         private void AwaitCallbackFromRemoteHost(ISocket sock, bool wait)
@@ -544,15 +526,13 @@ namespace JPB.Communication.ComBase.TCP
                     if (wait)
                         sock.Receive(new byte[] {0x00});
                 }
-                catch (Exception e)
+                catch
                 {
                     if (tryCount >= tryMax || !sock.Connected)
                     {
                         throw;
                     }
-                    Debug.WriteLine(
-                        string.Format("TCPSender> awaits callback from remote pc try {0} of {1}", tryCount, tryMax),
-                        TraceCategory);
+                    PclTrace.WriteLine(string.Format("TCPSender> awaits callback from remote pc try {0} of {1}", tryCount, tryMax), Networkbase.TraceCategoryCriticalSerilization);
 
                     sock.Send(new byte[0]);
                     continue;

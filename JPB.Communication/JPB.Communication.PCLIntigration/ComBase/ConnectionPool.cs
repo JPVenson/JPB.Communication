@@ -150,11 +150,11 @@ namespace JPB.Communication.ComBase
             {
                 ThrowSockedNotAvailbileHelper();
             }
-            TCPNetworkReceiver tcpNetworkReceiver = await InjectISocket(ISocket, sender);
+            TCPNetworkReceiver tcpNetworkReceiver = InjectISocket(ISocket, sender);
             return tcpNetworkReceiver;
         }
 
-        internal async Task<TCPNetworkReceiver> InjectISocket(ISocket sock, TCPNetworkSender sender)
+        internal TCPNetworkReceiver InjectISocket(ISocket sock, TCPNetworkSender sender)
         {
             IPEndPoint localIp = sock.LocalEndPoint;
             IPEndPoint remoteIp = sock.RemoteEndPoint;

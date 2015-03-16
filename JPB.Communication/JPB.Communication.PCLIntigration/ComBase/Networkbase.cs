@@ -49,31 +49,14 @@ namespace JPB.Communication.ComBase
     /// </summary>
     public abstract class Networkbase
     {
-        public const string TraceCategory = "JPB.Communication";
+        public const string TraceCategoryCriticalSerilization = "JPB.Communication.Critical.Serilization";
+        public const string TraceCategoryLowSerilization = "JPB.Communication.Low.Serilization";
 
         /// <summary>
         ///     The default Serializer
         /// </summary>
         public static readonly IMessageSerializer DefaultMessageSerializer;
-
-        ///// <summary>
-        /////     A Standart Serializer that compress the message ( good for large MessageBase objects )
-        ///// </summary>
-        //public static readonly IMessageSerializer CompressedDefaultMessageSerializer;
-
-        ////public static readonly IMessageSerializer JsonMessageSerializer;
-        ///// <summary>
-        /////     A Standart JSON Serializer
-        ///// </summary>
-        ///// <summary>
-        /////     A Standart Soap Serializer
-        ///// </summary>
-        //public static readonly IMessageSerializer SoapSerializer;
-
-        ///// <summary>
-        /////     A Standart NetData Serializer
-        ///// </summary>
-        //public static readonly IMessageSerializer NetDataSerializer;
+             
 
         /// <summary>
         ///     A Full XML Serializer
@@ -148,7 +131,7 @@ namespace JPB.Communication.ComBase
             }
             catch (Exception e)
             {
-                PclTrace.WriteLine(string.Format("> Networkbase> RaiseNewLargeItemLoadedSuccess>{0}", e), TraceCategory);
+                PclTrace.WriteLine(string.Format("> Networkbase> RaiseNewLargeItemLoadedSuccess>{0}", e), TraceCategoryCriticalSerilization);
                 return null;
             }
         }
@@ -163,7 +146,7 @@ namespace JPB.Communication.ComBase
             }
             catch (Exception e)
             {
-                PclTrace.WriteLine(string.Format("> Networkbase> RaiseMessageSended>{0}", e), TraceCategory);
+                PclTrace.WriteLine(string.Format("> Networkbase> RaiseMessageSended>{0}", e), TraceCategoryCriticalSerilization);
             }
         }
 
@@ -177,7 +160,7 @@ namespace JPB.Communication.ComBase
             }
             catch (Exception e)
             {
-                PclTrace.WriteLine(string.Format("> Networkbase> RaiseIncommingMessage>{0}", e), TraceCategory);
+                PclTrace.WriteLine(string.Format("> Networkbase> RaiseIncommingMessage>{0}", e), TraceCategoryCriticalSerilization);
             }
         }
 
@@ -191,7 +174,7 @@ namespace JPB.Communication.ComBase
             }
             catch (Exception e)
             {
-                PclTrace.WriteLine(string.Format("> Networkbase> RaiseNewItemLoadedFail>{0}", e), TraceCategory);
+                PclTrace.WriteLine(string.Format("> Networkbase> RaiseNewItemLoadedFail>{0}", e), TraceCategoryCriticalSerilization);
             }
         }
 
@@ -205,7 +188,7 @@ namespace JPB.Communication.ComBase
             }
             catch (Exception e)
             {
-                PclTrace.WriteLine(string.Format("> Networkbase> RaiseNewItemLoadedSuccess>{0}", e), TraceCategory);
+                PclTrace.WriteLine(string.Format("> Networkbase> RaiseNewItemLoadedSuccess>{0}", e), TraceCategoryCriticalSerilization);
             }
         }
 
@@ -217,6 +200,7 @@ namespace JPB.Communication.ComBase
             }
             catch (Exception e)
             {
+                PclTrace.WriteLine(e.ToString(), TraceCategoryLowSerilization);
                 return null;
             }
         }
@@ -229,6 +213,7 @@ namespace JPB.Communication.ComBase
             }
             catch (Exception e)
             {
+                PclTrace.WriteLine(e.ToString(), TraceCategoryLowSerilization);
                 return new byte[0];
             }
         }
@@ -245,6 +230,7 @@ namespace JPB.Communication.ComBase
             }
             catch (Exception e)
             {
+                PclTrace.WriteLine(e.ToString(), TraceCategoryLowSerilization);
                 return new byte[0];
             }
         }
