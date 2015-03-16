@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace JPB.Communication.WinRT
 {
-    public static class WinRtExtentions
+    public static class WinRTExtentions
     {
         public static IPEndPoint AsGeneric(this System.Net.EndPoint endpoint)
         {
