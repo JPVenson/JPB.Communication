@@ -7,13 +7,18 @@ using System.Text;
 using System.Threading.Tasks;
 using JPB.Communication.WinRT;
 
+using Windows.Networking;
+using Windows.Networking.Connectivity;
+using Windows.Networking.Sockets; 
+
 namespace JPB.Communication.WinRT.WinRT
 {
     public class DnsFactory : IDNSFactory
     {
         public string GetHostName()
         {
-            return Dns.GetHostName();
+          
+            return NetworkInfomation.GetHostName();
         }
 
         public PCLIntigration.Contracts.IPHostEntry GetHostEntry(string p)

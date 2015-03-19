@@ -31,7 +31,6 @@ namespace JPB.Communication
     public class NetworkFactory
     {
         private static NetworkFactory _instance;
-        private static ISocketFactory _factory;
         internal static IPlatformFactory PlatformFactory;
 
         static NetworkFactory()
@@ -62,11 +61,11 @@ namespace JPB.Communication
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="InvalidOperationException"></exception>
-        public static NetworkFactory Create(IPlatformFactory factory = null)
+        public static NetworkFactory Create(IPlatformFactory factory)
         {
             if (_instance != null)
                 throw new InvalidOperationException("You cannot call Create multible times, it should be used to set the program wide socket type");
-            _factory = factory.SocketFactory;
+            PlatformFactory = factory;
             _instance = new NetworkFactory();
             return _instance;
         }
@@ -75,7 +74,7 @@ namespace JPB.Communication
         {
             get
             {
-                if (_instance != null)
+                if (_instance == null)
                     throw new InvalidOperationException("Must call create 1 time");
 
                 return _instance;
@@ -118,8 +117,8 @@ namespace JPB.Communication
             get { return _mutex; }
         }
 
-        public event Action<TCPNetworkSender> OnSenderCreate;
-        public event Action<TCPNetworkReceiver> OnReceiverCreate;
+        public event EventHandler<TCPNetworkSender> OnSenderCreate;
+        public event EventHandler<TCPNetworkReceiver> OnReceiverCreate;
 
         internal virtual void RaiseSenderCreate(TCPNetworkSender item)
         {
@@ -127,7 +126,7 @@ namespace JPB.Communication
                 return;
 
             if (OnSenderCreate != null)
-                OnSenderCreate(item);
+                OnSenderCreate(this, item);
         }
 
         internal virtual void RaiseReceiverCreate(TCPNetworkReceiver item)
@@ -136,7 +135,7 @@ namespace JPB.Communication
                 return;
 
             if (OnReceiverCreate != null)
-                OnReceiverCreate(item);
+                OnReceiverCreate(this, item);
         }
 
         /// <summary>
@@ -198,7 +197,7 @@ namespace JPB.Communication
 
         internal TCPNetworkSender CreateSender(ushort port)
         {
-            var sender = new TCPNetworkSender(port, _factory);
+            var sender = new TCPNetworkSender(port, PlatformFactory.SocketFactory);
             _senders.Add(port, sender);
             RaiseSenderCreate(sender);
             return sender;
@@ -227,7 +226,7 @@ namespace JPB.Communication
 
         internal TCPNetworkReceiver CreateReceiver(ushort port)
         {
-            var receiver = new TCPNetworkReceiver(port, _factory);
+            var receiver = new TCPNetworkReceiver(port, PlatformFactory.SocketFactory);
             _receivers.Add(port, receiver);
             RaiseReceiverCreate(receiver);
             return receiver;

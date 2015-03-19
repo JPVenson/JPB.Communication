@@ -13,21 +13,23 @@ namespace JPB.Communication.WinRT
         public static IPEndPoint AsGeneric(this System.Net.EndPoint endpoint)
         {
             var add = endpoint as System.Net.IPEndPoint;
-            return new IPEndPoint() 
+            return new IPEndPoint()
             {
                 Address = add.Address.AsGeneric(),
-                Port = (ushort)add.Port 
-            }; 
+                Port = (ushort)add.Port
+            };
         }
 
         public static IPAddress AsGeneric(this System.Net.IPAddress address)
         {
-            return new IPAddress() { Address = address.ToString() };
+            if (address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                return new IPAddress(address.Address);
+            return null;
         }
 
         public static IPHostEntry AsGeneric(this System.Net.IPHostEntry entry)
         {
-            return new IPHostEntry() { AddressList = entry.AddressList.Select(s => s.AsGeneric()).ToArray() };
+            return new IPHostEntry() { AddressList = entry.AddressList.Select(s => s.AsGeneric()).Where(s => s != null).ToArray() };
         }
 
     }

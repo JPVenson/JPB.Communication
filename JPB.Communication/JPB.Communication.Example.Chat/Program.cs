@@ -21,12 +21,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using JPB.Communication.ComBase;
 using JPB.Communication.ComBase.Messages;
+using JPB.Communication.PCLIntigration.ComBase;
 
 namespace JPB.Communication.Example.Chat
 {
@@ -45,9 +44,12 @@ namespace JPB.Communication.Example.Chat
 
         public Program()
         {
-            //Maybe multible network Adapters ... on what do we want to Recieve?
+            NetworkFactory.Create(new WinRT.WinRT.WinRTFactory());
 
+            //Maybe multible network Adapters ... on what do we want to Recieve?
             NetworkInfoBase.ResolveOwnIp += NetworkInfoBaseOnResolveOwnIp;
+            NetworkInfoBase.ResolveDistantIp += NetworkInfoBaseOnResolveDistantIp;
+
             Console.Title = string.Format("This: {0}", NetworkInfoBase.IpAddress.ToString());
             Console.Clear();
             //Create an Instance that observe a Port
@@ -76,7 +78,7 @@ namespace JPB.Communication.Example.Chat
 
             //If you want to alter control the Process of Serilation set this interface but remember that both Sender and Receiver must use the same otherwise they will not able to work
             //In this case we are using one of the Predefined Serializers
-            tcpNetworkReceiver.Serlilizer = Networkbase.NetDataSerializer;
+            tcpNetworkReceiver.Serlilizer = new JPB.Communication.ComBase.Serializer.NetContractSerializer();
             tcpNetworkSender.Serlilizer = tcpNetworkReceiver.Serlilizer;
 
             Console.WriteLine("Server IP or Hostname:");
@@ -133,6 +135,11 @@ namespace JPB.Communication.Example.Chat
                     break;
                 }
             } while (!input.ToLower().Equals("exit"));
+        }
+
+        private IPAddress NetworkInfoBaseOnResolveDistantIp(IPAddress[] arg1, string arg2)
+        {
+            return NetworkInfoBaseOnResolveOwnIp(arg1);
         }
 
         private static IPAddress NetworkInfoBaseOnResolveOwnIp(IPAddress[] ipAddresses)

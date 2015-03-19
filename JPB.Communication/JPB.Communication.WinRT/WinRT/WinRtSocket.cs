@@ -120,7 +120,7 @@ namespace JPB.Communication.WinRT
 
         public void Bind(IPEndPoint ipEndPoint)
         {
-            _sock.Bind(new System.Net.IPEndPoint(System.Net.IPAddress.Parse(ipEndPoint.Address.Address), ipEndPoint.Port));
+            _sock.Bind(new System.Net.IPEndPoint(new System.Net.IPAddress(ipEndPoint.Address.Address), ipEndPoint.Port));
         }
 
         public void Listen(int i)

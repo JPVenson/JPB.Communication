@@ -49,9 +49,13 @@
     <None Include="JPB.Communication.Example.ChatOverNetworkCollection.licenseheader" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\JPB.Communication\JPB.Communication.csproj">
-      <Project>{B9ECEDB9-6788-44FC-A88D-A8476F91FB6A}</Project>
-      <Name>JPB.Communication</Name>
+    <ProjectReference Include="..\JPB.Communication.PCLIntigration\JPB.Communication.PCLIntigration.csproj">
+      <Project>{d7f935df-52a5-4372-90a0-fed78d1d4bd7}</Project>
+      <Name>JPB.Communication.PCLIntigration</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\JPB.Communication.WinRT\JPB.Communication.WinRT.csproj">
+      <Project>{817b84cd-d302-45b9-91c4-31bf9ebd1c11}</Project>
+      <Name>JPB.Communication.WinRT</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

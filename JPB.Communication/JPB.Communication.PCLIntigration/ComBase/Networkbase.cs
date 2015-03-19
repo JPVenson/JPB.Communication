@@ -105,12 +105,12 @@ namespace JPB.Communication.ComBase
         }
 
         public static event MessageDelegate OnNewItemLoadedSuccess;
-        public static event Action<string> OnNewItemLoadedFail;
-        public static event Action<NetworkMessage> OnIncommingMessage;
+        public static event EventHandler<string> OnNewItemLoadedFail;
+        public static event EventHandler<NetworkMessage> OnIncommingMessage;
         public static event MessageDelegate OnMessageSend;
         public static event LargeMessageDelegate OnNewLargeItemLoadedSuccess;
 
-        protected Action<NetworkMessage> IncommingMessageHandler()
+        protected EventHandler<NetworkMessage> IncommingMessageHandler()
         {
             return OnIncommingMessage;
         }
@@ -156,7 +156,7 @@ namespace JPB.Communication.ComBase
             {
                 var handler = OnIncommingMessage;
                 if (handler != null)
-                    handler(strReceived);
+                    handler(this, strReceived);
             }
             catch (Exception e)
             {
@@ -170,7 +170,7 @@ namespace JPB.Communication.ComBase
             {
                 var handler = OnNewItemLoadedFail;
                 if (handler != null)
-                    handler(strReceived);
+                    handler(this, strReceived);
             }
             catch (Exception e)
             {
