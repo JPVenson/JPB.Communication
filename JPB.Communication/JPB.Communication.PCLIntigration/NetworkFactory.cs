@@ -31,7 +31,7 @@ namespace JPB.Communication
     public class NetworkFactory
     {
         private static NetworkFactory _instance;
-        internal static IPlatformFactory PlatformFactory;
+        public static IPlatformFactory PlatformFactory { get; private set; }
 
         static NetworkFactory()
         {
