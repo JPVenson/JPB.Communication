@@ -98,7 +98,7 @@ namespace JPB.Communication.Example.Chat
             {
                 try
                 {
-                    var hostAddresses = Dns.GetHostAddresses(input);
+                    var hostAddresses = NetworkFactory.PlatformFactory.DnsFactory.GetHostAddresses(input);
                     server = NetworkInfoBaseOnResolveOwnIp(hostAddresses).ToString();
                     serverOnline = true;
                 }
