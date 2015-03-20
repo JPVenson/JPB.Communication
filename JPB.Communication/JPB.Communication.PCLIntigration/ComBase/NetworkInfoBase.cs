@@ -110,24 +110,6 @@ namespace JPB.Communication.ComBase
             return RaiseResolveDistantIp(DnsAdapter.GetHostAddresses(host), host);
         }
 
-        public class RequestState
-        {
-            // This class stores the State of the request. 
-            const int BUFFER_SIZE = 1024;
-            public StringBuilder requestData;
-            public byte[] BufferRead;
-            public HttpWebRequest request;
-            public HttpWebResponse response;
-            public Stream streamResponse;
-            public RequestState()
-            {
-                BufferRead = new byte[BUFFER_SIZE];
-                requestData = new StringBuilder("");
-                request = null;
-                streamResponse = null;
-            }
-        }
-
         /// <summary>
         ///     Uses IpCheckUrl for IP check
         /// </summary>
@@ -136,21 +118,14 @@ namespace JPB.Communication.ComBase
         {
             String direction = "";
             HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(IpCheckUrl);
-            var waitForResp = new ManualResetEventSlim();
-            var requestWrapper = new RequestState();
-            requestWrapper.request = request;
-           
-            request.BeginGetResponse(s => 
+
+            var requestAwaiter = request.GetResponseAsync();
+            requestAwaiter.Wait();
+            
+            using (var stream = new StreamReader(requestAwaiter.Result.GetResponseStream()))
             {
-                using (var stream = new StreamReader((s.AsyncState as RequestState).streamResponse))
-                {
-                    direction = stream.ReadToEnd();
-                }
-                waitForResp.Set();
-            }, requestWrapper);
-
-
-            waitForResp.Wait(90000);           
+                direction = stream.ReadToEnd();
+            }
 
             Match match = Regex.Match(direction, IPADDRESS_PATTERN);
 

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using JPB.Communication.ComBase;
 using JPB.Communication.ComBase.Messages;
 using JPB.Communication.ComBase.Messages.Wrapper;
+using JPB.Communication.ComBase.Serializer;
 
 namespace JPB.Communication.Test.LargeMessages
 {
@@ -14,6 +15,9 @@ namespace JPB.Communication.Test.LargeMessages
     {
         static void Main(string[] args)
         {
+            Networkbase.DefaultMessageSerializer = new NetContractSerializer();
+            NetworkFactory.Create(new WinRT.WinRT.WinRTFactory());
+
             var publicIp = NetworkInfoBase.GetPublicIp();
             Console.WriteLine(publicIp);
 
@@ -22,7 +26,7 @@ namespace JPB.Communication.Test.LargeMessages
             NetworkFactory.Instance.InitCommonSenderAndReciver(1337, 1337);
             NetworkFactory.Instance.Reciever.LargeMessageSupport = true;
             NetworkFactory.Instance.Reciever.RegisterMessageBaseInbound(OnAction, "T");
-            var fileStream = new FileStream(@"F:\SS_DL.dll", FileMode.Open, FileAccess.Read, FileShare.Read);
+            var fileStream = new FileStream(@"C:\Windows\explorer.exe", FileMode.Open, FileAccess.Read, FileShare.Read);
 
             NetworkFactory.Instance.Sender.SendStreamDataAsync(fileStream,
                 new StreamMetaMessage("META DATA INBOUND", "T"),

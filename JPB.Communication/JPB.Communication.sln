@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.30501.0
+VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{45E79551-EC87-411F-BAB8-43935C755C02}"
 EndProject
@@ -28,6 +28,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "WinPhone", "WinPhone", "{A54765DA-C5AE-45CE-BD93-509F9E68CB1A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JPB.Communication.Test.UnitTests", "JPB.Communication.Test.UnitTests\JPB.Communication.Test.UnitTests.csproj", "{F101CE4E-39A7-4178-B951-0BA04B4CFE39}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JPB.Communication.UniversalSerializer", "JPB.Communication.UniversalSerializer\JPB.Communication.UniversalSerializer.csproj", "{F7CA8EAA-D473-4B5D-8D2C-09C3524FC8FB}"
 EndProject
 Global
 	GlobalSection(SubversionScc) = preSolution
@@ -75,6 +77,10 @@ Global
 		{F101CE4E-39A7-4178-B951-0BA04B4CFE39}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F101CE4E-39A7-4178-B951-0BA04B4CFE39}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F101CE4E-39A7-4178-B951-0BA04B4CFE39}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F7CA8EAA-D473-4B5D-8D2C-09C3524FC8FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F7CA8EAA-D473-4B5D-8D2C-09C3524FC8FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F7CA8EAA-D473-4B5D-8D2C-09C3524FC8FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F7CA8EAA-D473-4B5D-8D2C-09C3524FC8FB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
