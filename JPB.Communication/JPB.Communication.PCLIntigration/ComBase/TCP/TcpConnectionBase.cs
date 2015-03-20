@@ -18,10 +18,20 @@
  https://github.com/JPVenson/JPB.Communication/blob/master/LICENSE
  */
 
+using System;
 namespace JPB.Communication.ComBase.TCP
 {
     internal abstract class TcpConnectionBase : ConnectionBase
     {
+        public event EventHandler EndReceiveInternal;
         public abstract void BeginReceive();
+
+        protected void RaiseEndReceiveInternal()
+        {
+            var handler = EndReceiveInternal;
+
+            if (handler != null)
+                handler(this, new EventArgs());
+        }
     }
 }

@@ -26,6 +26,7 @@ using System.Threading.Tasks;
 using JPB.Communication.ComBase;
 using JPB.Communication.ComBase.Messages;
 using JPB.Communication.PCLIntigration.ComBase;
+using System.Net;
 
 namespace JPB.Communication.Example.Chat
 {
@@ -90,9 +91,7 @@ namespace JPB.Communication.Example.Chat
             serverOnline = true;
 #else
             input = Console.ReadLine();
-
-   
-
+            
             //Mehtod to Get the Ipaddress from an Host name
             do
             {
@@ -137,12 +136,12 @@ namespace JPB.Communication.Example.Chat
             } while (!input.ToLower().Equals("exit"));
         }
 
-        private IPAddress NetworkInfoBaseOnResolveDistantIp(IPAddress[] arg1, string arg2)
+        private JPB.Communication.PCLIntigration.ComBase.IPAddress NetworkInfoBaseOnResolveDistantIp(JPB.Communication.PCLIntigration.ComBase.IPAddress[] arg1, string arg2)
         {
             return NetworkInfoBaseOnResolveOwnIp(arg1);
         }
 
-        private static IPAddress NetworkInfoBaseOnResolveOwnIp(IPAddress[] ipAddresses)
+        private static JPB.Communication.PCLIntigration.ComBase.IPAddress NetworkInfoBaseOnResolveOwnIp(JPB.Communication.PCLIntigration.ComBase.IPAddress[] ipAddresses)
         {
             Console.WriteLine("Multible Addresses detected choose one");
             Console.WriteLine("ID | IP");

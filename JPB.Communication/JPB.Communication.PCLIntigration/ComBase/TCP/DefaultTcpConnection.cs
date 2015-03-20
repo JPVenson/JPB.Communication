@@ -53,13 +53,22 @@ namespace JPB.Communication.ComBase.TCP
                 OnBytesReceived,
                 this);
         }
-
-        private bool HandleRec(int rec)
+        enum HandeldMode
+        {
+            NoDateAvailble,
+            MaybeMoreData,
+            Handled,
+            Exception
+        }
+        private HandeldMode HandleRec(int rec)
         {
             //0 is: No more Data
             //1 is: Part Complted
             //<1 is: Content
 
+
+            if (rec == -1)
+                return HandeldMode.Exception;
 
             //to incomming data left
             //try to concat the message
@@ -69,8 +78,9 @@ namespace JPB.Communication.ComBase.TCP
                 byte[] buff = datarec.Get();
                 if (buff.Length <= 2)
                 {
+                    RaiseEndReceiveInternal();
                     datarec.Clear();
-                    return false;
+                    return HandeldMode.NoDateAvailble;
                 }
 
                 int count = buff.Count();
@@ -92,9 +102,12 @@ namespace JPB.Communication.ComBase.TCP
                 }
 
                 Parse(compltearray.ToArray());
-                return true;
+                RaiseEndReceiveInternal();
+                return HandeldMode.Handled;
             }
-            return false;
+
+
+            return HandeldMode.MaybeMoreData;
         }
 
         // This is the method that is called whenever the Socket receives
@@ -115,7 +128,11 @@ namespace JPB.Communication.ComBase.TCP
 
             try
             {
-                if (!HandleRec(rec) && rec > -1)
+                var dataMode = HandleRec(rec);
+                if (dataMode == HandeldMode.NoDateAvailble)
+                    return;
+
+                if (dataMode == HandeldMode.MaybeMoreData && dataMode != HandeldMode.Exception)
                 {
                     //this is Not the end, my only friend the end
                     //allocate new memory and add the mem to the Memory holder

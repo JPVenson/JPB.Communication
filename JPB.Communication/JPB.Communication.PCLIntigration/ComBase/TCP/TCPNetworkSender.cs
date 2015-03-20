@@ -239,7 +239,7 @@ namespace JPB.Communication.ComBase.TCP
 
 
         /// <summary>
-        ///     Sends a message an awaits a response on the same port from the other side
+        ///     Sends a message an awaits a response from the other side
         /// </summary>
         /// <param name="mess">Message object or inherted object</param>
         /// <param name="ip">Ip of sock</param>
@@ -249,7 +249,7 @@ namespace JPB.Communication.ComBase.TCP
         {
             var task = new Task<T>(() =>
             {
-                if (mess.ExpectedResult == default(ushort))
+                if (mess.ExpectedResult == default(ushort) || mess.ExpectedResult == 0)
                 {
                     mess.ExpectedResult = Port;
                 }
@@ -369,9 +369,6 @@ namespace JPB.Communication.ComBase.TCP
             {
                 ISocket openNetwork = OpenAndSend(memstream, client);
 
-                //wait for the Responce that the other side is waiting for the content
-                //openNetwork.Write(new byte[] { 0x00 }, 0, 1);
-
                 AwaitCallbackFromRemoteHost(client, true);
 
                 SendOnStream(stream, client);
@@ -381,8 +378,6 @@ namespace JPB.Communication.ComBase.TCP
                 if (!SharedConnection)
                 {
                     openNetwork.Send(new byte[0]);
-                    //openNetwork.LingerState = new LingerOption(true, 60);
-                    //openNetwork.Shutdown(ISocketShutdown.Both);
                     openNetwork.Close();
                     openNetwork.Dispose();
                 }
@@ -497,7 +492,6 @@ namespace JPB.Communication.ComBase.TCP
                     }
                     return isConnected;
                 }
-                return await CreateClientSock(ipOrHost, Port);
             }
             return await CreateClientSock(ipOrHost, Port);
         }
@@ -524,7 +518,10 @@ namespace JPB.Communication.ComBase.TCP
                 {
                     sock.Send(0x00);
                     if (wait)
-                        sock.Receive(new byte[] {0x00});
+                    {
+                        sock.Receive(new byte[] { 0x00 });
+                    }
+                    return;
                 }
                 catch
                 {
@@ -537,7 +534,6 @@ namespace JPB.Communication.ComBase.TCP
                     sock.Send(new byte[0]);
                     continue;
                 }
-                break;
             } while (true);
         }
 
@@ -555,6 +551,7 @@ namespace JPB.Communication.ComBase.TCP
             {
                 openNetwork.Send(new byte[0]);
                 openNetwork.Close();
+                openNetwork.Dispose();
             }
         }
 

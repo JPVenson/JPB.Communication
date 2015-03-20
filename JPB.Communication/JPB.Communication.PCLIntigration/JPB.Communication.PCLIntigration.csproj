@@ -82,6 +82,7 @@
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="NetworkFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Shared\CrossPlatform\PCLTimer.cs" />
     <Compile Include="Shared\CrossPlatform\PclTrace.cs" />
     <Compile Include="Shared\MessageDeliveryQueue.cs" />
     <Compile Include="Shared\NetworkCollectionMessage.cs" />

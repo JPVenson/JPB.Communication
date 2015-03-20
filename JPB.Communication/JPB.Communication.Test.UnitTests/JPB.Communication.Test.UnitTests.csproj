@@ -51,8 +51,9 @@
   </Choose>
   <ItemGroup>
     <Compile Include="Mock\ClassProxyMock.cs" />
-    <Compile Include="UnitTest1.cs" />
+    <Compile Include="NetworkObjectIntigraionTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UnitTest1.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\JPB.Communication.PCLIntigration\JPB.Communication.PCLIntigration.csproj">

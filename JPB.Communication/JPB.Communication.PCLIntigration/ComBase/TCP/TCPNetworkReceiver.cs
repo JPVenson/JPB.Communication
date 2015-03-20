@@ -28,6 +28,7 @@ using JPB.Communication.ComBase.Messages;
 using JPB.Communication.ComBase.Messages.Wrapper;
 using JPB.Communication.Contracts;
 using JPB.Communication.PCLIntigration.Contracts;
+using JPB.Communication.PCLIntigration.Shared.CrossPlatform;
 
 namespace JPB.Communication.ComBase.TCP
 {
@@ -239,7 +240,6 @@ namespace JPB.Communication.ComBase.TCP
         {
             if (port == Port)
             {
-                IncommingMessage = false;
                 object messCopy = mess;
                 _workeritems.Enqueue(() =>
                 {
@@ -310,7 +310,7 @@ namespace JPB.Communication.ComBase.TCP
             if (requstInbound == null)
                 return;
 
-            TCPNetworkSender sender = NetworkFactory.Instance.GetSender(requstInbound.ExpectedResult);
+            var sender = NetworkFactory.Instance.GetSender(requstInbound.ExpectedResult);
 
             Tuple<Func<RequstMessage, object>, object>[] firstOrDefault =
                 _requestHandler.Where(pendingrequest => pendingrequest.Item2.Equals(requstInbound.InfoState)).ToArray();
@@ -322,22 +322,22 @@ namespace JPB.Communication.ComBase.TCP
                 {
                     //Found a handler for that message and executed it
                     Task waiter = null;
-                    //Timer timer = null;
+                    PCLTimer timer = null;
 
                     try
                     {
                         if (AutoRespond)
                         {
-                            //timer = new Timer((s) =>
-                            //{
-                            //    if (result != null)
-                            //        return;
+                            timer = new PCLTimer((s) =>
+                            {
+                                if (result != null)
+                                    return;
 
-                            //    sender.SendNeedMoreTimeBackAsync(new RequstMessage
-                            //    {
-                            //        ResponseFor = requstInbound.Id
-                            //    }, requstInbound.Sender);
-                            //}, result, 10000, 10000);
+                                sender.SendNeedMoreTimeBackAsync(new RequstMessage
+                                {
+                                    ResponseFor = requstInbound.Id
+                                }, requstInbound.Sender);
+                            }, result, 10000, 10000);
                         }
 
                         result = tuple.Item1(requstInbound);
@@ -348,10 +348,10 @@ namespace JPB.Communication.ComBase.TCP
                     }
                     finally
                     {
-                        //if (waiter != null)
-                        //{
-                        //    timer.Dispose();
-                        //}
+                        if (waiter != null)
+                        {
+                            timer.Dispose();
+                        }
                     }
 
                     if (result != null)
@@ -364,7 +364,8 @@ namespace JPB.Communication.ComBase.TCP
                 sender.SendMessageAsync(new RequstMessage
                 {
                     Message = result,
-                    ResponseFor = requstInbound.Id
+                    ResponseFor = requstInbound.Id,
+                    InfoState = requstInbound.InfoState
                 }, requstInbound.Sender);
             }
             else
@@ -484,6 +485,7 @@ namespace JPB.Communication.ComBase.TCP
                     };
                 }
                 conn.Serlilizer = Serlilizer;
+                conn.EndReceiveInternal += (e, ef) => IncommingMessage = false;
                 conn.BeginReceive();
             }
         }

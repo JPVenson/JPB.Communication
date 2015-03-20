@@ -36,7 +36,7 @@ namespace JPB.Communication.WinRT
 
         public void Dispose()
         {
-            throw new NotImplementedException();
+            _sock.Dispose();
         }
 
         public bool Connected

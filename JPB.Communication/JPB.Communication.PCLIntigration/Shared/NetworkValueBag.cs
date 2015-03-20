@@ -32,24 +32,6 @@ using System.Collections.Specialized;
 
 namespace JPB.Communication.Shared
 {
-    ///// <summary>
-    /////     Guid Container
-    ///// </summary>
-    //public static class NetworkListControler
-    //{
-    //    internal static List<string> Guids;
-
-    //    static NetworkListControler()
-    //    {
-    //        Guids = new List<string>();
-    //    }
-
-    //    public static IEnumerable<string> GetGuids()
-    //    {
-    //        return Guids.ToArray();
-    //    }
-    //}
-
     /// <summary>
     ///     This class holds and Updates unsorted values that will be Synced over the Network
     ///     On a Pc, only one Network Value bag with the given guid can exists
@@ -65,7 +47,6 @@ namespace JPB.Communication.Shared
         protected readonly TCPNetworkReceiver TCPNetworkReceiver;
         protected readonly TCPNetworkSender TcpNetworkSernder;
 
-        private volatile List<string> _collectionRecievers;
         private volatile ICollection<T> _localValues;
 
         /// <summary>
@@ -82,7 +63,7 @@ namespace JPB.Communication.Shared
             //    throw new TypeLoadException("Typeof T must be a Value type ... please use the NonValue collection");
             //}
 
-            CollectionRecievers = new List<string>();
+            CollectionRecievers = new ObservableCollection<string>();
 
             Port = port;
             Guid = guid;
@@ -103,10 +84,10 @@ namespace JPB.Communication.Shared
         ///     All other PC's that Contains a NetworkValueBag with the desiered GUID.
         ///     When Add,Remove,Clear is invoked this PC's will be notifyed to do the same
         /// </summary>
-        public List<string> CollectionRecievers
+        public ObservableCollection<string> CollectionRecievers
         {
-            get { return _collectionRecievers; }
-            protected set { _collectionRecievers = value; }
+            get;
+            protected set;
         }
 
         /// <summary>
@@ -200,6 +181,10 @@ namespace JPB.Communication.Shared
             get { return false; }
         }
 
+        /// <summary>
+        /// Will add the value to the local Collection and then trigger a Push notification to all receivers async
+        /// </summary>
+        /// <param name="item"></param>
         public virtual void Add(T item)
         {
             lock (SyncRoot)
@@ -434,17 +419,17 @@ namespace JPB.Communication.Shared
         /// <returns></returns>
         protected object PullConnectMessage(RequstMessage arg)
         {
-            if (arg.Message is string && arg.Message == Guid)
+            if (arg.Message is string && Guid.Equals(arg.Message as string))
                 lock (SyncRoot)
                 {
                     if (!CollectionRecievers.Contains(arg.Sender))
                     {
                         CollectionRecievers.Add(arg.Sender);
                     }
-                    if (!CollectionRecievers.Contains(NetworkInfoBase.IpAddress.ToString()))
-                    {
-                        CollectionRecievers.Add(NetworkInfoBase.IpAddress.ToString());
-                    }
+                    //if (!CollectionRecievers.Contains(NetworkInfoBase.IpAddress.ToString()))
+                    //{
+                    //    CollectionRecievers.Add(NetworkInfoBase.IpAddress.ToString());
+                    //}
                     return CollectionRecievers.ToArray();
                 }
             return null;
@@ -473,7 +458,9 @@ namespace JPB.Communication.Shared
                 return false;
             }
 
-            CollectionRecievers = new List<string>(users);
+            CollectionRecievers = new ObservableCollection<string>(users);
+            CollectionRecievers.Add(host);
+
 #pragma warning disable 4014
             TcpNetworkSernder.SendMultiMessageAsync(
 #pragma warning restore 4014
@@ -495,7 +482,7 @@ new MessageBase { InfoState = NetworkCollectionProtocol.CollectionRegisterUser }
         /// <returns></returns>
         protected object PullGetCollectionMessage(RequstMessage arg)
         {
-            if (arg.Message != Guid)
+            if (!Guid.Equals(arg.Message as string))
                 return null;
 
             lock (SyncRoot)
@@ -520,11 +507,16 @@ new MessageBase { InfoState = NetworkCollectionProtocol.CollectionRegisterUser }
                 if (obj.Message is IEnumerable<string>)
                 {
                     var diabled = obj.Message as IEnumerable<string>;
-                    CollectionRecievers.RemoveAll(s => diabled.Contains(s));
+                    var toRemove = CollectionRecievers.Where(s => diabled.Contains(s));
+
+                    foreach (var item in toRemove)
+                    {
+                        CollectionRecievers.Remove(item);
+                    }
                 }
                 else
                 {
-                    CollectionRecievers.RemoveAll(s => s == obj.Sender);
+                    CollectionRecievers.Remove(obj.Sender);
                 }
             }
         }
@@ -625,7 +617,10 @@ new MessageBase { InfoState = NetworkCollectionProtocol.CollectionRegisterUser }
 
             lock (SyncRoot)
             {
-                CollectionRecievers.RemoveAll(sendMultiMessage.Contains);
+                foreach (var item in sendMultiMessage)
+                {
+                    CollectionRecievers.Remove(item);
+                }
             }
         }
 

@@ -55,25 +55,14 @@ namespace JPB.Communication.ComBase
         /// <summary>
         ///     The default Serializer
         /// </summary>
-        public static readonly IMessageSerializer DefaultMessageSerializer;
-             
+        public static IMessageSerializer DefaultMessageSerializer;
 
-        /// <summary>
-        ///     A Full XML Serializer
-        /// </summary>
-        public static readonly IMessageSerializer FullXmlSerializer;
 
         private IMessageSerializer _serlilizer;
 
         static Networkbase()
         {
-            FullXmlSerializer = new FullXmlSerializer();
-            DefaultMessageSerializer = FullXmlSerializer;
-            //DefaultMessageSerializer = new DefaultMessageSerlilizer();
-            //CompressedDefaultMessageSerializer = new BinaryCompressedMessageSerializer();
-            ////JsonMessageSerializer = new MessageJsonSerlalizer();
-            //SoapSerializer = new SoapSerializer();
-            //NetDataSerializer = new NetContractSerializer();
+
         }
 
         /// <summary>
@@ -93,7 +82,12 @@ namespace JPB.Communication.ComBase
         /// </summary>
         public IMessageSerializer Serlilizer
         {
-            get { return _serlilizer; }
+            get
+            {
+                if(_serlilizer == null)
+                    throw new Exception("Please define an Default Serializer");
+                return _serlilizer; 
+            }
             set
             {
                 if (value == null)

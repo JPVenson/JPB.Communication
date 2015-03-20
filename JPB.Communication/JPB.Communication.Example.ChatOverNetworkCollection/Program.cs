@@ -27,6 +27,7 @@ using System.Threading.Tasks;
 using JPB.Communication.ComBase;
 using JPB.Communication.Shared;
 using JPB.Communication.PCLIntigration.ComBase;
+using JPB.Communication.ComBase.Serializer;
 
 namespace JPB.Communication.Example.ChatOverNetworkCollection
 {
@@ -55,16 +56,22 @@ namespace JPB.Communication.Example.ChatOverNetworkCollection
 
         public Program()
         {
+            Networkbase.DefaultMessageSerializer = new NetContractSerializer();
+            NetworkFactory.Create(new WinRT.WinRT.WinRTFactory());
+
             //create an Instance of the NetworkValueBag
             NetworkInfoBase.ResolveOwnIp += NetworkInfoBaseOnResolveOwnIp;
             NetworkInfoBase.ResolveDistantIp += NetworkInfoBaseOnResolveRemoteIp;
 
             networkValueCollection = NetworkValueBag<string>.CreateNetworkValueCollection(1337,
 
-                //To have multible NetworkBags on the Same system and Port we need a Valid Uniq identifyer
+                //To have multiple NetworkBags on the Same system and Port we need a Valid Uniq identifier
                 "AnyUniqValidStringLikeAGuid: 46801E06-AB14-4910-BA95-7E13F58F4186");
 
-            Console.WriteLine("Connect to a server or be the first? y/n");
+            SyncRoot = networkValueCollection.SyncRoot;
+
+
+            Console.WriteLine("Connect to a server(y) or be the first(n)? y/n");
 
             var consoleKeyInfo = Console.ReadKey();
             if (consoleKeyInfo.Key == ConsoleKey.Y)
@@ -76,13 +83,39 @@ namespace JPB.Communication.Example.ChatOverNetworkCollection
                 Console.WriteLine("Trys to connect to ip");
                 var connect = networkValueCollection.Connect(resolveIp.ToString());
                 connect.Wait();
-                Console.WriteLine("Connect was {0}", connect.Result ? "Sucessfull" : "Failed");
+                Console.WriteLine("Connect {0}", connect.Result ? "Successful" : "Failed");                
             }
 
             networkValueCollection.CollectionChanged += networkValueCollection_CollectionChanged;
+
+            QueueMessages();
         }
 
-        public object SyncRoot { get; set; }
+        private void QueueMessages()
+        {
+            Console.Clear();
+            var input = "Hello world";
+
+            while (!string.IsNullOrEmpty(input) && input != "quit")
+            {
+                networkValueCollection.Add(FormartChatMessage(input));
+                input = Console.ReadLine();
+            }
+        }
+
+        /// <summary>
+        /// 0 = This IP
+        /// 1 = This Username
+        /// 2 = Message
+        /// 3 = Date
+        /// </summary>
+        private string MessageFormat = "From: {0}\r\n{1}:{2}\r\n'{3}'";
+        private string FormartChatMessage(string message)
+        {
+            return string.Format(MessageFormat, NetworkInfoBase.IpAddress.ToString(), Environment.UserName, message, DateTime.Now.ToShortTimeString());
+        }
+
+        public object SyncRoot;
 
         void networkValueCollection_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
