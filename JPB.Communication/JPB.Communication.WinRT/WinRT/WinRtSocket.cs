@@ -23,8 +23,12 @@ namespace JPB.Communication.WinRT
            var taskCreate =  new Task<ISocket>(() =>
             {
                 if (sock == null)
-                    sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
+                    sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
+                sock.LingerState = new LingerOption(true, 10);
+                sock.DontFragment = true;
+                sock.NoDelay = true;
+                sock.SetIPProtectionLevel(IPProtectionLevel.Unrestricted);
                 var rtSock = new WinRtSocket(sock);
                 return rtSock;
             });
@@ -95,7 +99,7 @@ namespace JPB.Communication.WinRT
 
         public int Send(byte[] content, int length, int start)
         {
-            return _sock.Send(content, length, start, SocketFlags.None);
+            return _sock.Send(content, length, start, SocketFlags.Partial);
         }
 
         public void Receive(byte[] content)

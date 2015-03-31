@@ -65,17 +65,16 @@ namespace JPB.Communication.ComBase.TCP
             //0 is: No more Data
             //1 is: Part Complted
             //<1 is: Content
-
-
+            
             if (rec == -1)
                 return HandeldMode.Exception;
-
+            
             //to incomming data left
             //try to concat the message
-            if (rec == 0 || rec == 1)
+            if ((rec == 0 || rec == 1) || rec < _receiveBufferSize)
             {
                 //Wrong Partial byte only call?
-                byte[] buff = datarec.Get();
+                byte[] buff = datarec.Get(rec);
                 if (buff.Length <= 2)
                 {
                     RaiseEndReceiveInternal();
@@ -101,7 +100,12 @@ namespace JPB.Communication.ComBase.TCP
                     i++;
                 }
 
-                Parse(compltearray.ToArray());
+                var parsedCorretly = Parse(compltearray.ToArray());
+                if (!parsedCorretly)
+                {
+                    //Maybe not full message
+                    return HandeldMode.MaybeMoreData;
+                }
                 RaiseEndReceiveInternal();
                 return HandeldMode.Handled;
             }

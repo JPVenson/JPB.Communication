@@ -85,6 +85,12 @@ namespace JPB.Communication.ComBase
             {
                 await _writeAsync;
             }
+            AdjustSize(adjustLast);
+            Last = bytes;
+        }
+
+        private void AdjustSize(int adjustLast)
+        {
             if (Last != null && adjustLast > 0)
             {
                 var consumedBytes = new byte[adjustLast];
@@ -101,24 +107,23 @@ namespace JPB.Communication.ComBase
                 }
                 _datarec.Add(consumedBytes);
             }
-            Last = bytes;
         }
 
-        private byte[] privateGet()
+        private byte[] privateGet(int adjustLast)
         {
             if (_writeAsync != null)
                 _writeAsync.Wait();
 
+            AdjustSize(adjustLast);
             if (!IsSharedMem)
                 return _datarec.SelectMany(s => s).ToArray();
             return Last;
         }
 
-        public byte[] Get()
+        public byte[] Get(int adjustLast)
         {
-            return privateGet();
+            return privateGet(adjustLast);
         }
-
       
         public void Clear()
         {

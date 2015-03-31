@@ -28,7 +28,7 @@ using JPB.Communication.PCLIntigration.Contracts;
 
 namespace JPB.Communication
 {
-    public class NetworkFactory
+    public class NetworkFactory : IDisposable
     {
         private static NetworkFactory _instance;
         public static IPlatformFactory PlatformFactory { get; private set; }
@@ -241,6 +241,19 @@ namespace JPB.Communication
                 return true;
             }
             return false;
+        }
+
+        public void Dispose()
+        {
+            foreach (var item in this._receivers)
+            {
+                item.Value.Dispose();
+            }
+
+            foreach (var item in this._senders)
+            {
+                item.Value.Dispose();
+            }
         }
     }
 }

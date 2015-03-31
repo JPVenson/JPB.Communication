@@ -119,7 +119,7 @@ namespace JPB.Communication.ComBase
                 ipAddress = NetworkInfoBase.ResolveIp(hostOrIp);
             }
 
-            ConnectionWrapper fod = Connections.FirstOrDefault(s => s.Ip == ipAddress.ToString());
+            var fod = Connections.FirstOrDefault(s => s.Ip == ipAddress.ToString());
 
             if (fod == null)
             {
@@ -131,7 +131,7 @@ namespace JPB.Communication.ComBase
         internal async Task<TCPNetworkReceiver> ConnectToHost(string hostOrIp, ushort port)
         {
             string ip = NetworkInfoBase.ResolveIp(hostOrIp).ToString();
-            ConnectionWrapper fod = Connections.FirstOrDefault(s => s.Ip == ip);
+            var fod = Connections.FirstOrDefault(s => s.Ip == ip);
             if (fod != null)
             {
                 if (fod.TCPNetworkSender.ConnectionOpen(hostOrIp))
@@ -144,13 +144,13 @@ namespace JPB.Communication.ComBase
                 RaiseConnectionClosed(fod);
             }
 
-            TCPNetworkSender sender = NetworkFactory.Instance.GetSender(port);
-            ISocket ISocket = await sender._InitSharedConnection(ip);
-            if (ISocket == null)
+            var sender = NetworkFactory.Instance.GetSender(port);
+            var senderSock = await sender._InitSharedConnection(ip);
+            if (senderSock == null)
             {
                 ThrowSockedNotAvailbileHelper();
             }
-            TCPNetworkReceiver tcpNetworkReceiver = InjectISocket(ISocket, sender);
+            var tcpNetworkReceiver = InjectISocket(senderSock, sender);
             return tcpNetworkReceiver;
         }
 
@@ -159,7 +159,7 @@ namespace JPB.Communication.ComBase
             IPEndPoint localIp = sock.LocalEndPoint;
             IPEndPoint remoteIp = sock.RemoteEndPoint;
             var port1 = (ushort)localIp.Port;
-            TCPNetworkReceiver receiver = TCPNetworkReceiver.CreateReceiverInSharedState(port1, sock);
+            var receiver = TCPNetworkReceiver.CreateReceiverInSharedState(port1, sock);
             AddConnection(new ConnectionWrapper(remoteIp.Address.ToString(), sock, receiver, sender));
             return receiver;
         }
@@ -182,7 +182,7 @@ namespace JPB.Communication.ComBase
             var networkInformationException = new Exception
             {
             };
-            networkInformationException.Data.Add("Description", "The creation of the Socked was not successfull");
+            networkInformationException.Data.Add("Description", "The creation of the Socked was not successful");
             throw networkInformationException;
         }
 

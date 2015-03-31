@@ -173,7 +173,7 @@ namespace JPB.Communication.ComBase.TCP
 
         private byte[] concatBytes(InternalMemoryHolder rec)
         {
-            byte[] buff = NullRemover(rec.Get());
+            byte[] buff = NullRemover(rec.Get(0));
             int count = buff.Count();
             var compltearray = new byte[count];
             for (int i = 0; i < count; i++)

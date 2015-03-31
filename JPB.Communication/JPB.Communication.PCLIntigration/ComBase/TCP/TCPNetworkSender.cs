@@ -46,7 +46,8 @@ namespace JPB.Communication.ComBase.TCP
         /// <summary>
         ///     Thread static
         /// </summary>
-        [ThreadStatic] public static Exception LastException;
+        [ThreadStatic]
+        public static Exception LastException;
 
         private readonly ISocketFactory _sockType;
 
@@ -74,6 +75,16 @@ namespace JPB.Communication.ComBase.TCP
         public void Dispose()
         {
             NetworkFactory.Instance._senders.Remove(Port);
+
+            //remove shared Collection and close
+
+            if (SharedConnection)
+            {
+                var connec = ConnectionPool.Instance.Connections.FirstOrDefault(s => s.TCPNetworkSender == this);
+
+                connec.Socket.Close();
+                connec.TCPNetworkReceiver.Dispose();
+            }
         }
 
         /// <summary>
@@ -274,7 +285,7 @@ namespace JPB.Communication.ComBase.TCP
                         }
 
                         if (s.Message is T)
-                            result = (T) s.Message;
+                            result = (T)s.Message;
                         if (waitForResponsive != null)
                             waitForResponsive.Set();
                     };
@@ -423,7 +434,7 @@ namespace JPB.Communication.ComBase.TCP
         /// <returns></returns>
         public async Task<TCPNetworkReceiver> InitSharedConnection(string ipOrHost)
         {
-            UseExternalIpAsSender = true;
+            SharedConnection = true;
             return await ConnectionPool.Instance.ConnectToHost(ipOrHost, Port);
         }
 
@@ -516,7 +527,7 @@ namespace JPB.Communication.ComBase.TCP
                 tryCount++;
                 try
                 {
-                    sock.Send(0x00);
+                    sock.Send(0x01);
                     if (wait)
                     {
                         sock.Receive(new byte[] { 0x00 });
@@ -564,14 +575,31 @@ namespace JPB.Communication.ComBase.TCP
         {
             int bufSize = sock.ReceiveBufferSize;
 
+
             var buf = new byte[bufSize];
             int read = 0;
-            int send = 0;
-            while ((read = stream.Read(buf, 0, bufSize)) > 0)
+            long send = 0;
+            int lastOverZeroRead = 0;
+            do
             {
+                read = stream.Read(buf, 0, bufSize);
                 send = sock.Send(buf, 0, read);
+                if (read > 0)
+                    lastOverZeroRead = read;
                 //target.Write(buf, 0, read);
+            } while (read > 0);
+
+            //if the last send would be a Full packet
+            //the remote maschine would still guess that there are data open
+            //check the last read to be a full packet if so send 0x01 to open a new packet
+            if (SharedConnection)
+            {
+                if (lastOverZeroRead == bufSize)
+                {
+                    sock.Send(0x01);
+                }
             }
+
             return sock;
         }
 

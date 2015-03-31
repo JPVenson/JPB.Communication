@@ -215,10 +215,10 @@ namespace JPB.Communication.ComBase.TCP
             }
         }
 
-        internal static TCPNetworkReceiver CreateReceiverInSharedState(ushort portInfo, ISocket sock)
+        internal static TCPNetworkReceiver CreateReceiverInSharedState(ushort portInfo, ISocket basedOn)
         {
-            var inst = new TCPNetworkReceiver(portInfo, sock);
-            inst.StartListener(sock);
+            var inst = new TCPNetworkReceiver(portInfo, NetworkFactory.PlatformFactory.SocketFactory.Create());
+            inst.StartListener(basedOn);
 
             lock (NetworkFactory.Instance._mutex)
             {
@@ -514,6 +514,18 @@ namespace JPB.Communication.ComBase.TCP
             return firstOrDefault.TCPNetworkSender;
         }
 
+        private void CheckDisposedObjectOrClosedSocket()
+        {
+            if (IsDisposing)
+            {
+                string reason = "Unknown reason";                
+                throw new ObjectDisposedException("TCPNetworkReceiver", "This object is disposed you cannot access it anymore.")
+                    {
+                        Source = reason
+                    };
+            }
+        }
+
         #region Implementation of IDisposable
 
         public void Dispose()
@@ -528,6 +540,14 @@ namespace JPB.Communication.ComBase.TCP
                 _listenerISocket.Dispose();
 
             NetworkFactory.Instance._receivers.Remove(Port);
+
+            if (SharedConnection)
+            {
+                var connec = ConnectionPool.Instance.Connections.FirstOrDefault(s => s.TCPNetworkReceiver == this);
+
+                connec.Socket.Close();
+                connec.TCPNetworkSender.Dispose();
+            }
         }
 
         #endregion

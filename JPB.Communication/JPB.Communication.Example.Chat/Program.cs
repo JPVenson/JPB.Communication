@@ -27,6 +27,7 @@ using JPB.Communication.ComBase;
 using JPB.Communication.ComBase.Messages;
 using JPB.Communication.PCLIntigration.ComBase;
 using System.Net;
+using JPB.Communication.ComBase.Serializer;
 
 namespace JPB.Communication.Example.Chat
 {
@@ -38,13 +39,14 @@ namespace JPB.Communication.Example.Chat
         /// <param name="args"></param>
         static void Main(string[] args)
         {
-            //new SimpleChat();
+            //SimpleChat.Main2(args);
             new Program();
         }
 
 
         public Program()
         {
+            Networkbase.DefaultMessageSerializer = new NetContractSerializer();
             NetworkFactory.Create(new WinRT.WinRT.WinRTFactory());
 
             //Maybe multible network Adapters ... on what do we want to Recieve?
