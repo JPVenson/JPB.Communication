@@ -25,7 +25,6 @@ using System.Linq;
 using JPB.Communication.ComBase;
 using JPB.Communication.ComBase.Messages;
 using JPB.Communication.ComBase.TCP;
-using JPB.Communication.PCLIntigration.Shared;
 
 namespace JPB.Communication.Shared
 {

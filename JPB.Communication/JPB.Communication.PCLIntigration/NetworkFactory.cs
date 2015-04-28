@@ -24,7 +24,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using JPB.Communication.ComBase.TCP;
 using JPB.Communication.Contracts;
-using JPB.Communication.PCLIntigration.Contracts;
+using JPB.Communication.Contracts.Factorys;
 
 namespace JPB.Communication
 {

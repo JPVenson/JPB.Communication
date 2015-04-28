@@ -1,20 +1,22 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
-namespace JPB.Communication.PCLIntigration.ComBase
+namespace JPB.Communication.Contracts.Intigration
 {
     public class IPAddress
     {
         public long Address { get; private set; }
+
+        public string AddressContent
+        {
+            get { return ToString(); }
+        }
 
         private string m_ToString;
 
         public static bool TryParse(string ipString, out IPAddress ipAddress)
         {
             ipAddress = null;
-            return InternalParse(ipString, true) == null;
+            return InternalParse(ipString, true) != null;
         }
 
         public static IPAddress Parse(string ipString)

@@ -5,6 +5,8 @@ using System.Threading;
 using JPB.Communication.ComBase.Messages;
 using System.Threading.Tasks;
 using JPB.Communication.ComBase.Serializer;
+using JPB.Communication.NativeWin.Serilizer;
+using JPB.Communication.NativeWin.WinRT;
 
 namespace JPB.Communication.Test.UnitTests
 {
@@ -20,7 +22,7 @@ namespace JPB.Communication.Test.UnitTests
         public void TestSimpleSendAndReceive()
         {
             Networkbase.DefaultMessageSerializer = new NetContractSerializer();
-            NetworkFactory.Create(new WinRT.WinRT.WinRTFactory());
+            NetworkFactory.Create(new WinRTFactory());
             var sender = NetworkFactory.Instance.GetSender(1337);
             var receiver = NetworkFactory.Instance.GetReceiver(1337);
 
@@ -41,7 +43,7 @@ namespace JPB.Communication.Test.UnitTests
         public async Task RequestTest()
         {
             Networkbase.DefaultMessageSerializer = new NetContractSerializer();
-            NetworkFactory.Create(new WinRT.WinRT.WinRTFactory());
+            NetworkFactory.Create(new WinRTFactory());
             var sender = NetworkFactory.Instance.GetSender(1337);
             var receiver = NetworkFactory.Instance.GetReceiver(1337);
             NetworkFactory.Instance.GetReceiver(1338);
@@ -62,7 +64,7 @@ namespace JPB.Communication.Test.UnitTests
         public async Task SingleConnectionTest()
         {
             Networkbase.DefaultMessageSerializer = new NetContractSerializer();
-            NetworkFactory.Create(new WinRT.WinRT.WinRTFactory());
+            NetworkFactory.Create(new WinRTFactory());
 
             var currentIp = NetworkInfoBase.IpAddress.ToString();
             var sender = NetworkFactory.Instance.GetSender(1337);

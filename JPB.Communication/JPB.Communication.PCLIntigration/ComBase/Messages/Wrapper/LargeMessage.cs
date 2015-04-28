@@ -40,7 +40,7 @@ namespace JPB.Communication.ComBase.Messages.Wrapper
         /// </summary>
         public long StreamSize { get; private set; }
 
-
+        private bool raised;
         /// <summary>
         ///     Provieds you a maybe only partial exisiting stream to the Large data
         /// </summary>
@@ -63,6 +63,11 @@ namespace JPB.Communication.ComBase.Messages.Wrapper
         /// </summary>
         protected internal virtual void RaiseLoadCompleted()
         {
+            if (raised)
+                return;
+
+            raised = true;
+
             Action<LargeMessage> handler = OnLoadCompleted;
             if (handler != null)
                 handler(this);

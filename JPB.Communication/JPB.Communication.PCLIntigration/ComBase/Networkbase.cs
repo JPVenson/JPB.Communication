@@ -19,14 +19,12 @@
  */
 
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using JPB.Communication.ComBase.Messages;
 using JPB.Communication.ComBase.Messages.Wrapper;
-using JPB.Communication.ComBase.Serializer;
 using JPB.Communication.ComBase.Serializer.Contracts;
-using JPB.Communication.PCLIntigration.Shared.CrossPlatform;
+using JPB.Communication.Shared.CrossPlatform;
 
 namespace JPB.Communication.ComBase
 {
@@ -186,11 +184,17 @@ namespace JPB.Communication.ComBase
             }
         }
 
+        public MessageBase LoadMessageBaseFromBinary(byte[] source)
+        {
+            return Serlilizer.DeSerializeMessageContent(source);
+        }
+
         public NetworkMessage DeSerialize(byte[] source)
         {
             try
             {
-                return Serlilizer.DeSerializeMessage(source);
+                var sor = source;
+                return Serlilizer.DeSerializeMessage(sor);
             }
             catch (Exception e)
             {
@@ -229,10 +233,6 @@ namespace JPB.Communication.ComBase
             }
         }
 
-        public MessageBase LoadMessageBaseFromBinary(byte[] source)
-        {
-            return Serlilizer.DeSerializeMessageContent(source);
-        }
 
         protected NetworkMessage Wrap(MessageBase message)
         {

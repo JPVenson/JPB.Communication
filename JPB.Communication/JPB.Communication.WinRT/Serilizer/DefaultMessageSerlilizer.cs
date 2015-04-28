@@ -28,11 +28,12 @@ using System.Runtime.Serialization.Formatters;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Xml.Serialization;
-using JPB.Communication.ComBase.Messages;
 using JPB.Communication.ComBase.Serializer.Contracts;
-using JPB.Communication.PCLIntigration.Shared.CrossPlatform;
+using JPB.Communication.ComBase;
+using JPB.Communication.Shared.CrossPlatform;
+using JPB.Communication.ComBase.Messages;
 
-namespace JPB.Communication.ComBase.Serializer
+namespace JPB.Communication.NativeWin.Serilizer
 {
     /// <summary>
     ///     Contains a Mixed Message Serlilizer that Converts the Message as XML and the Content to Binary
@@ -41,6 +42,11 @@ namespace JPB.Communication.ComBase.Serializer
     /// </summary>
     public class DefaultMessageSerlilizer : IMessageSerializer
     {
+        public DefaultMessageSerlilizer()
+        {
+            IlMergeSupport = true;
+            _binder = new IlMergeBinder();
+        }
         //IL MERGE OR RENAMING SUPPORT
 
         internal static Encoding Encoding = Encoding.UTF8;
@@ -100,7 +106,7 @@ namespace JPB.Communication.ComBase.Serializer
                 BinaryFormatter binaryFormatter = CreateFormatter();
                 if (IlMergeSupport)
                 {
-                    binaryFormatter.Binder = new IlMergeBinder();
+                    binaryFormatter.Binder = _binder;
                 }
                 var deserialize = (MessageBase) binaryFormatter.Deserialize(memst);
                 return deserialize;

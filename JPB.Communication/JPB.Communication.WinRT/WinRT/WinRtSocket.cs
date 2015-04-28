@@ -1,12 +1,9 @@
-﻿using JPB.Communication.Contracts;
-using JPB.Communication.PCLIntigration.Contracts;
-using System;
-using System.IO;
+﻿using System;
 using System.Net.Sockets;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using JPB.Communication.Contracts.Intigration;
 
-namespace JPB.Communication.WinRT
+namespace JPB.Communication.NativeWin.WinRT
 {
     /// <summary>
     /// 
@@ -25,9 +22,7 @@ namespace JPB.Communication.WinRT
                 if (sock == null)
                     sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
-                sock.LingerState = new LingerOption(true, 10);
-                sock.DontFragment = true;
-                sock.NoDelay = true;
+                sock.LingerState = new LingerOption(true, 30);
                 sock.SetIPProtectionLevel(IPProtectionLevel.Unrestricted);
                 var rtSock = new WinRtSocket(sock);
                 return rtSock;
@@ -82,7 +77,16 @@ namespace JPB.Communication.WinRT
 
         public Task ConnectAsync(string ipOrHost, ushort port)
         {
-            var task = new Task(() => _sock.Connect(ipOrHost, port));
+            var task = new Task(() =>{
+                try
+                {
+                    _sock.Connect(ipOrHost, port);
+                }
+                catch (Exception)
+                {
+
+                }
+            });
             task.Start();
             return task;
         }
@@ -99,7 +103,7 @@ namespace JPB.Communication.WinRT
 
         public int Send(byte[] content, int length, int start)
         {
-            return _sock.Send(content, length, start, SocketFlags.Partial);
+            return _sock.Send(content, length, start, SocketFlags.None);
         }
 
         public void Receive(byte[] content)
@@ -139,9 +143,16 @@ namespace JPB.Communication.WinRT
 
         public ISocket EndAccept(IAsyncResult result)
         {
-            var endAccept = _sock.EndAccept(result);
-            var sock = new WinRtSocket(endAccept);
-            return sock;
+            try
+            {
+                var endAccept = _sock.EndAccept(result);
+                var sock = new WinRtSocket(endAccept);
+                return sock;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
     }
 

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Specialized;
 using JPB.Communication.Shared;
 using JPB.WPFBase.MVVM.ViewModel;
+using System;
 
 namespace JPB.Communication.WPF.Controls.Intigration
 {

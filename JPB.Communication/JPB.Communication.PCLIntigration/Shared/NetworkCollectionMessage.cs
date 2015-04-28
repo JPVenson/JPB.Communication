@@ -18,8 +18,6 @@
  https://github.com/JPVenson/JPB.Communication/blob/master/LICENSE
  */
 
-using System;
-
 namespace JPB.Communication.Shared
 {
     public class NetworkCollectionMessage

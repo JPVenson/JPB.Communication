@@ -1,11 +1,8 @@
-﻿using JPB.Communication.Contracts;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using JPB.Communication.Contracts.Factorys;
+using JPB.Communication.Contracts.Intigration;
 using System.Threading.Tasks;
 
-namespace JPB.Communication.WinRT.WinRT
+namespace JPB.Communication.NativeWin.WinRT
 {
     public class WinRtSocketFactory : ISocketFactory
     {

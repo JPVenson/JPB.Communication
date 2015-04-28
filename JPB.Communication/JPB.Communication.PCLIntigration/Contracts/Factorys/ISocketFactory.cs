@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
-using JPB.Communication.ComBase.TCP;
+using JPB.Communication.Contracts.Intigration;
 
-namespace JPB.Communication.Contracts
+namespace JPB.Communication.Contracts.Factorys
 {
     /// <summary>
     /// </summary>

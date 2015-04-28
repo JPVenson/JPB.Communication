@@ -64,8 +64,6 @@
     <Compile Include="ComBase\NetworkMessage.cs" />
     <Compile Include="ComBase\NetworkReceiverBase.cs" />
     <Compile Include="ComBase\Serializer\Contracts\IMessageSerializer.cs" />
-    <Compile Include="ComBase\Serializer\FullXmlSerializer.cs" />
-    <Compile Include="ComBase\Serializer\MessageJsonSerlalizer.cs" />
     <Compile Include="ComBase\StreamBuffer.cs" />
     <Compile Include="ComBase\TCP\ConnectionWrapper.cs" />
     <Compile Include="ComBase\TCP\DefaultTcpConnection.cs" />
@@ -79,6 +77,7 @@
     <Compile Include="Contracts\Factorys\IPlatformFactory.cs" />
     <Compile Include="Contracts\Intigration\ISocket.cs" />
     <Compile Include="Contracts\Factorys\ISocketFactory.cs" />
+    <Compile Include="Contracts\Intigration\SerializableAttribute.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="NetworkFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

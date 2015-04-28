@@ -1,19 +1,17 @@
-﻿using JPB.Communication.PCLIntigration.Contracts.Factorys;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System;
+using JPB.Communication.Contracts.Factorys;
+using JPB.Communication.Contracts.Intigration;
 
-namespace JPB.Communication.WinRT.WinRT
+namespace JPB.Communication.NativeWin.WinRT
 {
     class IPAddressFactory : IIPaddressFactory
     {
-        public bool TryParse(string hostOrIp, out PCLIntigration.ComBase.IPAddress ipAddress)
+        public bool TryParse(string hostOrIp, out IPAddress ipAddress)
         {
             throw new NotImplementedException();
         }
 
-        public PCLIntigration.ComBase.IPAddress Parse(string p)
+        public IPAddress Parse(string p)
         {
             throw new NotImplementedException();
         }

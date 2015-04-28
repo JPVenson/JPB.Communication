@@ -1,11 +1,6 @@
-﻿using JPB.Communication.PCLIntigration.ComBase;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using JPB.Communication.Contracts.Intigration;
 
-namespace JPB.Communication.PCLIntigration.Contracts.Factorys
+namespace JPB.Communication.Contracts.Factorys
 {
     public interface IIPaddressFactory
     {

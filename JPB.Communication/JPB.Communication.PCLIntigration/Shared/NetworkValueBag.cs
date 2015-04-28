@@ -22,13 +22,13 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JPB.Communication.ComBase;
 using JPB.Communication.ComBase.Messages;
 using JPB.Communication.ComBase.TCP;
-using System.Collections.Specialized;
 
 namespace JPB.Communication.Shared
 {

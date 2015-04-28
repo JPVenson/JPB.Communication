@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using JPB.Communication.Contracts.Intigration;
 
-namespace JPB.Communication.PCLIntigration.Contracts
+namespace JPB.Communication.Contracts
 {
     public static class DnsAdapter
     {        
@@ -18,7 +14,7 @@ namespace JPB.Communication.PCLIntigration.Contracts
             return NetworkFactory.PlatformFactory.DnsFactory.GetHostEntry(p);
         }
 
-        internal static ComBase.IPAddress[] GetHostAddresses(string host)
+        internal static IPAddress[] GetHostAddresses(string host)
         {
             return NetworkFactory.PlatformFactory.DnsFactory.GetHostAddresses(host);
         }

@@ -18,7 +18,6 @@
  https://github.com/JPVenson/JPB.Communication/blob/master/LICENSE
  */
 
-using JPB.Communication.PCLIntigration;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -115,6 +114,19 @@ namespace JPB.Communication.ComBase
         public void Write(byte[] buffer)
         {
             Last = buffer;
+        }
+
+        internal void FlushWait()
+        {
+            this.Flush();
+            if (_writeAsync != null)
+                _writeAsync.Wait();
+        }
+
+        internal void Wait()
+        {
+            if (_writeAsync != null)
+                _writeAsync.Wait();
         }
     }
 }

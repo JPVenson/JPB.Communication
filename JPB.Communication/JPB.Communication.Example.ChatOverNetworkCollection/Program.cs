@@ -22,12 +22,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using JPB.Communication.ComBase;
-using JPB.Communication.Shared;
-using JPB.Communication.PCLIntigration.ComBase;
+using JPB.Communication.ComBase.Messages;
 using JPB.Communication.ComBase.Serializer;
+using System.Runtime.Serialization;
+using JPB.Communication.NativeWin.Serilizer;
+using JPB.Communication.NativeWin.WinRT;
+using JPB.Communication.Contracts.Intigration;
+using JPB.Communication.Shared;
+using System.Threading;
 
 namespace JPB.Communication.Example.ChatOverNetworkCollection
 {
@@ -57,7 +61,7 @@ namespace JPB.Communication.Example.ChatOverNetworkCollection
         public Program()
         {
             Networkbase.DefaultMessageSerializer = new NetContractSerializer();
-            NetworkFactory.Create(new WinRT.WinRT.WinRTFactory());
+            NetworkFactory.Create(new WinRTFactory());
 
             //create an Instance of the NetworkValueBag
             NetworkInfoBase.ResolveOwnIp += NetworkInfoBaseOnResolveOwnIp;

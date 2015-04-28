@@ -22,15 +22,21 @@ using System;
 using JPB.Communication.ComBase;
 using JPB.Communication.ComBase.Messages;
 using JPB.Communication.ComBase.Serializer;
+using JPB.Communication.NativeWin.WinRT;
 
 namespace JPB.Communication.Example.Chat
 {
     public class SimpleChat
     {
-        public static void Main2(string[] args)
+        public SimpleChat()
         {
-            Networkbase.DefaultMessageSerializer = new NetContractSerializer();
-            NetworkFactory.Create(new WinRT.WinRT.WinRTFactory());
+            SimpleChat.Main2();
+        }
+
+        public static void Main2()
+        {
+            //Networkbase.DefaultMessageSerializer = new NetContractSerializer();
+            NetworkFactory.Create(new WinRTFactory());
 
             //Define a Contract that is not used by others
             var messageContract = "CC1AAD01-501C-46F6-A885-1C93946C79F8";

@@ -1,13 +1,9 @@
-﻿using JPB.Communication.Contracts;
-using JPB.Communication.PCLIntigration.Contracts;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using JPB.Communication.Contracts.Factorys;
+using JPB.Communication.Shared.CrossPlatform;
 
-namespace JPB.Communication.WinRT.WinRT
+namespace JPB.Communication.NativeWin.WinRT
 {
     public class WinRTFactory : IPlatformFactory
     {
@@ -21,16 +17,16 @@ namespace JPB.Communication.WinRT.WinRT
             get { return new WinRtSocketFactory(); }
         }
 
-        public event Action<object, PCLIntigration.Shared.CrossPlatform.PclTraceWriteEventArgs> TraceMessage;
+        public event Action<object, PclTraceWriteEventArgs> TraceMessage;
 
-        public void RaiseTraceMessage(object sender, PCLIntigration.Shared.CrossPlatform.PclTraceWriteEventArgs arg)
+        public void RaiseTraceMessage(object sender, PclTraceWriteEventArgs arg)
         {
             if (TraceMessage != null)
                 TraceMessage(sender, arg);
         }
 
 
-        public PCLIntigration.Contracts.Factorys.IDNSFactory DnsFactory
+        public IDNSFactory DnsFactory
         {
             get { return new DnsFactory(); }
         }

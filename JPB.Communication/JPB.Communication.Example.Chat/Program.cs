@@ -25,9 +25,11 @@ using System.Text;
 using System.Threading.Tasks;
 using JPB.Communication.ComBase;
 using JPB.Communication.ComBase.Messages;
-using JPB.Communication.PCLIntigration.ComBase;
-using System.Net;
 using JPB.Communication.ComBase.Serializer;
+using System.Runtime.Serialization;
+using JPB.Communication.NativeWin.Serilizer;
+using JPB.Communication.NativeWin.WinRT;
+using JPB.Communication.Contracts.Intigration;
 
 namespace JPB.Communication.Example.Chat
 {
@@ -39,15 +41,23 @@ namespace JPB.Communication.Example.Chat
         /// <param name="args"></param>
         static void Main(string[] args)
         {
-            //SimpleChat.Main2(args);
+            //new SimpleChat();
             new Program();
         }
 
+        [DataContract]
+        public class ChatMessage
+        {
+            [DataMember]
+            public string Message { get; set; }
+            [DataMember]
+            public ConsoleColor Color { get; set; }
+        }
 
         public Program()
         {
             Networkbase.DefaultMessageSerializer = new NetContractSerializer();
-            NetworkFactory.Create(new WinRT.WinRT.WinRTFactory());
+            NetworkFactory.Create(new WinRTFactory());
 
             //Maybe multible network Adapters ... on what do we want to Recieve?
             NetworkInfoBase.ResolveOwnIp += NetworkInfoBaseOnResolveOwnIp;
@@ -68,7 +78,7 @@ namespace JPB.Communication.Example.Chat
                 //This mehtod will create or return an instance for the spezific port
                 .GetReceiver(port);
 
-            
+
             //Register the callback that will be invoked when a new message is incomming that contains the InfoState ( Contract ) we defined
             tcpNetworkReceiver.RegisterMessageBaseInbound(OnIncommingMessage, ChatMessageContract);
 
@@ -81,8 +91,8 @@ namespace JPB.Communication.Example.Chat
 
             //If you want to alter control the Process of Serilation set this interface but remember that both Sender and Receiver must use the same otherwise they will not able to work
             //In this case we are using one of the Predefined Serializers
-            tcpNetworkReceiver.Serlilizer = new JPB.Communication.ComBase.Serializer.NetContractSerializer();
-            tcpNetworkSender.Serlilizer = tcpNetworkReceiver.Serlilizer;
+            //tcpNetworkReceiver.Serlilizer = new JPB.Communication.ComBase.Serializer.NetContractSerializer();
+            //tcpNetworkSender.Serlilizer = tcpNetworkReceiver.Serlilizer;
 
             Console.WriteLine("Server IP or Hostname:");
             bool serverOnline = false;
@@ -120,11 +130,26 @@ namespace JPB.Communication.Example.Chat
                 Console.ForegroundColor = ConsoleColor.Green;
                 input = Console.ReadLine();
                 Console.ResetColor();
+                var chatMess = new ChatMessage();
+                chatMess.Message = input;
+                chatMess.Color = ConsoleColor.Red;
+                var indexOfColor = input.IndexOf(":");
+                if (indexOfColor != -1)
+                {
+                    var maybeColor = input.Substring(0, indexOfColor).ToLower();
+                    var findConsoleColor = Enum.GetNames(typeof(ConsoleColor)).FirstOrDefault(s => s.ToLower() == maybeColor);
+                    if (findConsoleColor != null)
+                    {
+                        chatMess.Color = (ConsoleColor)Enum.Parse(typeof(ConsoleColor), findConsoleColor);
+                        chatMess.Message = input.Remove(0, indexOfColor + 1);
+                    }
+                }
+
                 //create a new MessageBase object or one object that inherts from it
                 var message = new MessageBase()
                 {
                     InfoState = ChatMessageContract,
-                    Message = input
+                    Message = chatMess
                 };
 
                 //Send the object over the network
@@ -138,12 +163,12 @@ namespace JPB.Communication.Example.Chat
             } while (!input.ToLower().Equals("exit"));
         }
 
-        private JPB.Communication.PCLIntigration.ComBase.IPAddress NetworkInfoBaseOnResolveDistantIp(JPB.Communication.PCLIntigration.ComBase.IPAddress[] arg1, string arg2)
+        private IPAddress NetworkInfoBaseOnResolveDistantIp(IPAddress[] arg1, string arg2)
         {
             return NetworkInfoBaseOnResolveOwnIp(arg1);
         }
 
-        private static JPB.Communication.PCLIntigration.ComBase.IPAddress NetworkInfoBaseOnResolveOwnIp(JPB.Communication.PCLIntigration.ComBase.IPAddress[] ipAddresses)
+        private static IPAddress NetworkInfoBaseOnResolveOwnIp(IPAddress[] ipAddresses)
         {
             Console.WriteLine("Multible Addresses detected choose one");
             Console.WriteLine("ID | IP");
@@ -166,9 +191,10 @@ namespace JPB.Communication.Example.Chat
 
         private static void OnIncommingMessage(MessageBase obj)
         {
+            var mess = (obj.Message as ChatMessage);
             var old = Console.ForegroundColor;
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("> {0} : \"{1}\"", obj.Sender, obj.Message.ToString());
+            Console.ForegroundColor = mess.Color;
+            Console.WriteLine("> {0} : \"{1}\"", obj.Sender, mess.Message);
             Console.ForegroundColor = old;
         }
 

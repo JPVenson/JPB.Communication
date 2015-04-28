@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Net;
 using System.Threading.Tasks;
-using JPB.Communication.PCLIntigration.Contracts;
 
-namespace JPB.Communication.Contracts
+namespace JPB.Communication.Contracts.Intigration
 {
     /// <summary>
     /// 

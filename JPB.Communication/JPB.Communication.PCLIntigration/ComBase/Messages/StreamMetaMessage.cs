@@ -18,11 +18,12 @@
  https://github.com/JPVenson/JPB.Communication/blob/master/LICENSE
  */
 
+using JPB.Communication.PCLIntigration.Contracts.Intigration;
 using System;
-using System.Runtime.Serialization;
 
 namespace JPB.Communication.ComBase.Messages
 {
+    [Serializable]
     public class StreamMetaMessage : MessageBase
     {
         public StreamMetaMessage()

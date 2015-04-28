@@ -8,6 +8,8 @@ using JPB.Communication.ComBase;
 using JPB.Communication.ComBase.Messages;
 using JPB.Communication.ComBase.Messages.Wrapper;
 using JPB.Communication.ComBase.Serializer;
+using JPB.Communication.NativeWin.Serilizer;
+using JPB.Communication.NativeWin.WinRT;
 
 namespace JPB.Communication.Test.LargeMessages
 {
@@ -16,7 +18,7 @@ namespace JPB.Communication.Test.LargeMessages
         static void Main(string[] args)
         {
             Networkbase.DefaultMessageSerializer = new NetContractSerializer();
-            NetworkFactory.Create(new WinRT.WinRT.WinRTFactory());
+            NetworkFactory.Create(new WinRTFactory());
 
             var publicIp = NetworkInfoBase.GetPublicIp();
             Console.WriteLine(publicIp);

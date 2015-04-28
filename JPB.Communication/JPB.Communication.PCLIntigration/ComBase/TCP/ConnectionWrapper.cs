@@ -19,7 +19,7 @@
  */
 
 using System;
-using JPB.Communication.Contracts;
+using JPB.Communication.Contracts.Intigration;
 
 namespace JPB.Communication.ComBase.TCP
 {

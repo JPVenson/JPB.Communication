@@ -1,22 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using JPB.Communication.ComBase;
-using JPB.Communication.ComBase.TCP;
-using JPB.Communication.WPF.Controls.View;
+﻿using System.Windows;
 using JPB.WPFBase.MVVM.ViewModel;
+using JPB.Communication.ComBase.TCP;
+using JPB.Communication.ComBase;
 
-namespace JPB.Communication.WPF.Controls.ViewModel
+namespace JPB.Communication.NativeWin.ViewModel
 {
     public class ConnectionPoolViewModel : AsyncViewModelBase
     {
         public ConnectionPoolViewModel()
         {
             //not thread save
-            OpenConnections = new ThreadSaveObservableCollection<ConnectionWrapper>(ConnectionPool.Instance.GetConnections().SelectMany(s => s));
+            OpenConnections = new ThreadSaveObservableCollection<ConnectionWrapper>(ConnectionPool.Instance.GetConnections());
             ConnectionPool.Instance.OnConnectionCreated += Instance_OnConnectionCreated;
             ConnectionPool.Instance.OnConnectionClosed += InstanceOnOnConnectionClosed;
             ShowDetailMode = Visibility.Collapsed;

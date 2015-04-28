@@ -1,12 +1,7 @@
-﻿using JPB.Communication.PCLIntigration.ComBase;
-using JPB.Communication.PCLIntigration.Contracts;
-using System;
-using System.Collections.Generic;
+﻿using JPB.Communication.Contracts.Intigration;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace JPB.Communication.WinRT
+namespace JPB.Communication.NativeWin.WinRT
 {
     public static class WinRTExtentions
     {

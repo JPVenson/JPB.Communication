@@ -1,10 +1,11 @@
 using System.IO;
 using System.Runtime.Serialization;
 using System.Text;
-using JPB.Communication.ComBase.Messages;
 using JPB.Communication.ComBase.Serializer.Contracts;
+using JPB.Communication.ComBase.Messages;
+using JPB.Communication.ComBase;
 
-namespace JPB.Communication.ComBase.Serializer
+namespace JPB.Communication.NativeWin.Serilizer
 {
     public class NetContractSerializer : IMessageSerializer
     {

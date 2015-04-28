@@ -24,17 +24,14 @@
 
 #endregion
 
-using JPB.Communication.PCLIntigration.ComBase;
-using JPB.Communication.PCLIntigration.Contracts;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
+using JPB.Communication.Contracts;
+using IPAddress = JPB.Communication.Contracts.Intigration.IPAddress;
 
 namespace JPB.Communication.ComBase
 {
@@ -96,6 +93,7 @@ namespace JPB.Communication.ComBase
                 _exIp = IPAddress.Parse(GetPublicIp());
                 return _exIp;
             }
+            set { _exIp = value; }
         }
 
         public static string IpCheckUrl { get; set; }

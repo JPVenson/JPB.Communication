@@ -23,6 +23,7 @@ using System.Runtime.Serialization;
 
 namespace JPB.Communication.ComBase.Messages
 {
+    [DataContract]
     public class RequstMessage : MessageBase
     {
         public RequstMessage()

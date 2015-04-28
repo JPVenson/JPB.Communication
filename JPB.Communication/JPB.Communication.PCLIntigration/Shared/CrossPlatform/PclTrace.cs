@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
-namespace JPB.Communication.PCLIntigration.Shared.CrossPlatform
+namespace JPB.Communication.Shared.CrossPlatform
 {
     public class PclTrace
     {

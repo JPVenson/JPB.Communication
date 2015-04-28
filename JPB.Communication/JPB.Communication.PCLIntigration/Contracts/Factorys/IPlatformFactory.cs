@@ -1,15 +1,8 @@
-﻿using JPB.Communication.Contracts;
-using JPB.Communication.PCLIntigration.ComBase;
-using JPB.Communication.PCLIntigration.Contracts.Factorys;
-using JPB.Communication.PCLIntigration.Shared.CrossPlatform;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using JPB.Communication.Shared.CrossPlatform;
 
-namespace JPB.Communication.PCLIntigration.Contracts
+namespace JPB.Communication.Contracts.Factorys
 {
     public interface IPlatformFactory
     {

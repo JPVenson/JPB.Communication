@@ -1,19 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq;
 using System.Windows;
-using JPB.Communication.ComBase;
-using JPB.Communication.ComBase.Messages;
-using JPB.Communication.ComBase.Messages.Wrapper;
-using JPB.Communication.ComBase.TCP;
-using JPB.Communication.WPF.Controls.Model;
-using JPB.Communication.WPF.Controls.View;
 using JPB.WPFBase.MVVM.DelegateCommand;
 using JPB.WPFBase.MVVM.ViewModel;
+using JPB.Communication.WPF.Model;
+using JPB.Communication.ComBase;
+using JPB.Communication.ComBase.TCP;
+using JPB.Communication.ComBase.Messages.Wrapper;
+using JPB.Communication.ComBase.Messages;
 
-namespace JPB.Communication.WPF.Controls.ViewModel
+namespace JPB.Communication.NativeWin.ViewModel
 {
     public class NetworkLogViewModel : AsyncViewModelBase
     {

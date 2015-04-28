@@ -24,8 +24,10 @@
 
 #endregion
 
+using JPB.Communication.PCLIntigration.Contracts.Intigration;
 using System;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 
 namespace JPB.Communication.ComBase.Messages
@@ -35,11 +37,13 @@ namespace JPB.Communication.ComBase.Messages
     ///     To ensure a valid Serliazion every inherited class should impliment its own ISerializable Implimentation
     /// </summary>
     [DebuggerStepThrough]
+    [Serializable]
+    [ClassInterfaceAttribute(ClassInterfaceType.None)]
     public class MessageBase
     {
         private object _infoState;
         private object _message;
-
+        
         public MessageBase()
         {
             Message = new object();

@@ -19,22 +19,16 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using JPB.Communication.Contracts;
+using JPB.Communication.Contracts.Intigration;
 
 namespace JPB.Communication.ComBase.TCP
 {
     internal class DefaultTcpConnection : TcpConnectionBase, IDisposable
     {
-        private readonly int _receiveBufferSize;
-        private readonly InternalMemoryHolder datarec;
         private readonly ISocket sock;
 
         internal DefaultTcpConnection(ISocket s)
         {
-            datarec = new InternalMemoryHolder();
             sock = s;
             _receiveBufferSize = sock.ReceiveBufferSize;
         }
@@ -47,72 +41,12 @@ namespace JPB.Communication.ComBase.TCP
             if (sock == null)
                 throw new ArgumentException("No sock supplyed please call DefaultTcpConnection(NetworkStream stream)");
 
-            datarec.Add(new byte[_receiveBufferSize], 0);
-            sock.BeginReceive(datarec.Last, 0,
-                datarec.Last.Length,
+            _datarec.Add(new byte[_receiveBufferSize], 0);
+            sock.BeginReceive(_datarec.Last, 0,
+                _datarec.Last.Length,
                 OnBytesReceived,
                 this);
-        }
-        enum HandeldMode
-        {
-            NoDateAvailble,
-            MaybeMoreData,
-            Handled,
-            Exception
-        }
-        private HandeldMode HandleRec(int rec)
-        {
-            //0 is: No more Data
-            //1 is: Part Complted
-            //<1 is: Content
-            
-            if (rec == -1)
-                return HandeldMode.Exception;
-            
-            //to incomming data left
-            //try to concat the message
-            if ((rec == 0 || rec == 1) || rec < _receiveBufferSize)
-            {
-                //Wrong Partial byte only call?
-                byte[] buff = datarec.Get(rec);
-                if (buff.Length <= 2)
-                {
-                    RaiseEndReceiveInternal();
-                    datarec.Clear();
-                    return HandeldMode.NoDateAvailble;
-                }
-
-                int count = buff.Count();
-                var compltearray = new List<byte>();
-                bool beginContent = false;
-                for (int i = 0, f = 0; f < count; f++)
-                {
-                    byte b = buff[f];
-                    if (!beginContent)
-                    {
-                        if (b == 0x00)
-                        {
-                            continue;
-                        }
-                        beginContent = true;
-                    }
-                    compltearray.Add(b);
-                    i++;
-                }
-
-                var parsedCorretly = Parse(compltearray.ToArray());
-                if (!parsedCorretly)
-                {
-                    //Maybe not full message
-                    return HandeldMode.MaybeMoreData;
-                }
-                RaiseEndReceiveInternal();
-                return HandeldMode.Handled;
-            }
-
-
-            return HandeldMode.MaybeMoreData;
-        }
+        }      
 
         // This is the method that is called whenever the Socket receives
         // incoming bytes.
@@ -140,22 +74,22 @@ namespace JPB.Communication.ComBase.TCP
                 {
                     //this is Not the end, my only friend the end
                     //allocate new memory and add the mem to the Memory holder
-                    datarec.Add(new byte[_receiveBufferSize], rec);
-                    sock.BeginReceive(datarec.Last, 0,
-                        datarec.Last.Length, 
+                    _datarec.Add(new byte[_receiveBufferSize], rec);
+                    sock.BeginReceive(_datarec.Last, 0,
+                        _datarec.Last.Length, 
                         OnBytesReceived,
                         this);
                 }
                 else
                 {
-                    datarec.Clear();
-                    datarec.Add(new byte[_receiveBufferSize], 0);
+                    _datarec.Clear();
+                    _datarec.Add(new byte[_receiveBufferSize], 0);
                     if (sock.Connected)
                     {
                         try
                         {
-                            sock.BeginReceive(datarec.Last, 0,
-                                datarec.Last.Length,
+                            sock.BeginReceive(_datarec.Last, 0,
+                                _datarec.Last.Length,
                                 OnBytesReceived,
                                 this);
                         }
@@ -173,12 +107,12 @@ namespace JPB.Communication.ComBase.TCP
                     Dispose();
                 }
 
-                datarec.Clear();
-                datarec.Add(new byte[_receiveBufferSize], 0);
+                _datarec.Clear();
+                _datarec.Add(new byte[_receiveBufferSize], 0);
                 try
                 {
-                    sock.BeginReceive(datarec.Last, 0,
-                        datarec.Last.Length, 
+                    sock.BeginReceive(_datarec.Last, 0,
+                        _datarec.Last.Length, 
                         OnBytesReceived,
                         this);
                 }
@@ -188,24 +122,12 @@ namespace JPB.Communication.ComBase.TCP
                 }
             }
         }
-
-        internal static byte[] NullRemover(byte[] dataStream)
-        {
-            int i;
-            var temp = new List<byte>();
-            for (i = 0; i < dataStream.Count() - 1; i++)
-            {
-                if (dataStream[i] == 0x00) continue;
-                temp.Add(dataStream[i]);
-            }
-            return temp.ToArray();
-        }
-
+        
         #region Implementation of IDisposable
 
         public void Dispose()
         {
-            datarec.Dispose();
+            _datarec.Dispose();
         }
 
         #endregion

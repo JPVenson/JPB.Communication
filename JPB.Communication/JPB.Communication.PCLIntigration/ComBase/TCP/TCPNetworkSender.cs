@@ -26,15 +26,14 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using JPB.Communication.ComBase.Messages;
-using JPB.Communication.Contracts;
-using JPB.Communication.PCLIntigration.Shared.CrossPlatform;
+using JPB.Communication.Contracts.Factorys;
+using JPB.Communication.Contracts.Intigration;
+using JPB.Communication.Shared.CrossPlatform;
 
 namespace JPB.Communication.ComBase.TCP
 {
@@ -81,6 +80,7 @@ namespace JPB.Communication.ComBase.TCP
             if (SharedConnection)
             {
                 var connec = ConnectionPool.Instance.Connections.FirstOrDefault(s => s.TCPNetworkSender == this);
+                if (connec == null) return;
 
                 connec.Socket.Close();
                 connec.TCPNetworkReceiver.Dispose();
@@ -226,17 +226,30 @@ namespace JPB.Communication.ComBase.TCP
         /// <returns>frue if message was successful delivered otherwise false</returns>
         public Task<bool> SendMessageAsync(MessageBase message, string ip)
         {
+            //var callee = Thread.CurrentContext;
             var task = new Task<bool>(() =>
             {
-                Task<ISocket> client = CreateClientSockAsync(ip);
-                NetworkMessage tcpMessage = PrepareMessage(message, ip);
-                client.Wait();
-                ISocket result = client.Result;
-                if (result == null)
+                try
+                {
+                    Task<ISocket> client = CreateClientSockAsync(ip);
+                    NetworkMessage tcpMessage = PrepareMessage(message, ip);
+                    client.Wait();
+                    var result = client.Result;
+                    if (result == null)
+                        return false;
+                    SendBaseAsync(tcpMessage, result);
+                    RaiseMessageSended(message);
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    //if (callee != null)
+                    //    callee.DoCallBack(() =>
+                    //    {
+                            SetException(this, e);
+                        //});
                     return false;
-                SendBaseAsync(tcpMessage, result);
-                RaiseMessageSended(message);
-                return true;
+                }
             });
             task.Start();
             return task;
@@ -330,6 +343,22 @@ namespace JPB.Communication.ComBase.TCP
         }
 
         /// <summary>
+        ///     Sends a message an awaits a response on the same port from the other side
+        /// </summary>
+        /// <param name="mess">Message object or inherted object</param>
+        /// <param name="ip">Ip of sock</param>
+        /// <returns>Result from other side or default(T)</returns>
+        /// <exception cref="TimeoutException"></exception>
+        public async Task<T> SendRequstMessage<T>(object mess, object infoState, string ip)
+        {
+            return await SendRequstMessageAsync<T>(new RequstMessage()
+            {
+                Message = mess,
+                InfoState = infoState
+            }, ip);
+        }
+
+        /// <summary>
         ///     Sends one message COPY to each ipOrHost and awaits from all a result or nothing
         /// </summary>
         /// <typeparam name="T">the result we await</typeparam>
@@ -367,7 +396,7 @@ namespace JPB.Communication.ComBase.TCP
         /// <exception cref="NotImplementedException"></exception>
         public async void SendStreamDataAsync(Stream stream, StreamMetaMessage mess, string ip, bool disposeOnEnd = true)
         {
-            ISocket client = await CreateClientSockAsync(ip);
+            var client = await CreateClientSockAsync(ip);
             if (client == null)
                 return;
 
@@ -378,7 +407,7 @@ namespace JPB.Communication.ComBase.TCP
 
             using (var memstream = new MemoryStream(serialize))
             {
-                ISocket openNetwork = OpenAndSend(memstream, client);
+                var openNetwork = SendOnStream(memstream, client);
 
                 AwaitCallbackFromRemoteHost(client, true);
 
@@ -421,7 +450,7 @@ namespace JPB.Communication.ComBase.TCP
             {
                 throw new ArgumentException("The Socket must be connected");
             }
-
+            SharedConnection = true;
             return ConnectionPool.Instance.InjectISocket(ipOrHost, this);
         }
 
@@ -492,19 +521,26 @@ namespace JPB.Communication.ComBase.TCP
 
         private async Task<ISocket> CreateClientSockAsync(string ipOrHost)
         {
-            if (SharedConnection)
+            try
             {
-                ISocket isConnected = ConnectionPool.Instance.GetSock(ipOrHost, Port);
-                if (isConnected != null)
+                if (SharedConnection)
                 {
-                    if (!isConnected.Connected)
+                    ISocket isConnected = ConnectionPool.Instance.GetSock(ipOrHost, Port);
+                    if (isConnected != null)
                     {
-                        isConnected.Connect(ipOrHost, Port);
+                        if (!isConnected.Connected)
+                        {
+                            isConnected.Connect(ipOrHost, Port);
+                        }
+                        return isConnected;
                     }
-                    return isConnected;
                 }
+                return await CreateClientSock(ipOrHost, Port);
             }
-            return await CreateClientSock(ipOrHost, Port);
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         private async Task<ISocket> CreateClientSock(string ipOrHost, ushort port)
@@ -528,9 +564,11 @@ namespace JPB.Communication.ComBase.TCP
                 try
                 {
                     sock.Send(0x01);
+                    //Thread.Sleep(150);
+                    //Thread.Yield();
                     if (wait)
                     {
-                        sock.Receive(new byte[] { 0x00 });
+                        //sock.Receive(new byte[] { 0x00 });
                     }
                     return;
                 }
@@ -554,8 +592,11 @@ namespace JPB.Communication.ComBase.TCP
             if (!serialize.Any())
                 return;
 
-            using (var memstream = new MemoryStream(serialize))
-                OpenAndSend(memstream, openNetwork);
+            lock (this)
+            {
+                using (var memstream = new MemoryStream(serialize))
+                    SendOnStream(memstream, openNetwork);
+            }
 
             AwaitCallbackFromRemoteHost(openNetwork, false);
             if (!SharedConnection)
@@ -566,16 +607,9 @@ namespace JPB.Communication.ComBase.TCP
             }
         }
 
-        private ISocket OpenAndSend(Stream stream, ISocket client)
-        {
-            return SendOnStream(stream, client);
-        }
-
         private ISocket SendOnStream(Stream stream, ISocket sock)
         {
             int bufSize = sock.ReceiveBufferSize;
-
-
             var buf = new byte[bufSize];
             int read = 0;
             long send = 0;
@@ -586,7 +620,6 @@ namespace JPB.Communication.ComBase.TCP
                 send = sock.Send(buf, 0, read);
                 if (read > 0)
                     lastOverZeroRead = read;
-                //target.Write(buf, 0, read);
             } while (read > 0);
 
             //if the last send would be a Full packet
@@ -597,6 +630,17 @@ namespace JPB.Communication.ComBase.TCP
                 if (lastOverZeroRead == bufSize)
                 {
                     sock.Send(0x01);
+                }
+                else
+                {
+                    var remaining = bufSize - lastOverZeroRead - 1;
+
+                    var buff = new byte[remaining];
+                    for (int i = 0; i < remaining; i++)
+                    {
+                        buff[i] = 0x00;
+                    }
+                    sock.Send(buff, 0, remaining);
                 }
             }
 

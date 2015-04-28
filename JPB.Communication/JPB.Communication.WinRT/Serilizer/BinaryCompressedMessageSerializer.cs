@@ -18,13 +18,14 @@
  https://github.com/JPVenson/JPB.Communication/blob/master/LICENSE
  */
 
+using JPB.Communication.ComBase;
+using JPB.Communication.ComBase.Messages;
+using JPB.Communication.ComBase.Serializer.Contracts;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
-using JPB.Communication.ComBase.Messages;
-using JPB.Communication.ComBase.Serializer.Contracts;
 
-namespace JPB.Communication.ComBase.Serializer
+namespace JPB.Communication.NativeWin.Serilizer
 {
     /// <summary>
     ///     Uses the Default Serlilizer but compresses the output by using the GZipStream
@@ -93,7 +94,7 @@ namespace JPB.Communication.ComBase.Serializer
         /// </summary>
         public static byte[] DeCompress(byte[] raw)
         {
-            using (var stream = new GZipStream(new MemoryStream(raw), CompressionMode.Decompress))
+            using (var stream = new GZipStream(new MemoryStream(raw), CompressionMode.Decompress, false))
             {
                 const int size = 4096;
                 var buffer = new byte[size];
@@ -108,7 +109,10 @@ namespace JPB.Communication.ComBase.Serializer
                             memory.Write(buffer, 0, count);
                         }
                     } while (count > 0);
-                    return memory.ToArray();
+                    var arr = memory.ToArray();
+                    if (arr.Length == 0)
+                        return raw;
+                    return arr;
                 }
             }
         }

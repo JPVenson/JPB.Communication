@@ -6,7 +6,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 
-namespace JPB.Communication.WPF.Controls.Model
+namespace JPB.Communication.WPF.Model
 {
     public class ObjectViewModel : INotifyPropertyChanged
     {

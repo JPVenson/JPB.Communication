@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using JPB.Communication.ComBase.Messages;
 using JPB.Communication.ComBase.Messages.Wrapper;
 using JPB.Communication.Contracts;

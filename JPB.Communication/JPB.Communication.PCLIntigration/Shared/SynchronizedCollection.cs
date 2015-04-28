@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections;
-using System.Diagnostics;
+using System.Collections.Generic;
 
 //-----------------------------------------------------------------------------
 // Copyright (c) Microsoft Corporation.  All rights reserved.
 // Light modified to work on PCL
 //-----------------------------------------------------------------------------
-namespace System.Collections.Generic
+namespace JPB.Communication.Shared
 {
     public class SynchronizedCollection<T> : IList<T>, IList
     {

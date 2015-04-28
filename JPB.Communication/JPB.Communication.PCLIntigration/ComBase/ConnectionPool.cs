@@ -20,15 +20,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Net;
-using System.Net.NetworkInformation;
 using System.Threading.Tasks;
 using JPB.Communication.ComBase.TCP;
-using JPB.Communication.Contracts;
-using JPB.Communication.PCLIntigration.ComBase;
-using JPB.Communication.PCLIntigration.Contracts;
+using JPB.Communication.Contracts.Intigration;
+using IPAddress = JPB.Communication.Contracts.Intigration.IPAddress;
+using IPEndPoint = JPB.Communication.Contracts.Intigration.IPEndPoint;
 
 namespace JPB.Communication.ComBase
 {
@@ -52,31 +49,7 @@ namespace JPB.Communication.ComBase
         /// <summary>
         /// </summary>
         internal List<ConnectionWrapper> Connections { get; private set; }
-
-        //private void ISocketStateCheck(object state, ElapsedEventArgs elapsedEventArgs)
-        //{
-        //    try
-        //    {
-        //        _stateTimer.Stop();
-        //        foreach (ConnectionWrapper connectionWrapper in Connections.ToArray())
-        //        {
-        //            if (!connectionWrapper.Socket.Connected)
-        //            {
-        //                Connections.Remove(connectionWrapper);
-        //                RaiseConnectionClosed(connectionWrapper);
-        //            }
-        //        }
-        //    }
-        //    catch (Exception)
-        //    {
-        //        Trace.WriteLine(">ConnectionPool >ISocketStateCheck >Error due Timer check", Networkbase.TraceCategory);
-        //    }
-        //    finally
-        //    {
-        //        _stateTimer.Start();
-        //    }
-        //}
-
+        
         /// <summary>
         ///     Is invoked when a connection is created
         ///     this can caused by an incomming or a Shared connection from this side
@@ -102,24 +75,52 @@ namespace JPB.Communication.ComBase
                 handler(this, item);
         }
 
+        private volatile bool _stateCheckInProgress;
+
+        private void CheckSockStates()
+        {
+            if(_stateCheckInProgress)
+                return;
+            _stateCheckInProgress = true;
+            try
+            {
+                var toRemove = Connections.Where(connectionWrapper => !connectionWrapper.Socket.Connected).ToList();
+                foreach (var connectionWrapper in toRemove)
+                {
+                    Connections.Remove(connectionWrapper);
+                    RaiseConnectionClosed(connectionWrapper);
+                }
+            }
+            finally
+            {
+                _stateCheckInProgress = false;
+            }
+          
+        }
+
         /// <summary>
         ///     Returns a Flat copy of all Connections that are existing
         /// </summary>
         /// <returns></returns>
-        public ILookup<string, ConnectionWrapper> GetConnections()
+        public IEnumerable<ConnectionWrapper> GetConnections()
         {
-            return Connections.ToLookup(s => s.Ip);
+            CheckSockStates();
+            return Connections.Select(s => s);
         }
 
         internal ISocket GetSockForIpOrNull(string hostOrIp)
         {
+            CheckSockStates();
             IPAddress ipAddress;
-            if (!IPAddress.TryParse(hostOrIp, out ipAddress))
+            if (!IPAddress.TryParse(hostOrIp, out ipAddress) || ipAddress == null)
             {
                 ipAddress = NetworkInfoBase.ResolveIp(hostOrIp);
             }
 
-            var fod = Connections.FirstOrDefault(s => s.Ip == ipAddress.ToString());
+            if (ipAddress == null)
+                return null;
+
+            var fod = Connections.FirstOrDefault(s => s.Ip == ipAddress.ToString() && s.Socket.Connected);
 
             if (fod == null)
             {
@@ -130,6 +131,7 @@ namespace JPB.Communication.ComBase
 
         internal async Task<TCPNetworkReceiver> ConnectToHost(string hostOrIp, ushort port)
         {
+            CheckSockStates();
             string ip = NetworkInfoBase.ResolveIp(hostOrIp).ToString();
             var fod = Connections.FirstOrDefault(s => s.Ip == ip);
             if (fod != null)
@@ -159,6 +161,7 @@ namespace JPB.Communication.ComBase
             IPEndPoint localIp = sock.LocalEndPoint;
             IPEndPoint remoteIp = sock.RemoteEndPoint;
             var port1 = (ushort)localIp.Port;
+            sender.SharedConnection = true;
             var receiver = TCPNetworkReceiver.CreateReceiverInSharedState(port1, sock);
             AddConnection(new ConnectionWrapper(remoteIp.Address.ToString(), sock, receiver, sender));
             return receiver;
@@ -166,15 +169,9 @@ namespace JPB.Communication.ComBase
 
         private void AddConnection(ConnectionWrapper connectionWrapper)
         {
+            CheckSockStates();
             Connections.Add(connectionWrapper);
             RaiseConnectionCreated(connectionWrapper);
-        }
-
-        [Obsolete]
-        private void AddConnection(string ip, ISocket ISocket, TCPNetworkReceiver receiver, TCPNetworkSender sender)
-        {
-            var connectionWrapper = new ConnectionWrapper(ip, ISocket, receiver, sender);
-            AddConnection(connectionWrapper);
         }
 
         private void ThrowSockedNotAvailbileHelper()
@@ -188,6 +185,7 @@ namespace JPB.Communication.ComBase
 
         internal ISocket GetSock(string ipOrHost, ushort port)
         {
+            CheckSockStates();
             string ip = NetworkInfoBase.ResolveIp(ipOrHost).ToString();
             ConnectionWrapper fod = Connections.FirstOrDefault(s => s.Ip == ip && s.TCPNetworkSender.Port == port);
             if (fod == null)
@@ -199,6 +197,7 @@ namespace JPB.Communication.ComBase
         {
             var ipEndPoint = endAccept.RemoteEndPoint as IPEndPoint;
             TCPNetworkSender senderForRemotePort = NetworkFactory.Instance.GetSender((ushort)ipEndPoint.Port);
+            senderForRemotePort.SharedConnection = true;
 
             AddConnection(
                 new ConnectionWrapper(ipEndPoint.Address.ToString(), endAccept,

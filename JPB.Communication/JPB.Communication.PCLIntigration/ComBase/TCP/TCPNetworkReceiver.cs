@@ -21,14 +21,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using JPB.Communication.ComBase.Messages;
 using JPB.Communication.ComBase.Messages.Wrapper;
 using JPB.Communication.Contracts;
-using JPB.Communication.PCLIntigration.Contracts;
-using JPB.Communication.PCLIntigration.Shared.CrossPlatform;
+using JPB.Communication.Contracts.Factorys;
+using JPB.Communication.Contracts.Intigration;
+using JPB.Communication.Shared.CrossPlatform;
+using IPEndPoint = JPB.Communication.Contracts.Intigration.IPEndPoint;
 
 namespace JPB.Communication.ComBase.TCP
 {
@@ -63,11 +64,7 @@ namespace JPB.Communication.ComBase.TCP
             _listenerISocket.Bind(new IPEndPoint() { Address = NetworkInfoBase.IpAddress, Port = port });
             _listenerISocket.Listen(5000);
             _listenerISocket.BeginAccept(OnConnectRequest, _listenerISocket);
-        }
 
-        internal TCPNetworkReceiver(ushort port, ISocketFactory factory)
-            : this(port, factory.Create())
-        {
             _largeMessages = new List<Tuple<Action<LargeMessage>, object>>();
             _onetimeupdated = new List<Tuple<Action<MessageBase>, Guid>>();
             _pendingrequests = new List<Tuple<Action<RequstMessage>, Guid>>();
@@ -83,6 +80,12 @@ namespace JPB.Communication.ComBase.TCP
             _typeCallbacks.Add(typeof(RequstMessage), WorkOn_RequestMessage);
             _typeCallbacks.Add(typeof(MessageBase), WorkOn_MessageBase);
             _typeCallbacks.Add(typeof(LargeMessage), WorkOn_LargeMessage);
+        }
+
+        internal TCPNetworkReceiver(ushort port, ISocketFactory factory)
+            : this(port, factory.Create())
+        {
+
 
         }
 
@@ -218,6 +221,7 @@ namespace JPB.Communication.ComBase.TCP
         internal static TCPNetworkReceiver CreateReceiverInSharedState(ushort portInfo, ISocket basedOn)
         {
             var inst = new TCPNetworkReceiver(portInfo, NetworkFactory.PlatformFactory.SocketFactory.Create());
+            inst.SharedConnection = true;
             inst.StartListener(basedOn);
 
             lock (NetworkFactory.Instance._mutex)
@@ -234,7 +238,7 @@ namespace JPB.Communication.ComBase.TCP
         /// <summary>
         ///     Is raised when a message is inside the buffer but not fully parsed
         /// </summary>
-        public event EventHandler OnIncommingMessage;
+        public new event EventHandler OnIncommingMessage;
 
         private void TcpConnectionOnOnNewItemLoadedSuccess(object mess, ushort port)
         {
@@ -303,7 +307,7 @@ namespace JPB.Communication.ComBase.TCP
                 _onetimeupdated.Remove(useditem);
         }
 
-        private void WorkOn_RequestMessage(object messCopy)
+        private async void WorkOn_RequestMessage(object messCopy)
         {
             //message with return value inbound
             var requstInbound = messCopy as RequstMessage;
@@ -321,14 +325,13 @@ namespace JPB.Communication.ComBase.TCP
                 foreach (var tuple in firstOrDefault)
                 {
                     //Found a handler for that message and executed it
-                    Task waiter = null;
                     PCLTimer timer = null;
 
                     try
                     {
                         if (AutoRespond)
                         {
-                            timer = new PCLTimer((s) =>
+                            timer = new PCLTimer(s =>
                             {
                                 if (result != null)
                                     return;
@@ -337,18 +340,18 @@ namespace JPB.Communication.ComBase.TCP
                                 {
                                     ResponseFor = requstInbound.Id
                                 }, requstInbound.Sender);
-                            }, result, 10000, 10000);
+                            }, null, 10000, 10000);
                         }
 
                         result = tuple.Item1(requstInbound);
                     }
                     catch (Exception)
                     {
-                        result = null;
+                        result = new object();
                     }
                     finally
                     {
-                        if (waiter != null)
+                        if (timer != null)
                         {
                             timer.Dispose();
                         }
@@ -359,9 +362,9 @@ namespace JPB.Communication.ComBase.TCP
                 }
 
                 if (result == null)
-                    return;
+                    result = new object();
 
-                sender.SendMessageAsync(new RequstMessage
+                await sender.SendMessageAsync(new RequstMessage
                 {
                     Message = result,
                     ResponseFor = requstInbound.Id,
@@ -382,9 +385,9 @@ namespace JPB.Communication.ComBase.TCP
                 else
                 {
                     //No ones listening ... send null as Defauld
-                    sender.SendMessageAsync(new RequstMessage
+                    await sender.SendMessageAsync(new RequstMessage
                     {
-                        Message = null,
+                        Message = new object(),
                         ResponseFor = requstInbound.Id
                     }, requstInbound.Sender);
                 }
@@ -430,28 +433,49 @@ namespace JPB.Communication.ComBase.TCP
 
         private void WorkOnItems()
         {
-            _autoResetEvent = new AutoResetEvent(false);
-            while (_workeritems.Any())
+            try
             {
-                if (IsDisposing)
-                    break;
+                _autoResetEvent = new AutoResetEvent(false);
+                while (_workeritems.Any())
+                {
+                    if (IsDisposing)
+                        break;
 
-                Action action = _workeritems.Dequeue();
-                action.BeginInvoke(s => { }, null);
+                    Action action = _workeritems.Dequeue();
+                    if (action != null)
+                        action.BeginInvoke(s => { }, null);
+                }
+                _autoResetEvent.Set();
             }
-            _autoResetEvent.Set();
+            finally
+            {
+                _isWorking = false;
+            }
         }
 
         private void OnConnectRequest(IAsyncResult result)
         {
             IncommingMessage = true;
-            var sock = ((ISocket)result.AsyncState);
+            try
+            {
+                var sock = ((ISocket)result.AsyncState);
 
-            var endAccept = sock.EndAccept(result);
+                var endAccept = sock.EndAccept(result);
 
-            StartListener(endAccept);
-            // Tell the listener Socket to start listening again.
-            sock.BeginAccept(OnConnectRequest, sock);
+                if (endAccept == null)
+                {
+                    //Fatal error dispose
+                    Dispose();
+                }
+
+                StartListener(endAccept);
+                // Tell the listener Socket to start listening again.
+                sock.BeginAccept(OnConnectRequest, sock);
+            }
+            catch (Exception)
+            {
+                Dispose();
+            }
         }
 
         internal void StartListener(ISocket endAccept)
@@ -474,7 +498,7 @@ namespace JPB.Communication.ComBase.TCP
                 {
                     conn = new DefaultTcpConnection(endAccept)
                     {
-                        Port = Port
+                        Port = Port,
                     };
                 }
                 else
@@ -485,6 +509,7 @@ namespace JPB.Communication.ComBase.TCP
                     };
                 }
                 conn.Serlilizer = Serlilizer;
+                conn.IsSharedConnection = SharedConnection;
                 conn.EndReceiveInternal += (e, ef) => IncommingMessage = false;
                 conn.BeginReceive();
             }
@@ -518,7 +543,7 @@ namespace JPB.Communication.ComBase.TCP
         {
             if (IsDisposing)
             {
-                string reason = "Unknown reason";                
+                string reason = "Unknown reason";
                 throw new ObjectDisposedException("TCPNetworkReceiver", "This object is disposed you cannot access it anymore.")
                     {
                         Source = reason
@@ -544,6 +569,7 @@ namespace JPB.Communication.ComBase.TCP
             if (SharedConnection)
             {
                 var connec = ConnectionPool.Instance.Connections.FirstOrDefault(s => s.TCPNetworkReceiver == this);
+                if (connec == null) return;
 
                 connec.Socket.Close();
                 connec.TCPNetworkSender.Dispose();
