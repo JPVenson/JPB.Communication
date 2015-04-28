@@ -33,6 +33,7 @@ using System.Threading.Tasks;
 using JPB.Communication.ComBase.Messages;
 using JPB.Communication.Contracts.Factorys;
 using JPB.Communication.Contracts.Intigration;
+using JPB.Communication.PCLIntigration.ComBase.Messages;
 using JPB.Communication.Shared.CrossPlatform;
 
 namespace JPB.Communication.ComBase.TCP
@@ -71,19 +72,19 @@ namespace JPB.Communication.ComBase.TCP
 
         public override ushort Port { get; internal set; }
 
-        public void Dispose()
+        public bool UseNetworkCredentials { get; private set; }
+        private byte[] preCompiledLogin;
+
+        public void ChangeNetworkCredentials(bool mode, LoginMessage mess)
         {
-            NetworkFactory.Instance._senders.Remove(Port);
-
-            //remove shared Collection and close
-
-            if (SharedConnection)
+            UseNetworkCredentials = mode;
+            if (mode)
             {
-                var connec = ConnectionPool.Instance.Connections.FirstOrDefault(s => s.TCPNetworkSender == this);
-                if (connec == null) return;
-
-                connec.Socket.Close();
-                connec.TCPNetworkReceiver.Dispose();
+                preCompiledLogin = SerializeLogin(mess);
+            }
+            else
+            {
+                preCompiledLogin = null;
             }
         }
 
@@ -246,8 +247,8 @@ namespace JPB.Communication.ComBase.TCP
                     //if (callee != null)
                     //    callee.DoCallBack(() =>
                     //    {
-                            SetException(this, e);
-                        //});
+                    SetException(this, e);
+                    //});
                     return false;
                 }
             });
@@ -486,39 +487,6 @@ namespace JPB.Communication.ComBase.TCP
             return Wrap(message);
         }
 
-        ///// <summary>
-        /////     Prepaired mehtod call that uses the Connect mehtod with multible IP addresses
-        /////     Behavior is not tested | Shared connections are not supported
-        /////     WIP
-        ///// </summary>
-        ///// <param name="ip"></param>
-        ///// <param name="port"></param>
-        ///// <returns></returns>
-        //private static async Task<TcpClient> CreateClientSockAsync(IEnumerable<string> ip, ushort port)
-        //{
-        //    TcpClient client = null;
-        //    try
-        //    {
-        //        client = new TcpClient();
-
-        //        //resolve DNS entrys
-        //        IPAddress[] ipAddresses =
-        //            ip
-        //                .Select(NetworkInfoBase.ResolveIp)
-        //                .AsParallel()
-        //                .ToArray();
-
-        //        await client.ConnectAsync(ipAddresses, port);
-        //        client.NoDelay = true;
-        //        return client;
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        SetException(client, e);
-        //        return null;
-        //    }
-        //}
-
         private async Task<ISocket> CreateClientSockAsync(string ipOrHost)
         {
             try
@@ -531,21 +499,32 @@ namespace JPB.Communication.ComBase.TCP
                         if (!isConnected.Connected)
                         {
                             isConnected.Connect(ipOrHost, Port);
+                            if (UseNetworkCredentials)
+                            {
+                                SendLoginData(isConnected);
+                                if (isConnected.Connected)
+                                    return isConnected;
+                                return null;
+                            }
                         }
                         return isConnected;
                     }
                 }
-                return await CreateClientSock(ipOrHost, Port);
+
+                var sock = await _sockType.CreateAndConnectAsync(ipOrHost, Port);
+                if (UseNetworkCredentials)
+                {
+                    SendLoginData(sock);
+                    if (sock.Connected)
+                        return sock;
+                    return null;
+                }
+                return sock;
             }
             catch (Exception)
             {
                 return null;
             }
-        }
-
-        private async Task<ISocket> CreateClientSock(string ipOrHost, ushort port)
-        {
-            return await _sockType.CreateAndConnectAsync(ipOrHost, port);
         }
 
         private void AwaitCallbackFromRemoteHost(ISocket sock, bool wait)
@@ -607,6 +586,11 @@ namespace JPB.Communication.ComBase.TCP
             }
         }
 
+        private void SendLoginData(ISocket sock)
+        {
+            sock.Send(this.preCompiledLogin);
+        }
+
         private ISocket SendOnStream(Stream stream, ISocket sock)
         {
             int bufSize = sock.ReceiveBufferSize;
@@ -648,5 +632,21 @@ namespace JPB.Communication.ComBase.TCP
         }
 
         #endregion
+
+        public void Dispose()
+        {
+            NetworkFactory.Instance._senders.Remove(Port);
+
+            //remove shared Collection and close
+
+            if (SharedConnection)
+            {
+                var connec = ConnectionPool.Instance.Connections.FirstOrDefault(s => s.TCPNetworkSender == this);
+                if (connec == null) return;
+
+                connec.Socket.Close();
+                connec.TCPNetworkReceiver.Dispose();
+            }
+        }
     }
 }

@@ -30,6 +30,9 @@ using JPB.Communication.Contracts.Factorys;
 using JPB.Communication.Contracts.Intigration;
 using JPB.Communication.Shared.CrossPlatform;
 using IPEndPoint = JPB.Communication.Contracts.Intigration.IPEndPoint;
+using JPB.Communication.PCLIntigration.ComBase.Messages;
+using JPB.Communication.PCLIntigration.ComBase;
+using JPB.Communication.PCLIntigration.ComBase.Security;
 
 namespace JPB.Communication.ComBase.TCP
 {
@@ -80,14 +83,21 @@ namespace JPB.Communication.ComBase.TCP
             _typeCallbacks.Add(typeof(RequstMessage), WorkOn_RequestMessage);
             _typeCallbacks.Add(typeof(MessageBase), WorkOn_MessageBase);
             _typeCallbacks.Add(typeof(LargeMessage), WorkOn_LargeMessage);
+            
         }
 
         internal TCPNetworkReceiver(ushort port, ISocketFactory factory)
             : this(port, factory.Create())
         {
-
-
+            
         }
+
+        [ThreadStatic]
+        public ReceiverSession Session;
+        public LoginMessage AuditInfos { get; set; }
+
+        public bool CheckCredentials { get; set; }
+             
 
         /// <summary>
         ///     If Enabled this Receiver can handle streams and messages
@@ -247,6 +257,13 @@ namespace JPB.Communication.ComBase.TCP
                 object messCopy = mess;
                 _workeritems.Enqueue(() =>
                 {
+                    Session = new ReceiverSession()
+                    {
+                        Receiver = this,
+                        Calle = NetworkAuthentificator.Instance.GetUser(_calle),
+                        Sock = this._listenerISocket
+                    };
+
                     Type type = messCopy.GetType();
 
                     KeyValuePair<Type, Action<object>> handler = _typeCallbacks.FirstOrDefault(s => s.Key == type);
@@ -277,7 +294,7 @@ namespace JPB.Communication.ComBase.TCP
                     .ToArray();
             foreach (var action in updateCallbacks)
             {
-                action.Item1.BeginInvoke(messCopy, e => { }, null);
+                action.Item1(messCopy);
             }
         }
 
@@ -291,7 +308,7 @@ namespace JPB.Communication.ComBase.TCP
                     .ToArray();
             foreach (var action in updateCallbacks)
             {
-                action.Item1.BeginInvoke(messCopy, e => { }, null);
+                action.Item1(messCopy);
             }
 
             //Go through all one time items and check for ID
@@ -300,7 +317,7 @@ namespace JPB.Communication.ComBase.TCP
 
             foreach (var action in oneTimeImtes)
             {
-                action.Item1.BeginInvoke(messCopy, e => { }, null);
+                action.Item1(messCopy);
             }
 
             foreach (var useditem in oneTimeImtes)
@@ -460,6 +477,13 @@ namespace JPB.Communication.ComBase.TCP
             {
                 var sock = ((ISocket)result.AsyncState);
 
+                var acceptConnection = RaiseConnectionInbound(sock);
+                if(!acceptConnection)
+                {
+                    sock.Dispose();
+                    return;
+                }
+
                 var endAccept = sock.EndAccept(result);
 
                 if (endAccept == null)
@@ -480,39 +504,53 @@ namespace JPB.Communication.ComBase.TCP
 
         internal void StartListener(ISocket endAccept)
         {
-            if (RaiseConnectionInbound(endAccept))
+            if (SharedConnection)
             {
-                if (SharedConnection)
+                ConnectionWrapper firstOrDefault =
+                    ConnectionPool.Instance.Connections.FirstOrDefault(s => endAccept == s.Socket);
+                if (firstOrDefault == null)
                 {
-                    ConnectionWrapper firstOrDefault =
-                        ConnectionPool.Instance.Connections.FirstOrDefault(s => endAccept == s.Socket);
-                    if (firstOrDefault == null)
-                    {
-                        ConnectionPool.Instance.AddConnection(endAccept, this);
-                    }
+                    ConnectionPool.Instance.AddConnection(endAccept, this);
                 }
-
-                TcpConnectionBase conn;
-
-                if (!LargeMessageSupport)
-                {
-                    conn = new DefaultTcpConnection(endAccept)
-                    {
-                        Port = Port,
-                    };
-                }
-                else
-                {
-                    conn = new LargeTcpConnection(endAccept)
-                    {
-                        Port = Port
-                    };
-                }
-                conn.Serlilizer = Serlilizer;
-                conn.IsSharedConnection = SharedConnection;
-                conn.EndReceiveInternal += (e, ef) => IncommingMessage = false;
-                conn.BeginReceive();
             }
+
+            TcpConnectionBase conn;
+
+            if (!LargeMessageSupport)
+            {
+                conn = new DefaultTcpConnection(endAccept)
+                {
+                    Port = Port,
+                };
+            }
+            else
+            {
+                conn = new LargeTcpConnection(endAccept)
+                {
+                    Port = Port
+                };
+            }
+            conn.Serlilizer = Serlilizer;
+            conn.IsSharedConnection = SharedConnection;
+            conn.EndReceiveInternal += (e, ef) => IncommingMessage = false;
+            
+            if(this.CheckCredentials)
+            {
+                var credMessage = conn.ReciveCredentials();
+                if (credMessage == null)
+                {
+                    return;
+                }
+                var isAudit = NetworkAuthentificator.Instance.CheckCredentials(credMessage, endAccept.RemoteEndPoint.Address.AddressContent, endAccept.RemoteEndPoint.Port);
+                if (!isAudit)
+                {                    
+                    endAccept.Close();
+                    endAccept.Dispose();
+                    return;
+                }
+            }
+
+            conn.BeginReceive();
         }
 
 

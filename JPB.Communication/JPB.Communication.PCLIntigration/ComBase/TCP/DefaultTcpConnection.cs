@@ -25,28 +25,24 @@ namespace JPB.Communication.ComBase.TCP
 {
     internal class DefaultTcpConnection : TcpConnectionBase, IDisposable
     {
-        private readonly ISocket sock;
-
-        internal DefaultTcpConnection(ISocket s)
+        public DefaultTcpConnection(ISocket sock) : base(sock)
         {
-            sock = s;
-            _receiveBufferSize = sock.ReceiveBufferSize;
-        }
 
+        }
         public override ushort Port { get; internal set; }
 
         // Call this method to set this connection's Socket up to receive data.
         public override void BeginReceive()
         {
-            if (sock == null)
+            if (Sock == null)
                 throw new ArgumentException("No sock supplyed please call DefaultTcpConnection(NetworkStream stream)");
 
             _datarec.Add(new byte[_receiveBufferSize], 0);
-            sock.BeginReceive(_datarec.Last, 0,
+            Sock.BeginReceive(_datarec.Last, 0,
                 _datarec.Last.Length,
                 OnBytesReceived,
                 this);
-        }      
+        }
 
         // This is the method that is called whenever the Socket receives
         // incoming bytes.
@@ -57,7 +53,7 @@ namespace JPB.Communication.ComBase.TCP
             int rec;
             try
             {
-                rec = sock.EndReceive(result);
+                rec = Sock.EndReceive(result);
             }
             catch (Exception)
             {
@@ -75,8 +71,8 @@ namespace JPB.Communication.ComBase.TCP
                     //this is Not the end, my only friend the end
                     //allocate new memory and add the mem to the Memory holder
                     _datarec.Add(new byte[_receiveBufferSize], rec);
-                    sock.BeginReceive(_datarec.Last, 0,
-                        _datarec.Last.Length, 
+                    Sock.BeginReceive(_datarec.Last, 0,
+                        _datarec.Last.Length,
                         OnBytesReceived,
                         this);
                 }
@@ -84,11 +80,11 @@ namespace JPB.Communication.ComBase.TCP
                 {
                     _datarec.Clear();
                     _datarec.Add(new byte[_receiveBufferSize], 0);
-                    if (sock.Connected)
+                    if (Sock.Connected)
                     {
                         try
                         {
-                            sock.BeginReceive(_datarec.Last, 0,
+                            Sock.BeginReceive(_datarec.Last, 0,
                                 _datarec.Last.Length,
                                 OnBytesReceived,
                                 this);
@@ -102,7 +98,7 @@ namespace JPB.Communication.ComBase.TCP
             }
             catch (Exception)
             {
-                if (!sock.Connected)
+                if (!Sock.Connected)
                 {
                     Dispose();
                 }
@@ -111,8 +107,8 @@ namespace JPB.Communication.ComBase.TCP
                 _datarec.Add(new byte[_receiveBufferSize], 0);
                 try
                 {
-                    sock.BeginReceive(_datarec.Last, 0,
-                        _datarec.Last.Length, 
+                    Sock.BeginReceive(_datarec.Last, 0,
+                        _datarec.Last.Length,
                         OnBytesReceived,
                         this);
                 }
@@ -122,7 +118,7 @@ namespace JPB.Communication.ComBase.TCP
                 }
             }
         }
-        
+
         #region Implementation of IDisposable
 
         public void Dispose()

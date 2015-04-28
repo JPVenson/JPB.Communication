@@ -20,6 +20,9 @@
 
 using System;
 using System.Collections.Generic;
+using JPB.Communication.Contracts.Intigration;
+using JPB.Communication.PCLIntigration.ComBase;
+using JPB.Communication.PCLIntigration.ComBase.Messages;
 
 namespace JPB.Communication.ComBase.TCP
 {
@@ -33,15 +36,26 @@ namespace JPB.Communication.ComBase.TCP
 
     internal abstract class TcpConnectionBase : ConnectionBase
     {
-        public TcpConnectionBase()
+        public TcpConnectionBase(ISocket sock)
         {
+            this._sock = sock;
+            _receiveBufferSize = sock.ReceiveBufferSize;
             _datarec = new InternalMemoryHolder();
         }
 
+        private readonly ISocket _sock;
         public event EventHandler EndReceiveInternal;
         protected readonly InternalMemoryHolder _datarec;
         protected int _receiveBufferSize;
         public bool IsSharedConnection { get; set; }
+
+        public ISocket Sock
+        {
+            get
+            {
+                return _sock;
+            }
+        }
 
         public abstract void BeginReceive();
         protected void RaiseEndReceiveInternal()
@@ -112,8 +126,17 @@ namespace JPB.Communication.ComBase.TCP
                 return HandeldMode.Handled;
             }
 
-
             return HandeldMode.MaybeMoreData;
+        }
+
+        internal LoginMessage ReciveCredentials()
+        {
+            byte[] maybeLoginMessage = new byte[NetworkAuthentificator.CredBufferSize];
+            Sock.Receive(maybeLoginMessage);
+            if (maybeLoginMessage[0] == 0x00)
+                return null;
+
+            return DeSerializeLogin(maybeLoginMessage);
         }
     }
 }

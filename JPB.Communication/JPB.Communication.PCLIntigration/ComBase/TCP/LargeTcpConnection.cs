@@ -28,17 +28,13 @@ namespace JPB.Communication.ComBase.TCP
 {
     internal class LargeTcpConnection : TcpConnectionBase, IDisposable
     {
-        private readonly ISocket _sock;
-
         private readonly StreamBuffer _streamData;
         private LargeMessage _metaMessage;
 
-        internal LargeTcpConnection(ISocket s)
+        internal LargeTcpConnection(ISocket s) : base(s)
         {
             _streamData = new StreamBuffer();
-            _sock = s;
-            _datarec.Add(new byte[_sock.ReceiveBufferSize], 0);
-            _receiveBufferSize = _sock.ReceiveBufferSize;
+            _datarec.Add(new byte[Sock.ReceiveBufferSize], 0);
         }
 
         // Call this method to set this connection's Socket up to receive data.
@@ -51,7 +47,7 @@ namespace JPB.Communication.ComBase.TCP
         public override void BeginReceive()
         {
             byte[] last = _datarec.Last;
-            _sock.BeginReceive(
+            Sock.BeginReceive(
                 last, 0,
                 last.Length,
                 OnBytesReceived,
@@ -67,7 +63,7 @@ namespace JPB.Communication.ComBase.TCP
             int rec;
             try
             {
-                rec = _sock.EndReceive(result);
+                rec = Sock.EndReceive(result);
             }
             catch (Exception)
             {
@@ -78,27 +74,27 @@ namespace JPB.Communication.ComBase.TCP
 
             if (rec > 1)
             {
-                if(!MetaDataReached)
+                if (!MetaDataReached)
                 {
                     if (rec < _receiveBufferSize)
                     {
                         MetaDataReached = true;
                         //Thread.Sleep(150);
                         //Thread.Yield();
-                        _sock.Send(0x01);
+                        Sock.Send(0x01);
                     }
                     else
                     {
-                        var newbuff = new byte[_sock.ReceiveBufferSize];
+                        var newbuff = new byte[Sock.ReceiveBufferSize];
                         _datarec.Add(newbuff, rec);
-                        _sock.BeginReceive(
+                        Sock.BeginReceive(
                             newbuff, 0,
                             newbuff.Length,
                             OnBytesReceived,
                             this);
                         return;
                     }
-                }                               
+                }
 
                 if (MetaDataReached)
                 {
@@ -107,13 +103,13 @@ namespace JPB.Communication.ComBase.TCP
                         _metaMessage = ParseLargeObject(concatBytes(_datarec, rec), () => _streamData.UnderlyingStream);
                     }
 
-                    var bytes = new byte[_sock.ReceiveBufferSize];
+                    var bytes = new byte[Sock.ReceiveBufferSize];
                     _streamData.Flush(rec);
                     _streamData.Write(bytes);
 
                     if (_metaMessage.StreamSize >= _streamData.Length)
                     {
-                        _sock.BeginReceive(
+                        Sock.BeginReceive(
                             bytes, 0,
                             bytes.Length,
                             OnBytesReceived,
@@ -127,9 +123,9 @@ namespace JPB.Communication.ComBase.TCP
                 else
                 {
                     LastCallWasMeta = false;
-                    var newbuff = new byte[_sock.ReceiveBufferSize];
+                    var newbuff = new byte[Sock.ReceiveBufferSize];
                     _datarec.Add(newbuff, rec);
-                    _sock.BeginReceive(
+                    Sock.BeginReceive(
                         newbuff, 0,
                         newbuff.Length,
                         OnBytesReceived,
