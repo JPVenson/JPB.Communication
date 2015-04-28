@@ -94,6 +94,9 @@ namespace JPB.Communication.Example.Chat
             //tcpNetworkReceiver.Serlilizer = new JPB.Communication.ComBase.Serializer.NetContractSerializer();
             //tcpNetworkSender.Serlilizer = tcpNetworkReceiver.Serlilizer;
 
+
+            //then we can enable the build in Authentification!!!!!!!!!!!!!!!!!!!!!!
+
             Console.WriteLine("Server IP or Hostname:");
             bool serverOnline = false;
             string server = null;

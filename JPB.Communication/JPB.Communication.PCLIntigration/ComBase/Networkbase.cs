@@ -25,6 +25,10 @@ using JPB.Communication.ComBase.Messages;
 using JPB.Communication.ComBase.Messages.Wrapper;
 using JPB.Communication.ComBase.Serializer.Contracts;
 using JPB.Communication.Shared.CrossPlatform;
+using JPB.Communication.PCLIntigration.Contracts.Security;
+using JPB.Communication.PCLIntigration.ComBase.Messages;
+using JPB.Communication.PCLIntigration.ComBase;
+using System.Text;
 
 namespace JPB.Communication.ComBase
 {
@@ -54,8 +58,7 @@ namespace JPB.Communication.ComBase
         ///     The default Serializer
         /// </summary>
         public static IMessageSerializer DefaultMessageSerializer;
-
-
+        
         private IMessageSerializer _serlilizer;
 
         static Networkbase()
@@ -70,10 +73,14 @@ namespace JPB.Communication.ComBase
             Serlilizer = DefaultMessageSerializer;
         }
 
+        protected LoginMessage _calle;
+
         /// <summary>
         ///     Defines the Port the Instance is working on
         /// </summary>
         public abstract ushort Port { get; internal set; }
+
+        public ISecureMessageProvider Security { get; set; }
 
         /// <summary>
         ///     When Serlilizaion is request this Interface will be used
@@ -194,6 +201,10 @@ namespace JPB.Communication.ComBase
             try
             {
                 var sor = source;
+                if (Security != null)
+                {
+                    sor = Security.Decrypt(sor);
+                }
                 return Serlilizer.DeSerializeMessage(sor);
             }
             catch (Exception e)
@@ -203,17 +214,78 @@ namespace JPB.Communication.ComBase
             }
         }
 
-        public byte[] Serialize(NetworkMessage a)
+        public byte[] Serialize(NetworkMessage networkMessage)
         {
             try
             {
-                return Serlilizer.SerializeMessage(a);
+                var sor =  Serlilizer.SerializeMessage(networkMessage);
+                if (Security != null)
+                {
+                    sor = Security.Encrypt(sor);
+                }
+                return sor;
             }
             catch (Exception e)
             {
                 PclTrace.WriteLine(e.ToString(), TraceCategoryLowSerilization);
                 return new byte[0];
             }
+        }
+
+        internal LoginMessage DeSerializeLogin(byte[] maybeLoginMessage)
+        {
+            var message = maybeLoginMessage;
+            if (Security != null)
+            {
+                message = Security.Decrypt(maybeLoginMessage);
+            }
+
+            var passwordEncoded = message
+                .Take(NetworkAuthentificator.PasswordBufferSize)
+                .Where(s => s != 0x00)
+                .ToArray();
+            var usernameEncoded = message
+                .Skip(NetworkAuthentificator.PasswordBufferSize)
+                .Where(s => s != 0x00)
+                .ToArray();
+
+            var passwordPlain = Encoding.Unicode.GetString(passwordEncoded, 0, passwordEncoded.Length);
+            var usernamePlain = Encoding.Unicode.GetString(usernameEncoded, 0, usernameEncoded.Length);
+
+            return _calle = new LoginMessage()
+            {
+                Password = passwordPlain,
+                Username = usernamePlain
+            };
+        }
+
+        internal byte[] SerializeLogin(LoginMessage mess)
+        {
+            var passwordSize = NetworkAuthentificator.PasswordBufferSize;
+            var nameSize = NetworkAuthentificator.CredBufferSize - NetworkAuthentificator.PasswordBufferSize;
+            
+            var passwordPlain = Encoding.Unicode.GetBytes(mess.Password);
+            var usernamePlain = Encoding.Unicode.GetBytes(mess.Username);
+
+            if (passwordPlain.Length > passwordSize)
+                throw new ArgumentException("The password must be smaller then the maximum Password buffer size", "mess.Password");
+            if (usernamePlain.Length > passwordSize)
+                throw new ArgumentException("The Username must be smaller then the maximum Username buffer size", "mess.Username");
+
+            var passwordEncoded = new byte[NetworkAuthentificator.PasswordBufferSize];
+            var usernameEncoded = new byte[NetworkAuthentificator.CredBufferSize - NetworkAuthentificator.PasswordBufferSize];
+
+            passwordPlain.CopyTo(passwordEncoded, 0);
+            usernameEncoded.CopyTo(usernamePlain, 0);
+            
+            var credData = passwordEncoded
+                .Concat(usernamePlain)
+                .ToArray();
+
+            if (Security != null)
+                credData = Security.Encrypt(credData);
+
+            return credData;
         }
 
         /// <summary>
@@ -224,7 +296,8 @@ namespace JPB.Communication.ComBase
         {
             try
             {
-                return Serlilizer.SerializeMessageContent(A);
+                var sor = Serlilizer.SerializeMessageContent(A);
+                return sor;
             }
             catch (Exception e)
             {

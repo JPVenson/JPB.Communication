@@ -92,6 +92,6 @@ namespace JPB.Communication.ComBase
                 RaiseNewItemLoadedFail(source);
                 return null;
             }
-        }
+        }       
     }
 }
