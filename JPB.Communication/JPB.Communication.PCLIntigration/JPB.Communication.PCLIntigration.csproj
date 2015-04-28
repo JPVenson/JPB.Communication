@@ -57,6 +57,7 @@
     <Compile Include="Contracts\Dns.cs" />
     <Compile Include="Contracts\Factorys\IDNSFactory.cs" />
     <Compile Include="Contracts\Factorys\IIPaddressFactory.cs" />
+    <Compile Include="Contracts\IMessageSerializer.cs" />
     <Compile Include="Contracts\Intigration\IPAddress.cs" />
     <Compile Include="ComBase\Messages\MessageBase.cs" />
     <Compile Include="ComBase\Messages\RequstMessage.cs" />
@@ -66,7 +67,6 @@
     <Compile Include="ComBase\NetworkInfoBase.cs" />
     <Compile Include="ComBase\NetworkMessage.cs" />
     <Compile Include="ComBase\NetworkReceiverBase.cs" />
-    <Compile Include="Contracts\Serializer\Contracts\IMessageSerializer.cs" />
     <Compile Include="ComBase\StreamBuffer.cs" />
     <Compile Include="ComBase\TCP\ConnectionWrapper.cs" />
     <Compile Include="ComBase\TCP\DefaultTcpConnection.cs" />
@@ -95,7 +95,9 @@
     <Compile Include="Shared\SeriellTaskFactory.cs" />
     <Compile Include="Shared\SynchronizedCollection.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Contracts\Serializer\" />
+  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
