@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using JPB.Communication.ComBase.Serializer;
 using JPB.Communication.NativeWin.Serilizer;
 using JPB.Communication.NativeWin.WinRT;
+using JPB.Communication.PCLIntigration.ComBase;
 
 namespace JPB.Communication.Test.UnitTests
 {
@@ -17,6 +18,37 @@ namespace JPB.Communication.Test.UnitTests
         private string TestMessageObject = "testmessageobjectfor testing blöa";
 
         private ManualResetEvent waitOne = new ManualResetEvent(false);
+
+        [TestMethod]
+        public void TestAuthentification()
+        {
+            Networkbase.DefaultMessageSerializer = new NetContractSerializer();
+            NetworkFactory.Create(new WinRTFactory());
+            var sender = NetworkFactory.Instance.GetSender(1337);
+            var receiver = NetworkFactory.Instance.GetReceiver(1337);
+            var sharedPassword = Guid.NewGuid().ToString().Substring(0,10);
+
+            sender.ChangeNetworkCredentials(true, new PCLIntigration.ComBase.Messages.LoginMessage()
+            {
+                Username = Environment.UserDomainName + "@" + Environment.UserName,
+                Password = sharedPassword
+            });
+
+            receiver.CheckCredentials = true;
+            NetworkAuthentificator.Instance.DefaultLoginBevavior = DefaultLoginBevavior.IpNameCheckOnly;
+
+            receiver.RegisterMessageBaseInbound(MessageInbound, TestInfoState);
+
+            var result = sender.SendMessage(new MessageBase()
+            {
+                Message = TestMessageObject,
+                InfoState = TestInfoState
+            }, NetworkInfoBase.IpAddress.ToString());
+
+            Assert.IsTrue(result);
+            var handel = waitOne.WaitOne(new TimeSpan(0, 0, 5));
+            Assert.IsTrue(handel);
+        }
 
         [TestMethod]
         public void TestSimpleSendAndReceive()
