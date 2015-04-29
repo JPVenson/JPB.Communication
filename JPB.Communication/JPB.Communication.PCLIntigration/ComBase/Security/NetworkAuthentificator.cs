@@ -36,8 +36,8 @@ namespace JPB.Communication.PCLIntigration.ComBase
     {
         static NetworkAuthentificator()
         {
-            CredBufferSize = 50;
-            PasswordBufferSize = 25;
+            CredBufferSize = 128;
+            PasswordBufferSize = 128;
         }
         private NetworkAuthentificator()
         {
@@ -101,13 +101,16 @@ namespace JPB.Communication.PCLIntigration.ComBase
                 switch (DefaultLoginBevavior)
                 {
                     case DefaultLoginBevavior.AllowAllways:
-                        state = AuditState.AccessDenyed;
-                        break;
-                    case DefaultLoginBevavior.DenyAllways:
                         state = AuditState.AccessAllowed;
                         break;
+                    case DefaultLoginBevavior.DenyAllways:
+                        state = AuditState.AccessDenyed;
+                        break;
                     case DefaultLoginBevavior.IpNameCheckOnly:
-                        state = _logins.Any(s => s.Username == message.Username) ? AuditState.AccessAllowed : AuditState.AccessDenyed;
+                        var fod = _logins.FirstOrDefault(s => s.Username == message.Username);
+                        state = fod == null ? AuditState.AccessAllowed : AuditState.AccessDenyed;
+                        if (fod != null)
+                            return fod;
                         break;
                     default:
                         state = AuditState.AccessDenyed;

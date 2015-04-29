@@ -30,6 +30,7 @@ using System.Runtime.Serialization;
 using JPB.Communication.NativeWin.Serilizer;
 using JPB.Communication.NativeWin.WinRT;
 using JPB.Communication.Contracts.Intigration;
+using JPB.Communication.PCLIntigration.ComBase;
 
 namespace JPB.Communication.Example.Chat
 {
@@ -78,6 +79,24 @@ namespace JPB.Communication.Example.Chat
                 //This mehtod will create or return an instance for the spezific port
                 .GetReceiver(port);
 
+            tcpNetworkReceiver.CheckCredentials = true;
+            NetworkAuthentificator.Instance.OnLoginInbound += (s, e) =>
+            {
+                WriteSystemMessage(string.Format("Login Inbound '{0}'", e.Username));
+            };
+
+            NetworkAuthentificator.Instance.OnValidateUnknownLogin += (s, e) =>
+            {
+                WriteSystemMessage(string.Format("Validate Username {0}", e.Username));
+                var domain = e.Username.Substring(0, e.Username.IndexOf("@"));
+                return domain == Environment.UserDomainName ? AuditState.AccessAllowed : AuditState.AccessDenyed;
+            };
+
+            NetworkAuthentificator.Instance.OnValidateUserPassword += (s, e) =>
+            {
+                //Allow anonymus login
+                return true;
+            };
 
             //Register the callback that will be invoked when a new message is incomming that contains the InfoState ( Contract ) we defined
             tcpNetworkReceiver.RegisterMessageBaseInbound(OnIncommingMessage, ChatMessageContract);
@@ -88,6 +107,11 @@ namespace JPB.Communication.Example.Chat
 
             //create a Sender on the same port the same way we did on the Receiver
             var tcpNetworkSender = NetworkFactory.Instance.GetSender(port);
+            tcpNetworkSender.ChangeNetworkCredentials(true, new PCLIntigration.ComBase.Messages.LoginMessage()
+            {
+                Username = Environment.UserDomainName + "@" + Environment.UserName,
+                Password = "Nothing"
+            });
 
             //If you want to alter control the Process of Serilation set this interface but remember that both Sender and Receiver must use the same otherwise they will not able to work
             //In this case we are using one of the Predefined Serializers
@@ -190,6 +214,11 @@ namespace JPB.Communication.Example.Chat
             } while (input <= 0 && input >= ipAddresses.Length);
 
             return ipAddresses[input];
+        }
+
+        private static void WriteSystemMessage(string mess)
+        {
+            Console.WriteLine("System> {0}", mess);
         }
 
         private static void OnIncommingMessage(MessageBase obj)

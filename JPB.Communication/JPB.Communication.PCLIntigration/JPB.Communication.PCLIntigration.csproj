@@ -48,7 +48,7 @@
     <None Include="JPB.Communication.licenseheader" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ComBase\Security\Authentificator.cs" />
+    <Compile Include="ComBase\Security\NetworkAuthentificator.cs" />
     <Compile Include="ComBase\ConnectionBase.cs" />
     <Compile Include="ComBase\ConnectionPool.cs" />
     <Compile Include="ComBase\InternalMemoryHolder.cs" />
@@ -85,7 +85,7 @@
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="NetworkFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Shared\CrossPlatform\PCLTimer.cs" />
+    <Compile Include="Shared\CrossPlatform\PclTimer.cs" />
     <Compile Include="Shared\CrossPlatform\PclTrace.cs" />
     <Compile Include="Shared\MessageDeliveryQueue.cs" />
     <Compile Include="Shared\NetworkCollectionMessage.cs" />

@@ -9,6 +9,8 @@ namespace JPB.Communication.PCLIntigration.ComBase.Messages
 {
     public class LoginMessage
     {
+        public string SessionID { get; set; }
+
         public string Username { get; set; }
         /// <summary>
         /// This should never be a plain Password and Ever a Password Hash

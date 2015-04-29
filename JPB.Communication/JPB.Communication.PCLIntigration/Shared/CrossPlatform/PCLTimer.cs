@@ -6,9 +6,9 @@ namespace JPB.Communication.Shared.CrossPlatform
 {
     internal delegate void TimerCallback(object state);
 
-    class PCLTimer : CancellationTokenSource, IDisposable
+    class PclTimer : CancellationTokenSource, IDisposable
     {
-        internal PCLTimer(TimerCallback callback, object state, int dueTime, int period)
+        internal PclTimer(TimerCallback callback, object state, int dueTime, int period)
         {
             Task.Delay(dueTime, Token).ContinueWith(async (t, s) =>
             {

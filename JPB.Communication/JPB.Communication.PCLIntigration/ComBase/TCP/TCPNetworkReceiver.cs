@@ -342,13 +342,13 @@ namespace JPB.Communication.ComBase.TCP
                 foreach (var tuple in firstOrDefault)
                 {
                     //Found a handler for that message and executed it
-                    PCLTimer timer = null;
+                    PclTimer timer = null;
 
                     try
                     {
                         if (AutoRespond)
                         {
-                            timer = new PCLTimer(s =>
+                            timer = new PclTimer(s =>
                             {
                                 if (result != null)
                                     return;
