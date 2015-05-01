@@ -83,13 +83,13 @@ namespace JPB.Communication.ComBase.TCP
             _typeCallbacks.Add(typeof(RequstMessage), WorkOn_RequestMessage);
             _typeCallbacks.Add(typeof(MessageBase), WorkOn_MessageBase);
             _typeCallbacks.Add(typeof(LargeMessage), WorkOn_LargeMessage);
-            
+
         }
 
         internal TCPNetworkReceiver(ushort port, ISocketFactory factory)
             : this(port, factory.Create())
         {
-            
+
         }
 
         [ThreadStatic]
@@ -97,7 +97,7 @@ namespace JPB.Communication.ComBase.TCP
         public LoginMessage AuditInfos { get; set; }
 
         public bool CheckCredentials { get; set; }
-             
+
 
         /// <summary>
         ///     If Enabled this Receiver can handle streams and messages
@@ -119,6 +119,12 @@ namespace JPB.Communication.ComBase.TCP
         public bool SharedConnection { get; set; }
 
         public override ushort Port { get; internal set; }
+        public event Func<TCPNetworkReceiver, ISocket, bool> OnCheckConnectionInbound;
+
+        /// <summary>
+        ///     Is raised when a message is inside the buffer but not fully parsed
+        /// </summary>
+        public new event EventHandler OnIncommingMessage;
 
         /// <summary>
         ///     True if we are Recieving a message
@@ -243,13 +249,6 @@ namespace JPB.Communication.ComBase.TCP
             return inst;
         }
 
-        public event Func<TCPNetworkReceiver, ISocket, bool> OnCheckConnectionInbound;
-
-        /// <summary>
-        ///     Is raised when a message is inside the buffer but not fully parsed
-        /// </summary>
-        public new event EventHandler OnIncommingMessage;
-
         private void TcpConnectionOnOnNewItemLoadedSuccess(object mess, ushort port)
         {
             if (port == Port)
@@ -261,7 +260,8 @@ namespace JPB.Communication.ComBase.TCP
                     {
                         Receiver = this,
                         Calle = NetworkAuthentificator.Instance.GetUser(_calle),
-                        Sock = this._listenerISocket
+                        Sock = this._listenerISocket,
+                        PendingItems = _workeritems.Count
                     };
 
                     Type type = messCopy.GetType();
@@ -453,7 +453,7 @@ namespace JPB.Communication.ComBase.TCP
             try
             {
                 _autoResetEvent = new AutoResetEvent(false);
-                while (_workeritems.Any())
+                while (_workeritems.Count > 1)
                 {
                     if (IsDisposing)
                         break;
@@ -463,6 +463,10 @@ namespace JPB.Communication.ComBase.TCP
                         action.BeginInvoke(s => { }, null);
                 }
                 _autoResetEvent.Set();
+            }
+            catch
+            {
+                PclTrace.WriteLine("WorkOnItems has stop working");
             }
             finally
             {
@@ -478,7 +482,7 @@ namespace JPB.Communication.ComBase.TCP
                 var sock = ((ISocket)result.AsyncState);
 
                 var acceptConnection = RaiseConnectionInbound(sock);
-                if(!acceptConnection)
+                if (!acceptConnection)
                 {
                     sock.Dispose();
                     return;
@@ -533,8 +537,8 @@ namespace JPB.Communication.ComBase.TCP
             conn.Serlilizer = Serlilizer;
             conn.IsSharedConnection = SharedConnection;
             conn.EndReceiveInternal += (e, ef) => IncommingMessage = false;
-            
-            if(this.CheckCredentials)
+
+            if (this.CheckCredentials)
             {
                 var credMessage = conn.ReciveCredentials();
                 if (credMessage == null)
@@ -543,7 +547,7 @@ namespace JPB.Communication.ComBase.TCP
                 }
                 var isAudit = NetworkAuthentificator.Instance.CheckCredentials(credMessage, endAccept.RemoteEndPoint.Address.AddressContent, endAccept.RemoteEndPoint.Port);
                 if (!isAudit)
-                {                    
+                {
                     endAccept.Close();
                     endAccept.Dispose();
                     return;
@@ -583,9 +587,9 @@ namespace JPB.Communication.ComBase.TCP
             {
                 string reason = "Unknown reason";
                 throw new ObjectDisposedException("TCPNetworkReceiver", "This object is disposed you cannot access it anymore.")
-                    {
-                        Source = reason
-                    };
+                {
+                    Source = reason
+                };
             }
         }
 

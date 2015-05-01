@@ -21,7 +21,7 @@ namespace JPB.Communication.NativeWin.WinRT
             {
                 if (sock == null)
                     sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-
+                sock.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, false);
                 sock.LingerState = new LingerOption(true, 30);
                 sock.SetIPProtectionLevel(IPProtectionLevel.Unrestricted);
                 var rtSock = new WinRtSocket(sock);
