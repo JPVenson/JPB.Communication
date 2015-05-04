@@ -24,6 +24,7 @@ using System.Runtime.Serialization;
 namespace JPB.Communication.ComBase.Messages
 {
     [DataContract]
+    [System.Runtime.Serializable]
     public class RequstMessage : MessageBase
     {
         public RequstMessage()

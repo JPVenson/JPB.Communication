@@ -54,17 +54,7 @@ namespace JPB.Communication.NativeWin.Serilizer
         public bool IlMergeSupport { get; set; }
         public bool PrevendDiscPageing { get; set; }
 
-        public byte[] SerializeMessage(NetworkMessage a)
-        {
-            using (Stream stream = GetStream(a.MessageBase))
-            {
-                var serializer = new XmlSerializer(a.GetType());
-                serializer.Serialize(stream, a);
-                return getInfo(stream);
-            }
-        }
-
-        public byte[] SerializeMessageContent(MessageBase mess)
+        public byte[] SerializeMessage(MessageBase mess)
         {
             if (IlMergeSupport)
             {
@@ -81,35 +71,26 @@ namespace JPB.Communication.NativeWin.Serilizer
             }
         }
 
-        public NetworkMessage DeSerializeMessage(byte[] source)
+
+        public MessageBase DeSerializeMessage(byte[] source)
         {
             try
             {
-                using (var textReader = new StringReader(ResolveStringContent(source)))
+                using (var memst = new MemoryStream(source))
                 {
-                    var deserializer = new XmlSerializer(typeof (NetworkMessage));
-                    var tcpMessage = (NetworkMessage) deserializer.Deserialize(textReader);
-                    return tcpMessage;
+                    BinaryFormatter binaryFormatter = CreateFormatter();
+                    if (IlMergeSupport)
+                    {
+                        binaryFormatter.Binder = _binder;
+                    }
+                    var deserialize = (MessageBase)binaryFormatter.Deserialize(memst);
+                    return deserialize;
                 }
             }
             catch (Exception e)
             {
                 PclTrace.WriteLine(e.ToString(), Networkbase.TraceCategoryCriticalSerilization);
                 return null;
-            }
-        }
-
-        public MessageBase DeSerializeMessageContent(byte[] source)
-        {
-            using (var memst = new MemoryStream(source))
-            {
-                BinaryFormatter binaryFormatter = CreateFormatter();
-                if (IlMergeSupport)
-                {
-                    binaryFormatter.Binder = _binder;
-                }
-                var deserialize = (MessageBase) binaryFormatter.Deserialize(memst);
-                return deserialize;
             }
         }
 
@@ -172,6 +153,11 @@ namespace JPB.Communication.NativeWin.Serilizer
             }
 
             private static Dictionary<string, Type> TypnameToType { get; set; }
+
+            public static Dictionary<string, Type> GetOptimistics()
+            {
+                return TypnameToType;
+            }
 
             public override Type BindToType(string assemblyName, string typeName)
             {

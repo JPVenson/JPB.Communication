@@ -24,9 +24,9 @@
 
 #endregion
 
-using JPB.Communication.PCLIntigration.Contracts.Intigration;
 using System;
 using System.Diagnostics;
+using System.Runtime;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 
@@ -39,6 +39,7 @@ namespace JPB.Communication.ComBase.Messages
     [DebuggerStepThrough]
     [Serializable]
     [ClassInterfaceAttribute(ClassInterfaceType.None)]
+    [DataContract]
     public class MessageBase
     {
         private object _infoState;
@@ -102,13 +103,6 @@ namespace JPB.Communication.ComBase.Messages
         ///     Readonly
         /// </summary>
         public string Sender { get; set; }
-
-        /// <summary>
-        ///     The information about the Original Sender
-        ///     Is used to identify a Routed message
-        ///     Readonly
-        /// </summary>
-        public string Reciver { get; set; }
 
         /// <summary>
         ///     The ID of this message

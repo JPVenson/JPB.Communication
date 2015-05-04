@@ -32,16 +32,23 @@ namespace JPB.Communication.ComBase.TCP
         public override ushort Port { get; internal set; }
 
         // Call this method to set this connection's Socket up to receive data.
-        public override void BeginReceive()
+        public override bool BeginReceive(bool checkCred)
         {
             if (Sock == null)
-                throw new ArgumentException("No sock supplyed please call DefaultTcpConnection(NetworkStream stream)");
+                throw new ArgumentException("No sock supplyed please call DefaultTcpConnection(ISocket sock)");
+
+            var cont = base.BeginReceive(checkCred);
+
+            if (!cont)
+                return cont;
 
             _datarec.Add(new byte[_receiveBufferSize], 0);
             Sock.BeginReceive(_datarec.Last, 0,
                 _datarec.Last.Length,
                 OnBytesReceived,
                 this);
+
+            return true;
         }
 
         // This is the method that is called whenever the Socket receives

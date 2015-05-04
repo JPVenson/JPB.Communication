@@ -11,37 +11,18 @@ namespace JPB.Communication.NativeWin.Serilizer
     {
         public bool IlMergeSupport { get; set; }
 
-        public byte[] SerializeMessage(NetworkMessage a)
+        public byte[] SerializeMessage(MessageBase a)
         {
             using (var memst = new MemoryStream())
             {
-                NetDataContractSerializer formatter = GetSerializer<NetworkMessage>();
+                NetDataContractSerializer formatter = GetSerializer<MessageBase>();
                 formatter.Serialize(memst, a);
                 return memst.ToArray();
             }
         }
 
-        public byte[] SerializeMessageContent(MessageBase mess)
-        {
-            using (var memst = new MemoryStream())
-            {
-                NetDataContractSerializer formatter = GetSerializer<MessageBase>();
-                formatter.Serialize(memst, mess);
-                return memst.ToArray();
-            }
-        }
 
-        public NetworkMessage DeSerializeMessage(byte[] source)
-        {
-            using (var memst = new MemoryStream(source))
-            {
-                NetDataContractSerializer formatter = GetSerializer<NetworkMessage>();
-                var deserialize = (NetworkMessage)formatter.Deserialize(memst);
-                return deserialize;
-            }
-        }
-
-        public MessageBase DeSerializeMessageContent(byte[] source)
+        public MessageBase DeSerializeMessage(byte[] source)
         {
             using (var memst = new MemoryStream(source))
             {
@@ -50,6 +31,7 @@ namespace JPB.Communication.NativeWin.Serilizer
                 return deserialize;
             }
         }
+           
 
         public string ResolveStringContent(byte[] message)
         {
@@ -59,10 +41,10 @@ namespace JPB.Communication.NativeWin.Serilizer
         private NetDataContractSerializer GetSerializer<T>()
         {
             var serilizer = new NetDataContractSerializer();
-            //if (IlMergeSupport)
-            //{
-            //    serilizer.Binder = new DefaultMessageSerlilizer.IlMergeBinder();
-            //}
+            if (IlMergeSupport)
+            {
+                serilizer.Binder = new DefaultMessageSerlilizer.IlMergeBinder();
+            }
             return serilizer;
         }
     }

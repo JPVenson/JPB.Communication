@@ -31,29 +31,14 @@ namespace JPB.Communication.ComBase.Serializer.Contracts
         /// </summary>
         /// <param name="a"></param>
         /// <returns></returns>
-        byte[] SerializeMessage(NetworkMessage a);
-
-        /// <summary>
-        ///     Is used to convert the message object that is a Property of the TCP message into an other format then the TCP
-        ///     message
-        /// </summary>
-        /// <param name="mess"></param>
-        /// <returns></returns>
-        byte[] SerializeMessageContent(MessageBase mess);
+        byte[] SerializeMessage(MessageBase a);
 
         /// <summary>
         ///     Converts the output from the TCP network adapter into a valid TCP message
         /// </summary>
         /// <param name="source"></param>
         /// <returns></returns>
-        NetworkMessage DeSerializeMessage(byte[] source);
-
-        /// <summary>
-        ///     Converts the content of an TCP message into an object that will be deliverd to the Components
-        /// </summary>
-        /// <param name="source"></param>
-        /// <returns></returns>
-        MessageBase DeSerializeMessageContent(byte[] source);
+        MessageBase DeSerializeMessage(byte[] source);
 
         /// <summary>
         ///     tries to convert the Message to a string Representation

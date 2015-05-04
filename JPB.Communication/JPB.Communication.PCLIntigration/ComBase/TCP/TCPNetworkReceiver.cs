@@ -55,6 +55,7 @@ namespace JPB.Communication.ComBase.TCP
 
         private bool _incommingMessage;
         private bool _isWorking;
+        TcpConnectionBase _assosciatedConnection;
 
         /// <summary>
         ///     FOR INTERNAL USE ONLY
@@ -258,10 +259,12 @@ namespace JPB.Communication.ComBase.TCP
                 {
                     Session = new ReceiverSession()
                     {
-                        Receiver = this,
-                        Calle = NetworkAuthentificator.Instance.GetUser(_calle),
+                        NetworkReceiver = this,
+                        Calle = NetworkAuthentificator.Instance.GetUser(_assosciatedConnection._assosciatedLogin),
                         Sock = this._listenerISocket,
-                        PendingItems = _workeritems.Count
+                        PendingItems = _workeritems.Count,
+                        Sender = _assosciatedConnection.Sock.RemoteEndPoint.Address.AddressContent,
+                        Receiver = _assosciatedConnection.Sock.LocalEndPoint.Address.AddressContent,
                     };
 
                     Type type = messCopy.GetType();
@@ -306,6 +309,7 @@ namespace JPB.Communication.ComBase.TCP
                 _updated.Where(
                     action => messCopy != null && (action.Item2 == null || action.Item2.Equals(messCopy.InfoState)))
                     .ToArray();
+
             foreach (var action in updateCallbacks)
             {
                 action.Item1(messCopy);
@@ -453,7 +457,7 @@ namespace JPB.Communication.ComBase.TCP
             try
             {
                 _autoResetEvent = new AutoResetEvent(false);
-                while (_workeritems.Count > 1)
+                while (_workeritems.Count > 0)
                 {
                     if (IsDisposing)
                         break;
@@ -489,7 +493,6 @@ namespace JPB.Communication.ComBase.TCP
                 }
 
                 var endAccept = sock.EndAccept(result);
-
                 if (endAccept == null)
                 {
                     //Fatal error dispose
@@ -508,6 +511,22 @@ namespace JPB.Communication.ComBase.TCP
 
         internal void StartListener(ISocket endAccept)
         {
+
+            if (!LargeMessageSupport)
+            {
+                _assosciatedConnection = new DefaultTcpConnection(endAccept)
+                {
+                    Port = Port,
+                };
+            }
+            else
+            {
+                _assosciatedConnection = new LargeTcpConnection(endAccept)
+                {
+                    Port = Port
+                };
+            }
+
             if (SharedConnection)
             {
                 ConnectionWrapper firstOrDefault =
@@ -518,43 +537,10 @@ namespace JPB.Communication.ComBase.TCP
                 }
             }
 
-            TcpConnectionBase conn;
-
-            if (!LargeMessageSupport)
-            {
-                conn = new DefaultTcpConnection(endAccept)
-                {
-                    Port = Port,
-                };
-            }
-            else
-            {
-                conn = new LargeTcpConnection(endAccept)
-                {
-                    Port = Port
-                };
-            }
-            conn.Serlilizer = Serlilizer;
-            conn.IsSharedConnection = SharedConnection;
-            conn.EndReceiveInternal += (e, ef) => IncommingMessage = false;
-
-            if (this.CheckCredentials)
-            {
-                var credMessage = conn.ReciveCredentials();
-                if (credMessage == null)
-                {
-                    return;
-                }
-                var isAudit = NetworkAuthentificator.Instance.CheckCredentials(credMessage, endAccept.RemoteEndPoint.Address.AddressContent, endAccept.RemoteEndPoint.Port);
-                if (!isAudit)
-                {
-                    endAccept.Close();
-                    endAccept.Dispose();
-                    return;
-                }
-            }
-
-            conn.BeginReceive();
+            _assosciatedConnection.Serlilizer = Serlilizer;
+            _assosciatedConnection.IsSharedConnection = SharedConnection;
+            _assosciatedConnection.EndReceiveInternal += (e, ef) => IncommingMessage = false;         
+            _assosciatedConnection.BeginReceive(CheckCredentials);
         }
 
 

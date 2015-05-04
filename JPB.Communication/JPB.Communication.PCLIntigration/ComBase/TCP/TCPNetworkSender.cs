@@ -73,18 +73,18 @@ namespace JPB.Communication.ComBase.TCP
         public override ushort Port { get; internal set; }
 
         public bool UseNetworkCredentials { get; private set; }
-        private byte[] preCompiledLogin;
+        public byte[] PreCompiledLogin { get; private set; }
 
         public void ChangeNetworkCredentials(bool mode, LoginMessage mess)
         {
             UseNetworkCredentials = mode;
             if (mode)
             {
-                preCompiledLogin = SerializeLogin(mess);
+                PreCompiledLogin = SerializeLogin(mess);
             }
             else
             {
-                preCompiledLogin = null;
+                PreCompiledLogin = null;
             }
         }
 
@@ -233,7 +233,7 @@ namespace JPB.Communication.ComBase.TCP
                 try
                 {
                     Task<ISocket> client = CreateClientSockAsync(ip);
-                    NetworkMessage tcpMessage = PrepareMessage(message, ip);
+                    MessageBase tcpMessage = PrepareMessage(message, ip);
                     client.Wait();
                     var result = client.Result;
                     if (result == null)
@@ -403,7 +403,7 @@ namespace JPB.Communication.ComBase.TCP
 
             mess.StreamSize = stream.Length;
 
-            NetworkMessage prepairedMess = PrepareMessage(mess, ip);
+            var prepairedMess = PrepareMessage(mess, ip);
             byte[] serialize = Serialize(prepairedMess);
 
             using (var memstream = new MemoryStream(serialize))
@@ -474,7 +474,7 @@ namespace JPB.Communication.ComBase.TCP
             return await CreateClientSockAsync(ip);
         }
 
-        private NetworkMessage PrepareMessage(MessageBase message, string ip)
+        private MessageBase PrepareMessage(MessageBase message, string ip)
         {
             message.SendAt = DateTime.Now;
             if (string.IsNullOrEmpty(message.Sender) || !UseExternalIpAsSender)
@@ -483,42 +483,44 @@ namespace JPB.Communication.ComBase.TCP
             {
                 message.Sender = NetworkInfoBase.IpAddressExternal.ToString();
             }
-            message.Reciver = ip;
-            return Wrap(message);
+            return message;
         }
 
         private async Task<ISocket> CreateClientSockAsync(string ipOrHost)
         {
             try
             {
+                ISocket sock;
                 if (SharedConnection)
                 {
-                    ISocket isConnected = ConnectionPool.Instance.GetSock(ipOrHost, Port);
-                    if (isConnected != null)
+                    sock = ConnectionPool.Instance.GetSock(ipOrHost, Port);
+                    if (sock != null)
                     {
-                        if (!isConnected.Connected)
+                        if (!sock.Connected)
                         {
-                            isConnected.Connect(ipOrHost, Port);
-                            if (UseNetworkCredentials)
-                            {
-                                SendLoginData(isConnected);
-                                if (isConnected.Connected)
-                                    return isConnected;
-                                return null;
-                            }
+                            sock.Connect(ipOrHost, Port);
                         }
-                        return isConnected;
+                    }
+                    else
+                    {
+                        sock = await _sockType.CreateAndConnectAsync(ipOrHost, Port);
                     }
                 }
+                else
+                {
+                    sock = await _sockType.CreateAndConnectAsync(ipOrHost, Port);
+                }
 
-                var sock = await _sockType.CreateAndConnectAsync(ipOrHost, Port);
                 if (UseNetworkCredentials)
                 {
                     SendLoginData(sock);
-                    if (sock.Connected)
-                        return sock;
-                    return null;
+                    if (!sock.Connected)
+                    {
+                        sock.Close();
+                        sock.Dispose();
+                    }
                 }
+
                 return sock;
             }
             catch (Exception)
@@ -565,7 +567,7 @@ namespace JPB.Communication.ComBase.TCP
             } while (true);
         }
 
-        private void SendBaseAsync(NetworkMessage message, ISocket openNetwork)
+        private void SendBaseAsync(MessageBase message, ISocket openNetwork)
         {
             byte[] serialize = Serialize(message);
             if (!serialize.Any())
@@ -588,7 +590,10 @@ namespace JPB.Communication.ComBase.TCP
 
         private void SendLoginData(ISocket sock)
         {
-            sock.Send(this.preCompiledLogin);
+            //int bufSize = sock.ReceiveBufferSize;
+            //var buf = new byte[bufSize];
+            //PreCompiledLogin.CopyTo(buf, 0);
+            sock.Send(PreCompiledLogin, 0, PreCompiledLogin.Length);
         }
 
         private ISocket SendOnStream(Stream stream, ISocket sock)

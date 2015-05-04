@@ -57,7 +57,42 @@ namespace JPB.Communication.ComBase.TCP
             }
         }
 
-        public abstract void BeginReceive();
+        public virtual bool BeginReceive(bool CheckCredentials)
+        {
+            if (CheckCredentials)
+            {
+                try
+                {
+                    var credMessage = ReciveCredentials();
+                    if (credMessage == null)
+                    {
+                        Sock.Send(0x00);
+                        Sock.Close();
+                        Sock.Dispose();
+                        return false;
+                    }
+                    var isAudit = NetworkAuthentificator.Instance.CheckCredentials(credMessage, Sock.RemoteEndPoint.Address.AddressContent, Sock.RemoteEndPoint.Port);
+                    if (!isAudit)
+                    {
+                        Sock.Send(0x00);
+                        Sock.Close();
+                        Sock.Dispose();
+                        return false;
+                    }
+                    else
+                    {
+                        Sock.Send(0x01);
+                        return true;
+                    }
+                }
+                catch (Exception)
+                {
+                    Sock.Send(0x00);
+                    return false;
+                }
+            }
+            return true;
+        }
         protected void RaiseEndReceiveInternal()
         {
             var handler = EndReceiveInternal;
@@ -131,7 +166,7 @@ namespace JPB.Communication.ComBase.TCP
 
         internal LoginMessage ReciveCredentials()
         {
-            byte[] maybeLoginMessage = new byte[NetworkAuthentificator.CredBufferSize];
+            byte[] maybeLoginMessage = new byte[NetworkAuthentificator.ReceiveBufferSize];
             Sock.Receive(maybeLoginMessage);
             if (maybeLoginMessage[0] == 0x00)
                 return null;

@@ -17,18 +17,18 @@ namespace JPB.Communication.NativeWin.WinRT
 
         public static Task<ISocket> Create(Socket sock = null)
         {
-           var taskCreate =  new Task<ISocket>(() =>
+            var taskCreate = new Task<ISocket>(() =>
             {
                 if (sock == null)
                     sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                sock.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, false);
+                sock.NoDelay = false;
                 sock.LingerState = new LingerOption(true, 30);
                 sock.SetIPProtectionLevel(IPProtectionLevel.Unrestricted);
                 var rtSock = new WinRtSocket(sock);
                 return rtSock;
             });
-           taskCreate.Start();
-           return taskCreate;
+            taskCreate.Start();
+            return taskCreate;
         }
 
         private readonly Socket _sock;
@@ -77,7 +77,8 @@ namespace JPB.Communication.NativeWin.WinRT
 
         public Task ConnectAsync(string ipOrHost, ushort port)
         {
-            var task = new Task(() =>{
+            var task = new Task(() =>
+            {
                 try
                 {
                     _sock.Connect(ipOrHost, port);
@@ -101,14 +102,34 @@ namespace JPB.Communication.NativeWin.WinRT
             return this.Send(content, content.Length, 0);
         }
 
-        public int Send(byte[] content, int length, int start)
+        public int Send(byte[] content, int offset, int length)
         {
-            return _sock.Send(content, length, start, SocketFlags.None);
+            return this.SendInternal(content, offset, length, SocketFlags.None);
+        }
+
+        public int SendPartial(byte[] content, int offset, int length)
+        {
+            return this.SendInternal(content, offset, length, SocketFlags.None);
+        }
+
+        public int SendInternal(byte[] content, int offset, int length, SocketFlags flags)
+        {
+            return _sock.Send(content, offset, length, flags);
         }
 
         public void Receive(byte[] content)
         {
-            _sock.Receive(content);
+            ReceiveInternal(content, SocketFlags.None);
+        }
+
+        public void ReceivePartial(byte[] content)
+        {
+            ReceiveInternal(content, SocketFlags.None);
+        }
+
+        public void ReceiveInternal(byte[] content, SocketFlags flags)
+        {
+            _sock.Receive(content, 0, content.Length, SocketFlags.None);
         }
 
         public void Close()
@@ -155,7 +176,4 @@ namespace JPB.Communication.NativeWin.WinRT
             }
         }
     }
-
-
-
 }

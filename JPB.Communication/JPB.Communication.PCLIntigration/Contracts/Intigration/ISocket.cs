@@ -18,8 +18,11 @@ namespace JPB.Communication.Contracts.Intigration
 
         void Send(byte content);
         int Send(byte[] content);
-        int Send(byte[] content, int length, int start);
+        int Send(byte[] content, int offset, int length);
+        int SendPartial(byte[] content, int offset, int start);
         void Receive(byte[] content);
+
+        void ReceivePartial(byte[] content);
 
         void Close();
         void BeginReceive(byte[] last, int i, int length, Action<IAsyncResult> onBytesReceived, object sender);

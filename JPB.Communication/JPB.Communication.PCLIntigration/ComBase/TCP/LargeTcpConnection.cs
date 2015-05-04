@@ -44,14 +44,20 @@ namespace JPB.Communication.ComBase.TCP
         public bool LastCallWasMeta { get; set; }
         public override ushort Port { get; internal set; }
 
-        public override void BeginReceive()
+        public override bool BeginReceive(bool checkCred)
         {
+            var cont = base.BeginReceive(checkCred);
+
+            if (!cont)
+                return cont;
+
             byte[] last = _datarec.Last;
             Sock.BeginReceive(
                 last, 0,
                 last.Length,
                 OnBytesReceived,
                 this);
+            return true;
         }
 
         // This is the method that is called whenever the Socket receives

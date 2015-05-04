@@ -22,6 +22,7 @@ using System;
 using JPB.Communication.ComBase;
 using JPB.Communication.ComBase.Messages;
 using JPB.Communication.ComBase.Serializer;
+using JPB.Communication.NativeWin.Serilizer;
 using JPB.Communication.NativeWin.WinRT;
 
 namespace JPB.Communication.Example.Chat
@@ -35,7 +36,7 @@ namespace JPB.Communication.Example.Chat
 
         public static void Main2()
         {
-            //Networkbase.DefaultMessageSerializer = new NetContractSerializer();
+            Networkbase.DefaultMessageSerializer = new NetContractSerializer();
             NetworkFactory.Create(new WinRTFactory());
 
             //Define a Contract that is not used by others

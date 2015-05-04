@@ -132,7 +132,7 @@ namespace JPB.Communication.NativeWin.ViewModel
             TcpNetworkActionLog.Add(new TcpNetworkAction(TcpNetworkActionType.Send, new { Port = port, Message = mess }));
         }
 
-        void Networkbase_OnIncommingMessage(object sender, NetworkMessage e)
+        void Networkbase_OnIncommingMessage(object sender, MessageBase e)
         {
             TcpNetworkActionLog.Add(new TcpNetworkAction(TcpNetworkActionType.Incomming, new { (sender as Networkbase).Port, Message = e }));
         }

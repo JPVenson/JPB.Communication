@@ -31,16 +31,14 @@ namespace JPB.Communication.ComBase
 
         internal bool Parse(byte[] received)
         {
-            NetworkMessage item;
+            MessageBase item;
             try
             {
                 item = DeSerialize(received);
 
                 if (item != null)
                 {
-                    RaiseIncommingMessage(item);
-                    MessageBase loadMessageBaseFromBinary = base.LoadMessageBaseFromBinary(item.MessageBase);
-                    RaiseNewItemLoadedSuccess(loadMessageBaseFromBinary);
+                    RaiseNewItemLoadedSuccess(item);
                     return true;
                 }
                 return false;
@@ -64,16 +62,14 @@ namespace JPB.Communication.ComBase
 
         internal LargeMessage ParseLargeObject(byte[] received, Func<Stream> completed)
         {
-            NetworkMessage item;
+            MessageBase item;
             try
             {
                 item = DeSerialize(received);
 
                 if (item != null)
                 {
-                    RaiseIncommingMessage(item);
-                    MessageBase loadMessageBaseFromBinary = base.LoadMessageBaseFromBinary(item.MessageBase);
-                    return RaiseNewLargeItemLoadedSuccess(loadMessageBaseFromBinary, completed);
+                    return RaiseNewLargeItemLoadedSuccess(item, completed);
                 }
                 return null;
             }

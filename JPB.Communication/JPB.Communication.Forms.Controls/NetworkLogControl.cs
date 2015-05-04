@@ -99,7 +99,7 @@ namespace JPB.Communication.Forms.Controls
             }));
         }
 
-        void Networkbase_OnIncommingMessage(object sender, NetworkMessage e)
+        void Networkbase_OnIncommingMessage(object sender, MessageBase e)
         {
             this.BeginInvoke(new Action(() =>
             {

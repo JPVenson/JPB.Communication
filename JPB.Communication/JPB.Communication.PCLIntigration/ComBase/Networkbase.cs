@@ -73,7 +73,7 @@ namespace JPB.Communication.ComBase
             Serlilizer = DefaultMessageSerializer;
         }
 
-        protected LoginMessage _calle;
+        internal LoginMessage _assosciatedLogin;
 
         /// <summary>
         ///     Defines the Port the Instance is working on
@@ -105,11 +105,11 @@ namespace JPB.Communication.ComBase
 
         public static event MessageDelegate OnNewItemLoadedSuccess;
         public static event EventHandler<string> OnNewItemLoadedFail;
-        public static event EventHandler<NetworkMessage> OnIncommingMessage;
+        public static event EventHandler<MessageBase> OnIncommingMessage;
         public static event MessageDelegate OnMessageSend;
         public static event LargeMessageDelegate OnNewLargeItemLoadedSuccess;
 
-        protected EventHandler<NetworkMessage> IncommingMessageHandler()
+        protected EventHandler<MessageBase> IncommingMessageHandler()
         {
             return OnIncommingMessage;
         }
@@ -149,7 +149,7 @@ namespace JPB.Communication.ComBase
             }
         }
 
-        protected virtual void RaiseIncommingMessage(NetworkMessage strReceived)
+        protected virtual void RaiseIncommingMessage(MessageBase strReceived)
         {
             try
             {
@@ -190,13 +190,9 @@ namespace JPB.Communication.ComBase
                 PclTrace.WriteLine(string.Format("> Networkbase> RaiseNewItemLoadedSuccess>{0}", e), TraceCategoryCriticalSerilization);
             }
         }
+        
 
-        public MessageBase LoadMessageBaseFromBinary(byte[] source)
-        {
-            return Serlilizer.DeSerializeMessageContent(source);
-        }
-
-        public NetworkMessage DeSerialize(byte[] source)
+        public MessageBase DeSerialize(byte[] source)
         {
             try
             {
@@ -214,7 +210,7 @@ namespace JPB.Communication.ComBase
             }
         }
 
-        public byte[] Serialize(NetworkMessage networkMessage)
+        public byte[] Serialize(MessageBase networkMessage)
         {
             try
             {
@@ -232,6 +228,8 @@ namespace JPB.Communication.ComBase
             }
         }
 
+        private Encoding PasswordEncoding = Encoding.Unicode;
+
         internal LoginMessage DeSerializeLogin(byte[] maybeLoginMessage)
         {
             var message = maybeLoginMessage;
@@ -242,83 +240,65 @@ namespace JPB.Communication.ComBase
 
             var passwordEncoded = message
                 .Take(NetworkAuthentificator.PasswordBufferSize)
-                .Where(s => s != 0x00)
                 .ToArray();
             var usernameEncoded = message
                 .Skip(NetworkAuthentificator.PasswordBufferSize)
-                .Where(s => s != 0x00)
+                .Take(NetworkAuthentificator.NameBufferSize)
                 .ToArray();
 
-            var passwordPlain = Encoding.Unicode.GetString(passwordEncoded, 0, passwordEncoded.Length);
-            var usernamePlain = Encoding.Unicode.GetString(usernameEncoded, 0, usernameEncoded.Length);
+            var sessionEncoded = message
+                .Skip(NetworkAuthentificator.NameBufferSize)
+                .Skip(NetworkAuthentificator.PasswordBufferSize)
+                .Take(NetworkAuthentificator.SessionBufferSize)
+                .ToArray();
 
-            return _calle = new LoginMessage()
+            var passwordPlain = PasswordEncoding.GetString(passwordEncoded, 0, passwordEncoded.Length).Replace("\0", string.Empty).Trim();
+            var usernamePlain = PasswordEncoding.GetString(usernameEncoded, 0, usernameEncoded.Length).Replace("\0", string.Empty).Trim();
+            var sessionPlain = PasswordEncoding.GetString(sessionEncoded, 0, sessionEncoded.Length).Replace("\0", string.Empty).Trim();
+
+            return _assosciatedLogin = new LoginMessage()
             {
                 Password = passwordPlain,
-                Username = usernamePlain
+                Username = usernamePlain,
+                SessionID = sessionPlain
             };
         }
 
         internal byte[] SerializeLogin(LoginMessage mess)
         {
-            var passwordSize = NetworkAuthentificator.PasswordBufferSize;
-            var nameSize = NetworkAuthentificator.CredBufferSize - NetworkAuthentificator.PasswordBufferSize;
-            
-            var passwordPlain = Encoding.Unicode.GetBytes(mess.Password);
-            var usernamePlain = Encoding.Unicode.GetBytes(mess.Username);
+            mess.SessionID = Guid.NewGuid().ToString();
 
-            if (passwordPlain.Length > passwordSize)
+            var passwordPlain = PasswordEncoding.GetBytes(mess.Password);
+            var usernamePlain = PasswordEncoding.GetBytes(mess.Username);
+            var sessionPlain = PasswordEncoding.GetBytes(mess.SessionID);
+
+            if (passwordPlain.Length > NetworkAuthentificator.PasswordBufferSize)
                 throw new ArgumentException("The password must be smaller then the maximum Password buffer size", "mess.Password");
-            if (usernamePlain.Length > passwordSize)
+            if (usernamePlain.Length > NetworkAuthentificator.NameBufferSize)
                 throw new ArgumentException("The Username must be smaller then the maximum Username buffer size", "mess.Username");
+            if (sessionPlain.Length > NetworkAuthentificator.SessionBufferSize)
+                throw new ArgumentException("The Session ID must be smaller then the maximum Session ID buffer size", "mess.SessionID");
 
             var passwordEncoded = new byte[NetworkAuthentificator.PasswordBufferSize];
-            var usernameEncoded = new byte[NetworkAuthentificator.CredBufferSize - NetworkAuthentificator.PasswordBufferSize];
+            var usernameEncoded = new byte[NetworkAuthentificator.NameBufferSize];
+            var sessionEncoded = new byte[NetworkAuthentificator.SessionBufferSize];
 
             passwordPlain.CopyTo(passwordEncoded, 0);
-            usernameEncoded.CopyTo(usernamePlain, 0);
-            
+            usernamePlain.CopyTo(usernameEncoded, 0);
+            sessionPlain.CopyTo(sessionEncoded, 0);
+
             var credData = passwordEncoded
-                .Concat(usernamePlain)
+                .Concat(usernameEncoded)
+                .Concat(sessionEncoded)
                 .ToArray();
+
+            if (credData.Length != (NetworkAuthentificator.PasswordBufferSize + NetworkAuthentificator.SessionBufferSize + NetworkAuthentificator.NameBufferSize))
+                throw new Exception("Internal Error. The Cred data array has not the expected size");
 
             if (Security != null)
                 credData = Security.Encrypt(credData);
 
             return credData;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="A"></param>
-        /// <returns></returns>
-        public byte[] SaveMessageBaseAsContent(MessageBase A)
-        {
-            try
-            {
-                var sor = Serlilizer.SerializeMessageContent(A);
-                return sor;
-            }
-            catch (Exception e)
-            {
-                PclTrace.WriteLine(e.ToString(), TraceCategoryLowSerilization);
-                return new byte[0];
-            }
-        }
-
-
-        protected NetworkMessage Wrap(MessageBase message)
-        {
-            var mess = new NetworkMessage();
-            byte[] saveMessageBaseAsBinary = SaveMessageBaseAsContent(message);
-
-            if (!saveMessageBaseAsBinary.Any())
-                return null;
-
-            mess.MessageBase = saveMessageBaseAsBinary;
-            mess.Reciver = message.Reciver;
-            mess.Sender = message.Sender;
-            return mess;
-        }
+        }     
     }
 }

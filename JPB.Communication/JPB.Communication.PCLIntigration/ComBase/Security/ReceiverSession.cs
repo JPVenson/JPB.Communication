@@ -10,9 +10,11 @@ namespace JPB.Communication.PCLIntigration.ComBase.Security
 {
     public class ReceiverSession
     {
-        public TCPNetworkReceiver Receiver { get; set; }
+        public TCPNetworkReceiver NetworkReceiver { get; set; }
         public LoginMessageEx Calle { get; set; }
         public ISocket Sock { get; internal set; }
         public int PendingItems { get; internal set; }
+        public string Sender { get; internal set; }
+        public string Receiver { get; internal set; }
     }
 }

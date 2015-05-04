@@ -40,12 +40,16 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup>
-    <SignAssembly>false</SignAssembly>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>JPBCommunicationSig.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .NET Framework is automatically included -->
     <None Include="app.config" />
     <None Include="JPB.Communication.licenseheader" />
+    <None Include="JPBCommunicationSig.pfx" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ComBase\Security\NetworkAuthentificator.cs" />
@@ -65,7 +69,6 @@
     <Compile Include="ComBase\Messages\Wrapper\LargeMessage.cs" />
     <Compile Include="ComBase\Networkbase.cs" />
     <Compile Include="ComBase\NetworkInfoBase.cs" />
-    <Compile Include="ComBase\NetworkMessage.cs" />
     <Compile Include="ComBase\NetworkReceiverBase.cs" />
     <Compile Include="ComBase\StreamBuffer.cs" />
     <Compile Include="ComBase\TCP\ConnectionWrapper.cs" />

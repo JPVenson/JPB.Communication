@@ -31,6 +31,9 @@ using JPB.Communication.NativeWin.Serilizer;
 using JPB.Communication.NativeWin.WinRT;
 using JPB.Communication.Contracts.Intigration;
 using JPB.Communication.PCLIntigration.ComBase;
+using System.Diagnostics;
+using JPB.Communication.WinRT.Serilizer;
+using JPB.Communication.ComBase.TCP;
 
 namespace JPB.Communication.Example.Chat
 {
@@ -55,9 +58,12 @@ namespace JPB.Communication.Example.Chat
             public ConsoleColor Color { get; set; }
         }
 
+        TCPNetworkReceiver tcpNetworkReceiver;
+        private const char ColorSeperator = ':';
+
         public Program()
         {
-            Networkbase.DefaultMessageSerializer = new NetContractSerializer();
+            Networkbase.DefaultMessageSerializer = new FullXmlSerilizer(new[] { typeof(MessageBase), typeof(ChatMessage) });
             NetworkFactory.Create(new WinRTFactory());
 
             //Maybe multible network Adapters ... on what do we want to Recieve?
@@ -70,7 +76,7 @@ namespace JPB.Communication.Example.Chat
             ushort port = 1337; //LEED
 
 
-            var tcpNetworkReceiver
+            tcpNetworkReceiver
 
                 //The complete access to Sender and Recieiver are done bei the Network Factory
                 = NetworkFactory
@@ -82,18 +88,20 @@ namespace JPB.Communication.Example.Chat
             tcpNetworkReceiver.CheckCredentials = true;
             NetworkAuthentificator.Instance.OnLoginInbound += (s, e) =>
             {
-                WriteSystemMessage(string.Format("Login Inbound '{0}'", e.Username));
+                WriteLoginMessage(string.Format("Login Inbound '{0}'", e.Username));
             };
 
             NetworkAuthentificator.Instance.OnValidateUnknownLogin += (s, e) =>
             {
-                WriteSystemMessage(string.Format("Validate Username {0}", e.Username));
                 var domain = e.Username.Substring(0, e.Username.IndexOf("@"));
-                return domain == Environment.UserDomainName ? AuditState.AccessAllowed : AuditState.AccessDenyed;
+                var good = domain == Environment.UserDomainName ? AuditState.AccessAllowed : AuditState.AccessDenyed;
+                WriteLoginMessage(string.Format("Validate Username '{0}' -> {1}", e.Username, good));
+                return good;
             };
 
             NetworkAuthentificator.Instance.OnValidateUserPassword += (s, e) =>
             {
+                WriteLoginMessage(string.Format("Validate Password '{0}' -> {1}", e.Password, AuditState.AccessAllowed));
                 //Allow anonymus login
                 return true;
             };
@@ -107,24 +115,26 @@ namespace JPB.Communication.Example.Chat
 
             //create a Sender on the same port the same way we did on the Receiver
             var tcpNetworkSender = NetworkFactory.Instance.GetSender(port);
-            tcpNetworkSender.ChangeNetworkCredentials(true, new PCLIntigration.ComBase.Messages.LoginMessage()
+
+            var login = new PCLIntigration.ComBase.Messages.LoginMessage()
             {
                 Username = Environment.UserDomainName + "@" + Environment.UserName,
                 Password = "Nothing"
-            });
+            };
+
+            tcpNetworkSender.ChangeNetworkCredentials(true, login);
+            WriteSystemMessage("Set Cred:");
+            WriteSystemMessage(login.ToString());
 
             //If you want to alter control the Process of Serilation set this interface but remember that both Sender and Receiver must use the same otherwise they will not able to work
             //In this case we are using one of the Predefined Serializers
             //tcpNetworkReceiver.Serlilizer = new JPB.Communication.ComBase.Serializer.NetContractSerializer();
-            //tcpNetworkSender.Serlilizer = tcpNetworkReceiver.Serlilizer;
+            //tcpNetworkSender.Serlilizer = tcpNetworkReceiver.Serlilizer;           
 
-
-            //then we can enable the build in Authentification!!!!!!!!!!!!!!!!!!!!!!
-
-            Console.WriteLine("Server IP or Hostname:");
+            WriteSystemMessage("Server IP or Hostname:");
             bool serverOnline = false;
             string server = null;
-            var input = string.Empty;
+            InputWrapper input;
 #if DEBUG
             server = NetworkInfoBase.IpAddress.ToString();
             serverOnline = true;
@@ -147,31 +157,26 @@ namespace JPB.Communication.Example.Chat
                 }
             } while (!serverOnline);
 #endif
-            Console.Clear();
             Console.Title = string.Format("{0} , That : {1}", Console.Title, server);
-            Console.WriteLine("Server Found");
+            WriteSystemMessage("Server Found");
+            //Test it with send HelloWorld
+
+            var helloWorldMessage = new ChatMessage();
+            helloWorldMessage.Message = string.Format("Hello world from {0}", Environment.UserName);
+            helloWorldMessage.Color = ConsoleColor.Blue;
+            tcpNetworkSender.SendMessage(new MessageBase(helloWorldMessage, ChatMessageContract), server);
+
             //now, send as long as the user want to
             do
             {
                 Console.WriteLine("Please enter Message");
-                Console.ForegroundColor = ConsoleColor.Green;
-                input = Console.ReadLine();
-                Console.ResetColor();
-                var chatMess = new ChatMessage();
-                chatMess.Message = input;
-                chatMess.Color = ConsoleColor.Red;
-                var indexOfColor = input.IndexOf(":");
-                if (indexOfColor != -1)
-                {
-                    var maybeColor = input.Substring(0, indexOfColor).ToLower();
-                    var findConsoleColor = Enum.GetNames(typeof(ConsoleColor)).FirstOrDefault(s => s.ToLower() == maybeColor);
-                    if (findConsoleColor != null)
-                    {
-                        chatMess.Color = (ConsoleColor)Enum.Parse(typeof(ConsoleColor), findConsoleColor);
-                        chatMess.Message = input.Remove(0, indexOfColor + 1);
-                    }
-                }
 
+                input = ParseInput();
+
+                var chatMess = new ChatMessage();
+                chatMess.Message = input.Text;
+                chatMess.Color = input.Color;
+                
                 //create a new MessageBase object or one object that inherts from it
                 var message = new MessageBase()
                 {
@@ -187,7 +192,34 @@ namespace JPB.Communication.Example.Chat
                     Console.ReadKey();
                     break;
                 }
-            } while (!input.ToLower().Equals("exit"));
+            } while (true);
+        }
+
+        public class InputWrapper
+        {
+            public string Text { get; set; }
+            public ConsoleColor Color { get; set; }
+        }
+
+        private InputWrapper ParseInput()
+        {
+            var inputwrapper = new InputWrapper();
+            var firstInput = Console.ReadLine();
+
+            var findConsoleColor = Enum.GetNames(typeof(ConsoleColor)).FirstOrDefault(s => s.ToLower() == firstInput);
+            if (findConsoleColor != null)
+            {
+                inputwrapper.Color = (ConsoleColor)Enum.Parse(typeof(ConsoleColor), findConsoleColor);
+                Console.ForegroundColor = inputwrapper.Color;
+                inputwrapper.Text = Console.ReadLine();
+                Console.ResetColor();
+            }
+            else
+            {
+                inputwrapper.Color = ConsoleColor.White;
+                inputwrapper.Text = firstInput;
+            } 
+            return inputwrapper;
         }
 
         private IPAddress NetworkInfoBaseOnResolveDistantIp(IPAddress[] arg1, string arg2)
@@ -218,15 +250,26 @@ namespace JPB.Communication.Example.Chat
 
         private static void WriteSystemMessage(string mess)
         {
+            var old = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine("System> {0}", mess);
+            Console.ForegroundColor = old;
         }
 
-        private static void OnIncommingMessage(MessageBase obj)
+        private static void WriteLoginMessage(string mess)
+        {
+            var old = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("Login System> {0}", mess);
+            Console.ForegroundColor = old;
+        }
+
+        private void OnIncommingMessage(MessageBase obj)
         {
             var mess = (obj.Message as ChatMessage);
             var old = Console.ForegroundColor;
             Console.ForegroundColor = mess.Color;
-            Console.WriteLine("> {0} : \"{1}\"", obj.Sender, mess.Message);
+            Console.WriteLine("> {0} : \"{1}\"", tcpNetworkReceiver.Session.Calle.Username, mess.Message);
             Console.ForegroundColor = old;
         }
 

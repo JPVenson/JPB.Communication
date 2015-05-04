@@ -24,6 +24,9 @@ namespace JPB.Communication.PCLIntigration.ComBase
     {
         AccessAllowed,
         AccessDenyed,
+        /// <summary>
+        /// This means that the next time the User trys to login, your handle will be invoked again istead of using the Session ID
+        /// </summary>
         Unknown
     }
     public enum DefaultLoginBevavior
@@ -32,12 +35,14 @@ namespace JPB.Communication.PCLIntigration.ComBase
         DenyAllways,
         IpNameCheckOnly
     }
+
     public class NetworkAuthentificator
     {
         static NetworkAuthentificator()
         {
-            CredBufferSize = 128;
+            NameBufferSize = 128;
             PasswordBufferSize = 128;
+            SessionBufferSize = 128;
         }
         private NetworkAuthentificator()
         {
@@ -46,8 +51,17 @@ namespace JPB.Communication.PCLIntigration.ComBase
         }
 
         private static NetworkAuthentificator _instance;
-        internal static readonly int CredBufferSize;
+
+        public static int ReceiveBufferSize
+        {
+            get
+            {
+                return NameBufferSize + PasswordBufferSize + SessionBufferSize;
+            }
+        }
+        internal static readonly int NameBufferSize;
         internal static readonly int PasswordBufferSize;
+        internal static readonly int SessionBufferSize;
         public DefaultLoginBevavior DefaultLoginBevavior { get; set; }
 
         public bool ShouldCacheResults { get; set; }
@@ -120,6 +134,7 @@ namespace JPB.Communication.PCLIntigration.ComBase
 
             var login = new LoginMessageEx(host, port)
             {
+                SessionID = message.SessionID,
                 State = state,
                 Username = message.Username,
                 Password = message.Password

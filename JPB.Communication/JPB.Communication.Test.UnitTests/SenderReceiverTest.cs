@@ -144,14 +144,7 @@ namespace JPB.Communication.Test.UnitTests
 
         private int calcSize(Networkbase baseS, MessageBase makeup)
         {
-            var mess = new NetworkMessage();
-            byte[] saveMessageBaseAsBinary = baseS.SaveMessageBaseAsContent(makeup);
-
-            mess.MessageBase = saveMessageBaseAsBinary;
-            mess.Reciver = makeup.Reciver;
-            mess.Sender = makeup.Sender;
-
-            var messSeri = baseS.Serialize(mess);
+            var messSeri = baseS.Serialize(makeup);
             return messSeri.Length;
         }
 
