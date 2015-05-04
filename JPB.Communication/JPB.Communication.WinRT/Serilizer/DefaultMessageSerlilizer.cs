@@ -32,6 +32,7 @@ using JPB.Communication.ComBase.Serializer.Contracts;
 using JPB.Communication.ComBase;
 using JPB.Communication.Shared.CrossPlatform;
 using JPB.Communication.ComBase.Messages;
+using System.Xml;
 
 namespace JPB.Communication.NativeWin.Serilizer
 {
@@ -49,7 +50,7 @@ namespace JPB.Communication.NativeWin.Serilizer
         }
         //IL MERGE OR RENAMING SUPPORT
 
-        internal static Encoding Encoding = Encoding.UTF8;
+        internal static Encoding Encoding = Encoding.ASCII;
         private IlMergeBinder _binder;
         public bool IlMergeSupport { get; set; }
         public bool PrevendDiscPageing { get; set; }
@@ -66,7 +67,7 @@ namespace JPB.Communication.NativeWin.Serilizer
             //support for large objects
             using (Stream stream = GetStream(mess.Message))
             {
-                CreateFormatter().Serialize(stream, mess);
+                CreateFormatter().WriteObject(stream, mess);
                 return getInfo(stream);
             }
         }
@@ -78,12 +79,7 @@ namespace JPB.Communication.NativeWin.Serilizer
             {
                 using (var memst = new MemoryStream(source))
                 {
-                    BinaryFormatter binaryFormatter = CreateFormatter();
-                    if (IlMergeSupport)
-                    {
-                        binaryFormatter.Binder = _binder;
-                    }
-                    var deserialize = (MessageBase)binaryFormatter.Deserialize(memst);
+                    var deserialize = (MessageBase)CreateFormatter().ReadObject(memst);
                     return deserialize;
                 }
             }
@@ -126,18 +122,34 @@ namespace JPB.Communication.NativeWin.Serilizer
             return array;
         }
 
-        private BinaryFormatter CreateFormatter()
+        private DataContractSerializer CreateFormatter()
         {
-            var binaryFormatter = new BinaryFormatter
+            var settings = new DataContractSerializerSettings();
+            settings.DataContractResolver = new IlMergeContractResolverFasade();
+            settings.IgnoreExtensionDataObject = false;
+            settings.PreserveObjectReferences = true;
+            settings.SerializeReadOnlyTypes = false; 
+            var formartter = new DataContractSerializer(typeof(MessageBase), settings);           
+            
+            return formartter;
+        }
+
+        public class IlMergeContractResolverFasade : DataContractResolver
+        {
+            IlMergeBinder @base;
+            public IlMergeContractResolverFasade()
             {
-                AssemblyFormat = FormatterAssemblyStyle.Simple,
-                FilterLevel = TypeFilterLevel.Full,
-                TypeFormat = FormatterTypeStyle.TypesWhenNeeded
-            };
+                @base = new IlMergeBinder();
+            }
+            public override Type ResolveName(string typeName, string typeNamespace, Type declaredType, DataContractResolver knownTypeResolver)
+            {
+                return @base.BindToType(declaredType.Assembly.FullName, typeName);                
+            }
 
-            binaryFormatter.Context = new StreamingContext(StreamingContextStates.CrossMachine);
-
-            return binaryFormatter;
+            public override bool TryResolveType(Type type, Type declaredType, DataContractResolver knownTypeResolver, out XmlDictionaryString typeName, out XmlDictionaryString typeNamespace)
+            {
+                throw new NotImplementedException();
+            }
         }
 
         internal sealed class IlMergeBinder : SerializationBinder

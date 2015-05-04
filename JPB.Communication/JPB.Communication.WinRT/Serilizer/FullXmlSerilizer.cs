@@ -16,7 +16,7 @@ namespace JPB.Communication.WinRT.Serilizer
     {
         private DefaultMessageSerlilizer.IlMergeBinder Binder;
 
-        public FullXmlSerilizer(Type[] extraInfo)
+        public FullXmlSerilizer(params Type[] extraInfo)
         { 
             Binder = new DefaultMessageSerlilizer.IlMergeBinder();
             foreach (var item in extraInfo)
