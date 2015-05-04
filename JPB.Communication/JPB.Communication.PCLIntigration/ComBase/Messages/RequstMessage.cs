@@ -19,12 +19,20 @@
  */
 
 using System;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 
 namespace JPB.Communication.ComBase.Messages
 {
-    [DataContract]
+    [DebuggerStepThrough]
+#if PCL    
     [System.Runtime.Serializable]
+#else
+    [System.Serializable]
+#endif
+    [ClassInterfaceAttribute(ClassInterfaceType.None)]
+    [DataContract]
     public class RequstMessage : MessageBase
     {
         public RequstMessage()

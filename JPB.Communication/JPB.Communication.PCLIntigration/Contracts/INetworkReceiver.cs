@@ -83,8 +83,6 @@ namespace JPB.Communication.Contracts
         ///     Removes a delegate from the Handler list
         /// </summary>
         /// <param name="action"></param>
-        void UnRegisterRequstHandler(Func<RequstMessage, object> action);
-
-        void Dispose();
+        void UnRegisterRequstHandler(Func<RequstMessage, object> action);        
     }
 }

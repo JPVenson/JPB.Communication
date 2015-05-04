@@ -40,7 +40,7 @@ namespace JPB.Communication.ComBase.TCP
     ///     A Manged wrapper with callback functions for a Socket
     ///     It will observe and serlilze the content of incomming data from the Socket
     /// </summary>
-    public sealed class TCPNetworkReceiver : Networkbase, IDisposable, INetworkReceiver
+    public sealed class TCPNetworkReceiver : NetworkReceiverBase, IDisposable, INetworkReceiver
     {
         private readonly List<Tuple<Action<LargeMessage>, object>> _largeMessages;
         internal readonly ISocket _listenerISocket;
@@ -57,34 +57,19 @@ namespace JPB.Communication.ComBase.TCP
         private bool _isWorking;
         TcpConnectionBase _assosciatedConnection;
 
-        /// <summary>
-        ///     FOR INTERNAL USE ONLY
-        /// </summary>
-        internal Dictionary<Type, Action<object>> _typeCallbacks;
-
-        internal TCPNetworkReceiver(ushort port, ISocket sock)
+        internal TCPNetworkReceiver(ushort port, ISocket sock) : base()
         {
             _listenerISocket = sock;
             _listenerISocket.Bind(new IPEndPoint() { Address = NetworkInfoBase.IpAddress, Port = port });
             _listenerISocket.Listen(5000);
             _listenerISocket.BeginAccept(OnConnectRequest, _listenerISocket);
 
-            _largeMessages = new List<Tuple<Action<LargeMessage>, object>>();
-            _onetimeupdated = new List<Tuple<Action<MessageBase>, Guid>>();
-            _pendingrequests = new List<Tuple<Action<RequstMessage>, Guid>>();
-            _requestHandler = new List<Tuple<Func<RequstMessage, object>, object>>();
-            _updated = new List<Tuple<Action<MessageBase>, object>>();
             _workeritems = new Queue<Action>();
+            _typeCallbacks.Add(typeof(RequstMessage), WorkOn_RequestMessage);
 
             OnNewItemLoadedSuccess += TcpConnectionOnOnNewItemLoadedSuccess;
             OnNewLargeItemLoadedSuccess += TcpConnectionOnOnNewItemLoadedSuccess;
             Port = port;
-
-            _typeCallbacks = new Dictionary<Type, Action<object>>();
-            _typeCallbacks.Add(typeof(RequstMessage), WorkOn_RequestMessage);
-            _typeCallbacks.Add(typeof(MessageBase), WorkOn_MessageBase);
-            _typeCallbacks.Add(typeof(LargeMessage), WorkOn_LargeMessage);
-
         }
 
         internal TCPNetworkReceiver(ushort port, ISocketFactory factory)
@@ -98,7 +83,6 @@ namespace JPB.Communication.ComBase.TCP
         public LoginMessage AuditInfos { get; set; }
 
         public bool CheckCredentials { get; set; }
-
 
         /// <summary>
         ///     If Enabled this Receiver can handle streams and messages
@@ -126,114 +110,7 @@ namespace JPB.Communication.ComBase.TCP
         ///     Is raised when a message is inside the buffer but not fully parsed
         /// </summary>
         public new event EventHandler OnIncommingMessage;
-
-        /// <summary>
-        ///     True if we are Recieving a message
-        /// </summary>
-        public bool IncommingMessage
-        {
-            get { return _incommingMessage; }
-            private set
-            {
-                _incommingMessage = value;
-                RaiseIncommingMessage();
-            }
-        }
-
-        /// <summary>
-        ///     Removes a delegate from the Handler list
-        /// </summary>
-        /// <param name="action"></param>
-        public void UnregisterChanged(Action<MessageBase> action, object state)
-        {
-            Tuple<Action<MessageBase>, object> enumerable =
-                _updated.FirstOrDefault(s => s.Item1 == action && s.Item2 == state);
-            if (enumerable != null)
-            {
-                _updated.Remove(enumerable);
-            }
-        }
-
-        /// <summary>
-        ///     Removes a delegate from the Handler list
-        /// </summary>
-        /// <param name="action"></param>
-        public void UnregisterChanged(Action<MessageBase> action)
-        {
-            Tuple<Action<MessageBase>, object> enumerable = _updated.FirstOrDefault(s => s.Item1 == action);
-            if (enumerable != null)
-            {
-                _updated.Remove(enumerable);
-            }
-        }
-
-        /// <summary>
-        ///     Register a Callback localy that will be used when a new message is inbound that has state in its InfoState
-        /// </summary>
-        /// <param name="action">Callback</param>
-        /// <param name="state">Maybe an Enum?</param>
-        public void RegisterMessageBaseInbound(Action<MessageBase> action, object state)
-        {
-            _updated.Add(new Tuple<Action<MessageBase>, object>(action, state));
-        }
-
-        /// <summary>
-        ///     Register a Callback localy that will be used when a new Large message is inbound that has state in its InfoState
-        /// </summary>
-        /// <param name="action">Callback</param>
-        /// <param name="state">Maybe an Enum?</param>
-        public void RegisterMessageBaseInbound(Action<LargeMessage> action, object state)
-        {
-            _largeMessages.Add(new Tuple<Action<LargeMessage>, object>(action, state));
-        }
-
-        /// <summary>
-        ///     Register a Callback localy that will be used when a message contains a given Guid
-        /// </summary>
-        /// <param name="action"></param>
-        /// <param name="guid"></param>
-        public void RegisterOneTimeMessage(Action<MessageBase> action, Guid guid)
-        {
-            _onetimeupdated.Add(new Tuple<Action<MessageBase>, Guid>(action, guid));
-        }
-
-        /// <summary>
-        ///     Register a Callback localy that will be used when a Requst is inbound that has state in its InfoState
-        /// </summary>
-        /// <param name="action"></param>
-        /// <param name="state"></param>
-        public void RegisterRequstHandler(Func<RequstMessage, object> action, object state)
-        {
-            _requestHandler.Add(new Tuple<Func<RequstMessage, object>, object>(action, state));
-        }
-
-        /// <summary>
-        ///     Removes a delegate from the Handler list
-        /// </summary>
-        /// <param name="action"></param>
-        public void UnRegisterRequstHandler(Func<RequstMessage, object> action, object state)
-        {
-            Tuple<Func<RequstMessage, object>, object> enumerable =
-                _requestHandler.FirstOrDefault(s => s.Item1 == action && state == s.Item2);
-            if (enumerable != null)
-            {
-                _requestHandler.Remove(enumerable);
-            }
-        }
-
-        /// <summary>
-        ///     Removes a delegate from the Handler list
-        /// </summary>
-        /// <param name="action"></param>
-        public void UnRegisterRequstHandler(Func<RequstMessage, object> action)
-        {
-            Tuple<Func<RequstMessage, object>, object> enumerable =
-                _requestHandler.FirstOrDefault(s => s.Item1 == action);
-            if (enumerable != null)
-            {
-                _requestHandler.Remove(enumerable);
-            }
-        }
+             
 
         internal static TCPNetworkReceiver CreateReceiverInSharedState(ushort portInfo, ISocket basedOn)
         {
@@ -285,48 +162,7 @@ namespace JPB.Communication.ComBase.TCP
                 task.Start();
             }
         }
-
-        private void WorkOn_LargeMessage(object metaData)
-        {
-            var messCopy = metaData as LargeMessage;
-
-            Tuple<Action<LargeMessage>, object>[] updateCallbacks =
-                _largeMessages.Where(
-                    action =>
-                        messCopy != null && (action.Item2 == null || action.Item2.Equals(messCopy.MetaData.InfoState)))
-                    .ToArray();
-            foreach (var action in updateCallbacks)
-            {
-                action.Item1(messCopy);
-            }
-        }
-
-        private void WorkOn_MessageBase(object message)
-        {
-            var messCopy = message as MessageBase;
-
-            Tuple<Action<MessageBase>, object>[] updateCallbacks =
-                _updated.Where(
-                    action => messCopy != null && (action.Item2 == null || action.Item2.Equals(messCopy.InfoState)))
-                    .ToArray();
-
-            foreach (var action in updateCallbacks)
-            {
-                action.Item1(messCopy);
-            }
-
-            //Go through all one time items and check for ID
-            Tuple<Action<MessageBase>, Guid>[] oneTimeImtes =
-                _onetimeupdated.Where(s => messCopy != null && messCopy.Id == s.Item2).ToArray();
-
-            foreach (var action in oneTimeImtes)
-            {
-                action.Item1(messCopy);
-            }
-
-            foreach (var useditem in oneTimeImtes)
-                _onetimeupdated.Remove(useditem);
-        }
+            
 
         private async void WorkOn_RequestMessage(object messCopy)
         {
@@ -431,26 +267,7 @@ namespace JPB.Communication.ComBase.TCP
             EventHandler handler = OnIncommingMessage;
             if (handler != null)
                 handler(this, EventArgs.Empty);
-        }
-
-        internal void RegisterRequst(Action<RequstMessage> action, Guid guid)
-        {
-            _pendingrequests.Add(new Tuple<Action<RequstMessage>, Guid>(action, guid));
-        }
-
-        internal void UnRegisterRequst(Guid guid)
-        {
-            Tuple<Action<RequstMessage>, Guid> firstOrDefault = _pendingrequests.FirstOrDefault(s => s.Item2 == guid);
-            if (firstOrDefault != null)
-            {
-                _pendingrequests.Remove(firstOrDefault);
-            }
-        }
-
-        internal void UnRegisterCallback(Guid guid)
-        {
-            _onetimeupdated.Remove(_onetimeupdated.FirstOrDefault(s => s.Item2 == guid));
-        }
+        }   
 
         private void WorkOnItems()
         {

@@ -37,7 +37,11 @@ namespace JPB.Communication.ComBase.Messages
     ///     To ensure a valid Serliazion every inherited class should impliment its own ISerializable Implimentation
     /// </summary>
     [DebuggerStepThrough]
-    [Serializable]
+#if PCL    
+    [System.Runtime.Serializable]
+#else
+    [System.Serializable]
+#endif
     [ClassInterfaceAttribute(ClassInterfaceType.None)]
     [DataContract]
     public class MessageBase
@@ -103,6 +107,8 @@ namespace JPB.Communication.ComBase.Messages
         ///     Readonly
         /// </summary>
         public string Sender { get; set; }
+
+        public string Session { get; set; }
 
         /// <summary>
         ///     The ID of this message

@@ -490,6 +490,7 @@ namespace JPB.Communication.ComBase.TCP
         {
             try
             {
+                var newlyCreated = false;
                 ISocket sock;
                 if (SharedConnection)
                 {
@@ -499,19 +500,22 @@ namespace JPB.Communication.ComBase.TCP
                         if (!sock.Connected)
                         {
                             sock.Connect(ipOrHost, Port);
+                            newlyCreated = true;
                         }
                     }
                     else
                     {
                         sock = await _sockType.CreateAndConnectAsync(ipOrHost, Port);
+                        newlyCreated = true;
                     }
                 }
                 else
                 {
                     sock = await _sockType.CreateAndConnectAsync(ipOrHost, Port);
+                    newlyCreated = true;
                 }
 
-                if (UseNetworkCredentials)
+                if (newlyCreated && UseNetworkCredentials)
                 {
                     SendLoginData(sock);
                     if (!sock.Connected)

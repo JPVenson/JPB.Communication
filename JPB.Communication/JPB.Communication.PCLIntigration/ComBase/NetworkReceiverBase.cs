@@ -10,7 +10,7 @@ namespace JPB.Communication.ComBase
     /// <summary>
     /// 
     /// </summary>
-    public abstract class NetworkReceiverBase : Networkbase, IDisposable, INetworkReceiver
+    public abstract class NetworkReceiverBase : Networkbase, INetworkReceiver
     {
         protected NetworkReceiverBase()
         {
@@ -35,6 +35,8 @@ namespace JPB.Communication.ComBase
             }
         }
 
+
+
         private void WorkOn_MessageBase(object message)
         {
             var messCopy = message as MessageBase;
@@ -57,7 +59,7 @@ namespace JPB.Communication.ComBase
                 _onetimeupdated.Remove(useditem);
         }
 
-        public bool IncommingMessage { get; private set; }
+        public bool IncommingMessage { get; protected set; }
 
         /// <summary>
         /// Removes a delegate from the Handler list
@@ -150,11 +152,7 @@ namespace JPB.Communication.ComBase
                 _requestHandler.Remove(enumerable);
             }
         }
-
-        void INetworkReceiver.Dispose()
-        {
-            throw new NotImplementedException();
-        }
+        
 
         internal void RegisterRequst(Action<RequstMessage> action, Guid guid)
         {
@@ -182,11 +180,5 @@ namespace JPB.Communication.ComBase
         protected readonly List<Tuple<Action<RequstMessage>, Guid>> _pendingrequests;
         protected readonly List<Tuple<Func<RequstMessage, object>, object>> _requestHandler;
         private readonly List<Tuple<Action<MessageBase>, object>> _updated;
-
-
-        public void Dispose()
-        {
-            
-        }
     }
 }

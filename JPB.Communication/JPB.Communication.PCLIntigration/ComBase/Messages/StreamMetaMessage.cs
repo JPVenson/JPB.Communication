@@ -17,12 +17,22 @@
 
  https://github.com/JPVenson/JPB.Communication/blob/master/LICENSE
  */
- 
+
 using System;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
 
 namespace JPB.Communication.ComBase.Messages
 {
+    [DebuggerStepThrough]
+#if PCL    
     [System.Runtime.Serializable]
+#else
+    [System.Serializable]
+#endif
+    [ClassInterfaceAttribute(ClassInterfaceType.None)]
+    [DataContract]
     public class StreamMetaMessage : MessageBase
     {
         public StreamMetaMessage()

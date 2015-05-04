@@ -153,7 +153,10 @@ namespace JPB.Communication.ComBase.TCP
                 if (!parsedCorretly)
                 {
                     if (IsSharedConnection)
+                    {
                         _datarec.Clear();
+                        _datarec.Last = new byte[_receiveBufferSize];
+                    }
                     //Maybe not full message
                     return HandeldMode.MaybeMoreData;
                 }
