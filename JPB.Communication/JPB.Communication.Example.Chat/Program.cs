@@ -50,6 +50,7 @@ namespace JPB.Communication.Example.Chat
         }
 
         [DataContract]
+        [Serializable]
         public class ChatMessage
         {
             [DataMember]
@@ -63,7 +64,7 @@ namespace JPB.Communication.Example.Chat
 
         public Program()
         {
-            Networkbase.DefaultMessageSerializer = new FullXmlSerilizer(new[] { typeof(MessageBase), typeof(ChatMessage) });
+            Networkbase.DefaultMessageSerializer = new FullXmlSerilizer(typeof(MessageBase), typeof(ChatMessage));
             NetworkFactory.Create(new WinRTFactory());
 
             //Maybe multible network Adapters ... on what do we want to Recieve?
@@ -85,7 +86,12 @@ namespace JPB.Communication.Example.Chat
                 //This mehtod will create or return an instance for the spezific port
                 .GetReceiver(port);
 
+            tcpNetworkReceiver.SharedConnection = true;
+
+            //Lets submit and Await the Credentials buffer at the very first of our messages
             tcpNetworkReceiver.CheckCredentials = true;
+
+            //attach some more or less self explaining event handler to the Authentificator to handle logins
             NetworkAuthentificator.Instance.OnLoginInbound += (s, e) =>
             {
                 WriteLoginMessage(string.Format("Login Inbound '{0}'", e.Username));
@@ -121,7 +127,7 @@ namespace JPB.Communication.Example.Chat
                 Username = Environment.UserDomainName + "@" + Environment.UserName,
                 Password = "Nothing"
             };
-
+            //add our login cred buffer that will be send when we send our first message or everytime if we are not using a shared connection
             tcpNetworkSender.ChangeNetworkCredentials(true, login);
             WriteSystemMessage("Set Cred:");
             WriteSystemMessage(login.ToString());
@@ -164,6 +170,12 @@ namespace JPB.Communication.Example.Chat
             var helloWorldMessage = new ChatMessage();
             helloWorldMessage.Message = string.Format("Hello world from {0}", Environment.UserName);
             helloWorldMessage.Color = ConsoleColor.Blue;
+
+            //Setup our shared connection that will keep the connection open as long as we need it
+            //this will also allow us to bypass our local NAT
+            //The return value is not interesing for us at this moment
+            var toIgnore = tcpNetworkSender.InitSharedConnection(server);
+            tcpNetworkSender.SharedConnection = true;
             tcpNetworkSender.SendMessage(new MessageBase(helloWorldMessage, ChatMessageContract), server);
 
             //now, send as long as the user want to
@@ -176,7 +188,7 @@ namespace JPB.Communication.Example.Chat
                 var chatMess = new ChatMessage();
                 chatMess.Message = input.Text;
                 chatMess.Color = input.Color;
-                
+
                 //create a new MessageBase object or one object that inherts from it
                 var message = new MessageBase()
                 {
@@ -218,7 +230,7 @@ namespace JPB.Communication.Example.Chat
             {
                 inputwrapper.Color = ConsoleColor.White;
                 inputwrapper.Text = firstInput;
-            } 
+            }
             return inputwrapper;
         }
 
