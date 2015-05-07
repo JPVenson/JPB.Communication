@@ -59,26 +59,23 @@ namespace JPB.Communication.Example.Chat
             public ConsoleColor Color { get; set; }
         }
 
-        TCPNetworkReceiver tcpNetworkReceiver;
+        GenericNetworkReceiver tcpNetworkReceiver;
         private const char ColorSeperator = ':';
 
         public Program()
         {
             Networkbase.DefaultMessageSerializer = new FullXmlSerilizer(typeof(MessageBase), typeof(ChatMessage));
-            NetworkFactory.Create(new WinRTFactory());
+            NetworkFactory.Create(new WinRTLocalFactory());
 
             //Maybe multible network Adapters ... on what do we want to Recieve?
             NetworkInfoBase.ResolveOwnIp += NetworkInfoBaseOnResolveOwnIp;
             NetworkInfoBase.ResolveDistantIp += NetworkInfoBaseOnResolveDistantIp;
 
-            Console.Title = string.Format("This: {0}", NetworkInfoBase.IpAddress.ToString());
-            Console.Clear();
+
             //Create an Instance that observe a Port
             ushort port = 1337; //LEED
 
-
             tcpNetworkReceiver
-
                 //The complete access to Sender and Recieiver are done bei the Network Factory
                 = NetworkFactory
                 //Its a Singelton so we only got one instance
@@ -86,7 +83,9 @@ namespace JPB.Communication.Example.Chat
                 //This mehtod will create or return an instance for the spezific port
                 .GetReceiver(port);
 
-            tcpNetworkReceiver.SharedConnection = true;
+            //Check for the platform relevant shared connection that allows us to bypass NAT restrictions
+            if (NetworkFactory.PlatformFactory.SocketFactory.SupportsSharedState == Contracts.Factorys.SharedStateSupport.Full)
+                tcpNetworkReceiver.SharedConnection = true;
 
             //Lets submit and Await the Credentials buffer at the very first of our messages
             tcpNetworkReceiver.CheckCredentials = true;
@@ -135,7 +134,10 @@ namespace JPB.Communication.Example.Chat
             //If you want to alter control the Process of Serilation set this interface but remember that both Sender and Receiver must use the same otherwise they will not able to work
             //In this case we are using one of the Predefined Serializers
             //tcpNetworkReceiver.Serlilizer = new JPB.Communication.ComBase.Serializer.NetContractSerializer();
-            //tcpNetworkSender.Serlilizer = tcpNetworkReceiver.Serlilizer;           
+            //tcpNetworkSender.Serlilizer = tcpNetworkReceiver.Serlilizer;     
+
+            Console.Title = string.Format("This: {0}", NetworkInfoBase.IpAddress.ToString());
+            Console.Clear();
 
             WriteSystemMessage("Server IP or Hostname:");
             bool serverOnline = false;
@@ -174,8 +176,12 @@ namespace JPB.Communication.Example.Chat
             //Setup our shared connection that will keep the connection open as long as we need it
             //this will also allow us to bypass our local NAT
             //The return value is not interesing for us at this moment
-            var toIgnore = tcpNetworkSender.InitSharedConnection(server);
-            tcpNetworkSender.SharedConnection = true;
+
+            if (NetworkFactory.PlatformFactory.SocketFactory.SupportsSharedState == Contracts.Factorys.SharedStateSupport.Full)
+            {
+                tcpNetworkSender.InitSharedConnection(server);
+                tcpNetworkSender.SharedConnection = true;
+            }
             tcpNetworkSender.SendMessage(new MessageBase(helloWorldMessage, ChatMessageContract), server);
 
             //now, send as long as the user want to

@@ -102,12 +102,12 @@ namespace JPB.Communication.NativeWin.ViewModel
             TcpNetworkActionLog.Add(new TcpNetworkAction(TcpNetworkActionType.ConnectionOpen, new { Sender = sender, Source = connectionWrapper }));
         }
 
-        private void InstanceOnOnSenderCreate(object sender, TCPNetworkSender tcpNetworkSender)
+        private void InstanceOnOnSenderCreate(object sender, GenericNetworkSender tcpNetworkSender)
         {
             TcpNetworkActionLog.Add(new TcpNetworkAction(TcpNetworkActionType.InitSender, new { Sender = sender, Source = tcpNetworkSender }));
         }
 
-        void Instance_OnReceiverCreate(object sender, TCPNetworkReceiver tcpNetworkReceiver)
+        void Instance_OnReceiverCreate(object sender, GenericNetworkReceiver tcpNetworkReceiver)
         {
             TcpNetworkActionLog.Add(new TcpNetworkAction(TcpNetworkActionType.InitReceiver, new { Sender = sender, Source = tcpNetworkReceiver }));
         }

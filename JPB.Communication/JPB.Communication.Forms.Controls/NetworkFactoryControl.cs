@@ -35,12 +35,12 @@ namespace JPB.Communication.Forms.Controls
             }
         }
 
-        void Instance_OnSenderCreate(object sender, TCPNetworkSender e)
+        void Instance_OnSenderCreate(object sender, GenericNetworkSender e)
         {
             Sender.Rows.Add(e);
         }
 
-        void Instance_OnReceiverCreate(object sender, TCPNetworkReceiver e)
+        void Instance_OnReceiverCreate(object sender, GenericNetworkReceiver e)
         {
             Receiver.Rows.Add(e);
         }

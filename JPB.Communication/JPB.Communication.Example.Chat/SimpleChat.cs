@@ -37,7 +37,7 @@ namespace JPB.Communication.Example.Chat
         public static void Main2()
         {
             Networkbase.DefaultMessageSerializer = new NetContractSerializer();
-            NetworkFactory.Create(new WinRTFactory());
+            //NetworkFactory.Create(new WinRTFactory());
 
             //Define a Contract that is not used by others
             var messageContract = "CC1AAD01-501C-46F6-A885-1C93946C79F8";

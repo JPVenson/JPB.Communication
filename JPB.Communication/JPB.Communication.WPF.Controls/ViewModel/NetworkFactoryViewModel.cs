@@ -28,12 +28,12 @@ namespace JPB.Communication.NativeWin.ViewModel
             }
         }
 
-        void Instance_OnSenderCreate(object sender, TCPNetworkSender e)
+        void Instance_OnSenderCreate(object sender, GenericNetworkSender e)
         {
             Sender.Add(e);
         }
 
-        void Instance_OnReceiverCreate(object sender, TCPNetworkReceiver e)
+        void Instance_OnReceiverCreate(object sender, GenericNetworkReceiver e)
         {
             Receiver.Add(e);
         }

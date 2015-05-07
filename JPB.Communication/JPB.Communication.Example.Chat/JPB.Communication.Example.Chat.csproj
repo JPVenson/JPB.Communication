@@ -51,9 +51,9 @@
     <None Include="JPB.Communication.Example.Chat.licenseheader" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\JPB.Communication.WinRT\JPB.Communication.WinRT.csproj">
-      <Project>{817b84cd-d302-45b9-91c4-31bf9ebd1c11}</Project>
-      <Name>JPB.Communication.WinRT</Name>
+    <ProjectReference Include="..\JPB.Communication.WinRT.Local\JPB.Communication.WinRT.Local.csproj">
+      <Project>{1f92f78d-d75c-429b-9711-27877f88ae32}</Project>
+      <Name>JPB.Communication.WinRT.Local</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

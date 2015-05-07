@@ -51,7 +51,7 @@ namespace JPB.Communication.Forms.Controls
             }));
         }
 
-        private void InstanceOnOnSenderCreate(object sender, TCPNetworkSender tcpNetworkSender)
+        private void InstanceOnOnSenderCreate(object sender, GenericNetworkSender tcpNetworkSender)
         {
             this.BeginInvoke(new Action(() =>
             {
@@ -59,7 +59,7 @@ namespace JPB.Communication.Forms.Controls
             }));
         }
 
-        void Instance_OnReceiverCreate(object sender, TCPNetworkReceiver tcpNetworkReceiver)
+        void Instance_OnReceiverCreate(object sender, GenericNetworkReceiver tcpNetworkReceiver)
         {
             this.BeginInvoke(new Action(() =>
             {
