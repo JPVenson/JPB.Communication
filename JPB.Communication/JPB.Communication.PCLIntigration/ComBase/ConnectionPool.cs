@@ -129,7 +129,7 @@ namespace JPB.Communication.ComBase
             return fod.Socket;
         }
 
-        internal async Task<TCPNetworkReceiver> ConnectToHost(string hostOrIp, ushort port)
+        internal async Task<GenericNetworkReceiver> ConnectToHost(string hostOrIp, ushort port)
         {
             CheckSockStates();
             string ip = NetworkInfoBase.ResolveIp(hostOrIp).ToString();
@@ -156,13 +156,13 @@ namespace JPB.Communication.ComBase
             return tcpNetworkReceiver;
         }
 
-        internal TCPNetworkReceiver InjectISocket(ISocket sock, TCPNetworkSender sender)
+        internal GenericNetworkReceiver InjectISocket(ISocket sock, GenericNetworkSender sender)
         {
             IPEndPoint localIp = sock.LocalEndPoint;
             IPEndPoint remoteIp = sock.RemoteEndPoint;
             var port1 = (ushort)localIp.Port;
             sender.SharedConnection = true;
-            var receiver = TCPNetworkReceiver.CreateReceiverInSharedState(port1, sock);
+            var receiver = GenericNetworkReceiver.CreateReceiverInSharedState(port1, sock);
             AddConnection(new ConnectionWrapper(remoteIp.Address.ToString(), sock, receiver, sender));
             return receiver;
         }
@@ -193,10 +193,10 @@ namespace JPB.Communication.ComBase
             return fod.Socket;
         }
 
-        internal void AddConnection(ISocket endAccept, TCPNetworkReceiver tcpNetworkReceiver)
+        internal void AddConnection(ISocket endAccept, GenericNetworkReceiver tcpNetworkReceiver)
         {
             var ipEndPoint = endAccept.RemoteEndPoint as IPEndPoint;
-            TCPNetworkSender senderForRemotePort = NetworkFactory.Instance.GetSender((ushort)ipEndPoint.Port);
+            GenericNetworkSender senderForRemotePort = NetworkFactory.Instance.GetSender((ushort)ipEndPoint.Port);
             senderForRemotePort.SharedConnection = true;
 
             AddConnection(

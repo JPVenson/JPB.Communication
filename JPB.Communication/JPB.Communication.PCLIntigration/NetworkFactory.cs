@@ -38,17 +38,17 @@ namespace JPB.Communication
 
         }
 
-        internal readonly Object _mutex;
-        private TCPNetworkReceiver _commonReciever;
-        private TCPNetworkSender _commonSender;
-        internal Dictionary<ushort, TCPNetworkReceiver> _receivers;
-        internal Dictionary<ushort, TCPNetworkSender> _senders;
+        internal readonly object _mutex;
+        private GenericNetworkReceiver _commonReciever;
+        private GenericNetworkSender _commonSender;
+        internal Dictionary<ushort, GenericNetworkReceiver> _receivers;
+        internal Dictionary<ushort, GenericNetworkSender> _senders;
 
         private NetworkFactory()
         {
-            _receivers = new Dictionary<ushort, TCPNetworkReceiver>();
-            _senders = new Dictionary<ushort, TCPNetworkSender>();
-            _mutex = new object();
+            _receivers = new Dictionary<ushort, GenericNetworkReceiver>();
+            _senders = new Dictionary<ushort, GenericNetworkSender>();
+            _mutex = typeof(NetworkFactory);
         }
 
         public bool ShouldRaiseEvents { get; set; }
@@ -63,6 +63,7 @@ namespace JPB.Communication
         /// <exception cref="InvalidOperationException"></exception>
         public static NetworkFactory Create(IPlatformFactory factory)
         {
+            Created = true;
             if (_instance != null)
                 throw new InvalidOperationException("You cannot call Create multible times, it should be used to set the program wide socket type");
             PlatformFactory = factory;
@@ -84,7 +85,7 @@ namespace JPB.Communication
         /// <summary>
         ///     The Easy-To-Access Receiver that is created or pulled by InitCommonSenderAndReciver
         /// </summary>
-        public TCPNetworkReceiver Reciever
+        public GenericNetworkReceiver Reciever
         {
             get
             {
@@ -98,7 +99,7 @@ namespace JPB.Communication
         /// <summary>
         ///     The Easy-To-Access Sender that is created or pulled by InitCommonSenderAndReciver
         /// </summary>
-        public TCPNetworkSender Sender
+        public GenericNetworkSender Sender
         {
             get
             {
@@ -117,10 +118,12 @@ namespace JPB.Communication
             get { return _mutex; }
         }
 
-        public event EventHandler<TCPNetworkSender> OnSenderCreate;
-        public event EventHandler<TCPNetworkReceiver> OnReceiverCreate;
+        public static bool Created { get; private set; }
 
-        internal virtual void RaiseSenderCreate(TCPNetworkSender item)
+        public event EventHandler<GenericNetworkSender> OnSenderCreate;
+        public event EventHandler<GenericNetworkReceiver> OnReceiverCreate;
+
+        internal virtual void RaiseSenderCreate(GenericNetworkSender item)
         {
             if (!ShouldRaiseEvents)
                 return;
@@ -129,7 +132,7 @@ namespace JPB.Communication
                 OnSenderCreate(this, item);
         }
 
-        internal virtual void RaiseReceiverCreate(TCPNetworkReceiver item)
+        internal virtual void RaiseReceiverCreate(GenericNetworkReceiver item)
         {
             if (!ShouldRaiseEvents)
                 return;
@@ -142,7 +145,7 @@ namespace JPB.Communication
         ///     Returns a flat copy of all known tcp Receivers
         /// </summary>
         /// <returns></returns>
-        public Dictionary<ushort, TCPNetworkReceiver> GetReceivers()
+        public Dictionary<ushort, GenericNetworkReceiver> GetReceivers()
         {
             return _receivers.Select(s => s).ToDictionary(s => s.Key, s => s.Value);
         }
@@ -151,7 +154,7 @@ namespace JPB.Communication
         ///     Returns a flat copy of all known tcp senders
         /// </summary>
         /// <returns></returns>
-        public Dictionary<ushort, TCPNetworkSender> GetSenders()
+        public Dictionary<ushort, GenericNetworkSender> GetSenders()
         {
             return _senders.Select(s => s).ToDictionary(s => s.Key, s => s.Value);
         }
@@ -180,11 +183,11 @@ namespace JPB.Communication
         /// </summary>
         /// <param name="port"></param>
         /// <returns></returns>
-        public TCPNetworkSender GetSender(ushort port)
+        public GenericNetworkSender GetSender(ushort port)
         {
             lock (_mutex)
             {
-                KeyValuePair<ushort, TCPNetworkSender> element = _senders.FirstOrDefault(s => s.Key == port);
+                KeyValuePair<ushort, GenericNetworkSender> element = _senders.FirstOrDefault(s => s.Key == port);
 
                 if (!element.Equals(null) && element.Value != null)
                 {
@@ -195,9 +198,9 @@ namespace JPB.Communication
             }
         }
 
-        internal TCPNetworkSender CreateSender(ushort port)
+        internal GenericNetworkSender CreateSender(ushort port)
         {
-            var sender = new TCPNetworkSender(port, PlatformFactory.SocketFactory);
+            var sender = new GenericNetworkSender(port, PlatformFactory.SocketFactory);
             _senders.Add(port, sender);
             RaiseSenderCreate(sender);
             return sender;
@@ -209,11 +212,11 @@ namespace JPB.Communication
         /// </summary>
         /// <param name="port"></param>
         /// <returns></returns>
-        public TCPNetworkReceiver GetReceiver(ushort port)
+        public GenericNetworkReceiver GetReceiver(ushort port)
         {
             lock (_mutex)
             {
-                KeyValuePair<ushort, TCPNetworkReceiver> element = _receivers.FirstOrDefault(s => s.Key == port);
+                KeyValuePair<ushort, GenericNetworkReceiver> element = _receivers.FirstOrDefault(s => s.Key == port);
 
                 if (!element.Equals(null) && element.Value != null)
                 {
@@ -224,9 +227,9 @@ namespace JPB.Communication
             }
         }
 
-        internal TCPNetworkReceiver CreateReceiver(ushort port)
+        internal GenericNetworkReceiver CreateReceiver(ushort port)
         {
-            var receiver = new TCPNetworkReceiver(port, PlatformFactory.SocketFactory);
+            var receiver = new GenericNetworkReceiver(port, PlatformFactory.SocketFactory);
             _receivers.Add(port, receiver);
             RaiseReceiverCreate(receiver);
             return receiver;
@@ -234,7 +237,7 @@ namespace JPB.Communication
 
         public bool ContainsReceiver(ushort port)
         {
-            KeyValuePair<ushort, TCPNetworkReceiver> element = _receivers.FirstOrDefault(s => s.Key == port);
+            KeyValuePair<ushort, GenericNetworkReceiver> element = _receivers.FirstOrDefault(s => s.Key == port);
 
             if (!element.Equals(null) && element.Value != null)
             {

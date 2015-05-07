@@ -29,6 +29,7 @@ using JPB.Communication.PCLIntigration.Contracts.Security;
 using JPB.Communication.PCLIntigration.ComBase.Messages;
 using JPB.Communication.PCLIntigration.ComBase;
 using System.Text;
+using JPB.Communication.Contracts.Intigration;
 
 namespace JPB.Communication.ComBase
 {
@@ -58,7 +59,7 @@ namespace JPB.Communication.ComBase
         ///     The default Serializer
         /// </summary>
         public static IMessageSerializer DefaultMessageSerializer;
-        
+
         private IMessageSerializer _serlilizer;
 
         static Networkbase()
@@ -80,6 +81,28 @@ namespace JPB.Communication.ComBase
         /// </summary>
         public abstract ushort Port { get; internal set; }
 
+        public static bool CheckSocketSharedState(ISocket sock)
+        {
+            switch (sock.SupportsSharedState)
+            {
+                case Contracts.Factorys.SharedStateSupport.Full:
+                    return true;
+                case Contracts.Factorys.SharedStateSupport.PartialCheck:
+                    return sock.CheckSharedStateSupport();
+                case Contracts.Factorys.SharedStateSupport.Non:
+                    return false;
+                default:
+                    return false;
+            }
+        }
+
+        public static void CheckSocketSharedStateThrow(ISocket sock)
+        {
+            var check = CheckSocketSharedState(sock);
+            if (!check)
+                throw new UnsuportedNetworkFeatureException(string.Format("The socket of type {0} does not support the feature of SharedSockets", sock.GetType()));
+        }
+
         public ISecureMessageProvider Security { get; set; }
 
         /// <summary>
@@ -89,9 +112,9 @@ namespace JPB.Communication.ComBase
         {
             get
             {
-                if(_serlilizer == null)
+                if (_serlilizer == null)
                     throw new Exception("Please define an Default Serializer");
-                return _serlilizer; 
+                return _serlilizer;
             }
             set
             {
@@ -190,7 +213,7 @@ namespace JPB.Communication.ComBase
                 PclTrace.WriteLine(string.Format("> Networkbase> RaiseNewItemLoadedSuccess>{0}", e), TraceCategoryCriticalSerilization);
             }
         }
-        
+
 
         public MessageBase DeSerialize(byte[] source)
         {
@@ -214,7 +237,7 @@ namespace JPB.Communication.ComBase
         {
             try
             {
-                var sor =  Serlilizer.SerializeMessage(networkMessage);
+                var sor = Serlilizer.SerializeMessage(networkMessage);
                 if (Security != null)
                 {
                     sor = Security.Encrypt(sor);
@@ -299,6 +322,6 @@ namespace JPB.Communication.ComBase
                 credData = Security.Encrypt(credData);
 
             return credData;
-        }     
+        }
     }
 }

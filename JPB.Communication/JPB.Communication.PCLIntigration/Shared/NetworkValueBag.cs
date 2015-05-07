@@ -44,8 +44,8 @@ namespace JPB.Communication.Shared
         INotifyCollectionChanged,
         IDisposable
     {
-        protected readonly TCPNetworkReceiver TCPNetworkReceiver;
-        protected readonly TCPNetworkSender TcpNetworkSernder;
+        protected readonly GenericNetworkReceiver TCPNetworkReceiver;
+        protected readonly GenericNetworkSender TcpNetworkSernder;
 
         private volatile ICollection<T> _localValues;
 

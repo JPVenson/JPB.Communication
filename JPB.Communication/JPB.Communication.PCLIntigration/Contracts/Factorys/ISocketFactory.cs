@@ -12,5 +12,6 @@ namespace JPB.Communication.Contracts.Factorys
 
         ISocket Create();
         Task<ISocket> CreateAsync();
+        SharedStateSupport SupportsSharedState { get; }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using JPB.Communication.Contracts.Factorys;
+using System;
 using System.Threading.Tasks;
 
 namespace JPB.Communication.Contracts.Intigration
@@ -31,5 +32,9 @@ namespace JPB.Communication.Contracts.Intigration
         void Listen(int i);
         void BeginAccept(Action<IAsyncResult> onConnectRequest, ISocket listenerISocket);
         ISocket EndAccept(IAsyncResult result);
+
+        SharedStateSupport SupportsSharedState { get; }
+
+        bool CheckSharedStateSupport();
     }
 }

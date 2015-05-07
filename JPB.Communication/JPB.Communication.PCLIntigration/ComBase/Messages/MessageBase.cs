@@ -39,11 +39,11 @@ namespace JPB.Communication.ComBase.Messages
     [DebuggerStepThrough]
 #if PCL    
     [System.Runtime.Serializable]
+    [DataContract]
 #else
     [System.Serializable]
 #endif
     [ClassInterfaceAttribute(ClassInterfaceType.None)]
-    [DataContract]
     public class MessageBase
     {
         private object _infoState;

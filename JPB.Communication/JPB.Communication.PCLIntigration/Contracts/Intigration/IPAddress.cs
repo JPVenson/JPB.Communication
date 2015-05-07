@@ -4,11 +4,18 @@ namespace JPB.Communication.Contracts.Intigration
 {
     public class IPAddress
     {
+        private IPAddress()
+        {
+        }
+
         public long Address { get; private set; }
+
+        public bool IsFake { get; set; }
 
         public string AddressContent
         {
             get { return ToString(); }
+            private set { m_ToString = value; }
         }
 
         private string m_ToString;
@@ -22,6 +29,14 @@ namespace JPB.Communication.Contracts.Intigration
         public static IPAddress Parse(string ipString)
         {
             return InternalParse(ipString, false);
+        }
+
+        public static IPAddress ParseToFake(string ipString)
+        {
+            var ipAddress = new IPAddress();
+            ipAddress.AddressContent = ipString;
+            ipAddress.IsFake = true;
+            return ipAddress;
         }
 
         //
@@ -45,7 +60,7 @@ namespace JPB.Communication.Contracts.Intigration
             }
             Address = newAddress;
         }
-
+        
         private static IPAddress InternalParse(string ipString, bool tryParse)
         {
             if (ipString == null)

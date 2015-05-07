@@ -8,8 +8,8 @@
     <ProjectGuid>{D7F935DF-52A5-4372-90A0-FED78D1D4BD7}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>JPB.Communication.PCLIntigration</RootNamespace>
-    <AssemblyName>JPB.Communication.PCLIntigration</AssemblyName>
+    <RootNamespace>JPB.Communication</RootNamespace>
+    <AssemblyName>JPB.Communication</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -43,13 +43,13 @@
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>JPBCommunicationSig.pfx</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>
+    </AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .NET Framework is automatically included -->
     <None Include="app.config" />
     <None Include="JPB.Communication.licenseheader" />
-    <None Include="JPBCommunicationSig.pfx" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ComBase\Security\NetworkAuthentificator.cs" />
@@ -61,6 +61,7 @@
     <Compile Include="Contracts\Dns.cs" />
     <Compile Include="Contracts\Factorys\IDNSFactory.cs" />
     <Compile Include="Contracts\Factorys\IIPaddressFactory.cs" />
+    <Compile Include="Contracts\Factorys\SharedStateSupport.cs" />
     <Compile Include="Contracts\IMessageSerializer.cs" />
     <Compile Include="Contracts\Intigration\IPAddress.cs" />
     <Compile Include="ComBase\Messages\MessageBase.cs" />
@@ -71,12 +72,12 @@
     <Compile Include="ComBase\NetworkInfoBase.cs" />
     <Compile Include="ComBase\NetworkReceiverBase.cs" />
     <Compile Include="ComBase\StreamBuffer.cs" />
-    <Compile Include="ComBase\TCP\ConnectionWrapper.cs" />
-    <Compile Include="ComBase\TCP\DefaultTcpConnection.cs" />
-    <Compile Include="ComBase\TCP\LargeTcpConnection.cs" />
-    <Compile Include="ComBase\TCP\TcpConnectionBase.cs" />
-    <Compile Include="ComBase\TCP\TCPNetworkReceiver.cs" />
-    <Compile Include="ComBase\TCP\TCPNetworkSender.cs" />
+    <Compile Include="ComBase\Generic\ConnectionWrapper.cs" />
+    <Compile Include="ComBase\Generic\GenericConnectionHandler.cs" />
+    <Compile Include="ComBase\Generic\LargeMessageHandler.cs" />
+    <Compile Include="ComBase\Generic\TcpConnectionBase.cs" />
+    <Compile Include="ComBase\Generic\GenericNetworkReceiver.cs" />
+    <Compile Include="ComBase\Generic\GenericNetworkSender.cs" />
     <Compile Include="Contracts\INetworkReceiver.cs" />
     <Compile Include="Contracts\Intigration\IPEndPoint.cs" />
     <Compile Include="Contracts\Intigration\IPHostEntry.cs" />
@@ -90,6 +91,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Shared\CrossPlatform\PclTimer.cs" />
     <Compile Include="Shared\CrossPlatform\PclTrace.cs" />
+    <Compile Include="Shared\CrossPlatform\UnsuportedNetworkFeatureException.cs" />
     <Compile Include="Shared\MessageDeliveryQueue.cs" />
     <Compile Include="Shared\NetworkCollectionMessage.cs" />
     <Compile Include="Shared\NetworkCollectionProtocol.cs" />

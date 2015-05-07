@@ -38,7 +38,7 @@ namespace JPB.Communication.Shared
         IEnumerable
     {
         private readonly SeriellTaskFactory _internal;
-        private readonly TCPNetworkSender _sender;
+        private readonly GenericNetworkSender _sender;
 
         public MessageDeliveryQueue(ushort port)
         {
