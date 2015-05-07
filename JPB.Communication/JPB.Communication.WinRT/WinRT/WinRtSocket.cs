@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using JPB.Communication.Contracts.Factorys;
 using JPB.Communication.Contracts.Intigration;
 
 namespace JPB.Communication.NativeWin.WinRT
@@ -68,6 +69,14 @@ namespace JPB.Communication.NativeWin.WinRT
         {
             get { return _sock.ReceiveTimeout; }
             set { _sock.ReceiveTimeout = value; }
+        }
+
+        public SharedStateSupport SupportsSharedState
+        {
+            get
+            {
+                return SharedStateSupport.Full;
+            }
         }
 
         public async void Connect(string ipOrHost, ushort port)
@@ -174,6 +183,11 @@ namespace JPB.Communication.NativeWin.WinRT
             {
                 return null;
             }
+        }
+
+        public bool CheckSharedStateSupport()
+        {
+            return true;
         }
     }
 }

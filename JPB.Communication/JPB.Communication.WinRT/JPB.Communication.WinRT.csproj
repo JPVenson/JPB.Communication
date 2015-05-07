@@ -83,20 +83,20 @@
     <Compile Include="..\JPB.Communication.PCLIntigration\ComBase\TCP\ConnectionWrapper.cs">
       <Link>PCLNative\ComBase\TCP\ConnectionWrapper.cs</Link>
     </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\ComBase\TCP\DefaultTcpConnection.cs">
-      <Link>PCLNative\ComBase\TCP\DefaultTcpConnection.cs</Link>
+    <Compile Include="..\JPB.Communication.PCLIntigration\ComBase\TCP\GenericConnectionHandler.cs">
+      <Link>PCLNative\ComBase\TCP\GenericConnectionHandler.cs</Link>
     </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\ComBase\TCP\LargeTcpConnection.cs">
-      <Link>PCLNative\ComBase\TCP\LargeTcpConnection.cs</Link>
+    <Compile Include="..\JPB.Communication.PCLIntigration\ComBase\TCP\GenericNetworkReceiver.cs">
+      <Link>PCLNative\ComBase\TCP\GenericNetworkReceiver.cs</Link>
+    </Compile>
+    <Compile Include="..\JPB.Communication.PCLIntigration\ComBase\TCP\GenericNetworkSender.cs">
+      <Link>PCLNative\ComBase\TCP\GenericNetworkSender.cs</Link>
+    </Compile>
+    <Compile Include="..\JPB.Communication.PCLIntigration\ComBase\TCP\LargeMessageHandler.cs">
+      <Link>PCLNative\ComBase\TCP\LargeMessageHandler.cs</Link>
     </Compile>
     <Compile Include="..\JPB.Communication.PCLIntigration\ComBase\TCP\TcpConnectionBase.cs">
       <Link>PCLNative\ComBase\TCP\TcpConnectionBase.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\ComBase\TCP\TCPNetworkReceiver.cs">
-      <Link>PCLNative\ComBase\TCP\TCPNetworkReceiver.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\ComBase\TCP\TCPNetworkSender.cs">
-      <Link>PCLNative\ComBase\TCP\TCPNetworkSender.cs</Link>
     </Compile>
     <Compile Include="..\JPB.Communication.PCLIntigration\Contracts\Dns.cs">
       <Link>PCLNative\Contracts\Dns.cs</Link>
@@ -112,6 +112,9 @@
     </Compile>
     <Compile Include="..\JPB.Communication.PCLIntigration\Contracts\Factorys\ISocketFactory.cs">
       <Link>PCLNative\Contracts\Factorys\ISocketFactory.cs</Link>
+    </Compile>
+    <Compile Include="..\JPB.Communication.PCLIntigration\Contracts\Factorys\SharedStateSupport.cs">
+      <Link>PCLNative\Contracts\Factorys\SharedStateSupport.cs</Link>
     </Compile>
     <Compile Include="..\JPB.Communication.PCLIntigration\Contracts\IMessageSerializer.cs">
       <Link>PCLNative\Contracts\IMessageSerializer.cs</Link>
@@ -149,6 +152,9 @@
     <Compile Include="..\JPB.Communication.PCLIntigration\Shared\CrossPlatform\PclTrace.cs">
       <Link>PCLNative\Shared\CrossPlatform\PclTrace.cs</Link>
     </Compile>
+    <Compile Include="..\JPB.Communication.PCLIntigration\Shared\CrossPlatform\UnsuportedNetworkFeatureException.cs">
+      <Link>PCLNative\Shared\CrossPlatform\UnsuportedNetworkFeatureException.cs</Link>
+    </Compile>
     <Compile Include="..\JPB.Communication.PCLIntigration\Shared\MessageDeliveryQueue.cs">
       <Link>PCLNative\Shared\MessageDeliveryQueue.cs</Link>
     </Compile>
@@ -176,7 +182,6 @@
     <Compile Include="Serilizer\NetContractSerializer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WinRT\DnsFactory.cs" />
-    <Compile Include="WinRT\IPAddressFactory.cs" />
     <Compile Include="WinRT\WinRTExtentions.cs" />
     <Compile Include="WinRT\WinRTSocket.cs" />
     <Compile Include="WinRT\WinRTFactory.cs" />

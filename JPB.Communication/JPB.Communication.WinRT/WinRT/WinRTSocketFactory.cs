@@ -32,5 +32,13 @@ namespace JPB.Communication.NativeWin.WinRT
         {
             return await WinRtSocket.Create();
         }
+
+        public SharedStateSupport SupportsSharedState
+        {
+            get
+            {
+                return SharedStateSupport.Full;
+            }
+        }
     }
 }
