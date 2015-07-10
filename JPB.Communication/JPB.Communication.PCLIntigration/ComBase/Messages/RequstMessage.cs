@@ -34,7 +34,7 @@ namespace JPB.Communication.ComBase.Messages
 #endif
     [ClassInterfaceAttribute(ClassInterfaceType.None)]
 
-    public class RequstMessage : MessageBase
+    public class RequstMessage : NetworkMessage
     {
         public RequstMessage()
         {

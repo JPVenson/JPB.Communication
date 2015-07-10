@@ -22,6 +22,8 @@ using System;
 using System.IO;
 using JPB.Communication.ComBase.Messages;
 using JPB.Communication.ComBase.Messages.Wrapper;
+using JPB.Communication.PCLIntigration.ComBase;
+using JPB.Communication.ComBase.Generic;
 
 namespace JPB.Communication.ComBase
 {
@@ -31,13 +33,14 @@ namespace JPB.Communication.ComBase
 
         internal bool Parse(byte[] received)
         {
-            MessageBase item;
+            NetworkMessage item;
             try
             {
                 item = DeSerialize(received);
 
                 if (item != null)
                 {
+                    //TODO validate session id
                     RaiseNewItemLoadedSuccess(item);
                     return true;
                 }
@@ -62,7 +65,7 @@ namespace JPB.Communication.ComBase
 
         internal LargeMessage ParseLargeObject(byte[] received, Func<Stream> completed)
         {
-            MessageBase item;
+            NetworkMessage item;
             try
             {
                 item = DeSerialize(received);

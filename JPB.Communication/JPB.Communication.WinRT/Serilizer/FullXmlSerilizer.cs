@@ -27,11 +27,11 @@ namespace JPB.Communication.WinRT.Serilizer
 
         public bool IlMergeSupport { get; set; }
 
-        public byte[] SerializeMessage(MessageBase a)
+        public byte[] SerializeMessage(NetworkMessage a)
         {
             using (var memst = new MemoryStream())
             {
-                var formatter = GetSerializer<MessageBase>();
+                var formatter = GetSerializer<NetworkMessage>();
                 formatter.Serialize(memst, a);
                 return memst.ToArray();
             }
@@ -54,12 +54,12 @@ namespace JPB.Communication.WinRT.Serilizer
         {
         }
 
-        public MessageBase DeSerializeMessage(byte[] source)
+        public NetworkMessage DeSerializeMessage(byte[] source)
         {
             using (var memst = new MemoryStream(source))
             {
-                var formatter = GetSerializer<MessageBase>();
-                var deserialize = (MessageBase)formatter.Deserialize(memst);
+                var formatter = GetSerializer<NetworkMessage>();
+                var deserialize = (NetworkMessage)formatter.Deserialize(memst);
                 return deserialize;
             }
         }   

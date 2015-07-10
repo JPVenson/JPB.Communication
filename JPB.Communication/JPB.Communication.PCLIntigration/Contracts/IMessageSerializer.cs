@@ -31,14 +31,14 @@ namespace JPB.Communication.ComBase.Serializer.Contracts
         /// </summary>
         /// <param name="a"></param>
         /// <returns></returns>
-        byte[] SerializeMessage(MessageBase a);
+        byte[] SerializeMessage(NetworkMessage a);
 
         /// <summary>
         ///     Converts the output from the TCP network adapter into a valid TCP message
         /// </summary>
         /// <param name="source"></param>
         /// <returns></returns>
-        MessageBase DeSerializeMessage(byte[] source);
+        NetworkMessage DeSerializeMessage(byte[] source);
 
         /// <summary>
         ///     tries to convert the Message to a string Representation

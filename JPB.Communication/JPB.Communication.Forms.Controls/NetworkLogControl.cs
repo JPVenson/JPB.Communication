@@ -75,7 +75,7 @@ namespace JPB.Communication.Forms.Controls
             }));
         }
 
-        void Networkbase_OnNewItemLoadedSuccess(MessageBase mess, ushort port)
+        void Networkbase_OnNewItemLoadedSuccess(NetworkMessage mess, ushort port)
         {
             this.BeginInvoke(new Action(() =>
             {
@@ -91,7 +91,7 @@ namespace JPB.Communication.Forms.Controls
             }));
         }
 
-        void Networkbase_OnMessageSend(MessageBase mess, ushort port)
+        void Networkbase_OnMessageSend(NetworkMessage mess, ushort port)
         {
             this.BeginInvoke(new Action(() =>
             {
@@ -99,7 +99,7 @@ namespace JPB.Communication.Forms.Controls
             }));
         }
 
-        void Networkbase_OnIncommingMessage(object sender, MessageBase e)
+        void Networkbase_OnIncommingMessage(object sender, NetworkMessage e)
         {
             this.BeginInvoke(new Action(() =>
             {

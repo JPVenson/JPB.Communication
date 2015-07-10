@@ -44,12 +44,12 @@ namespace JPB.Communication.ComBase.Generic
     {
         private readonly List<Tuple<Action<LargeMessage>, object>> _largeMessages;
         internal readonly ISocket _listenerISocket;
-        private readonly List<Tuple<Action<MessageBase>, Guid>> _onetimeupdated;
+        private readonly List<Tuple<Action<NetworkMessage>, Guid>> _onetimeupdated;
         private readonly List<Tuple<Action<RequstMessage>, Guid>> _pendingrequests;
 
         private readonly List<Tuple<Func<RequstMessage, object>, object>> _requestHandler;
 
-        private readonly List<Tuple<Action<MessageBase>, object>> _updated;
+        private readonly List<Tuple<Action<NetworkMessage>, object>> _updated;
         private readonly Queue<Action> _workeritems;
         private AutoResetEvent _autoResetEvent;
 

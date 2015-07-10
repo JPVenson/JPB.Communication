@@ -11,23 +11,23 @@ namespace JPB.Communication.NativeWin.Serilizer
     {
         public bool IlMergeSupport { get; set; }
 
-        public byte[] SerializeMessage(MessageBase a)
+        public byte[] SerializeMessage(NetworkMessage a)
         {
             using (var memst = new MemoryStream())
             {
-                NetDataContractSerializer formatter = GetSerializer<MessageBase>();
+                NetDataContractSerializer formatter = GetSerializer<NetworkMessage>();
                 formatter.Serialize(memst, a);
                 return memst.ToArray();
             }
         }
 
 
-        public MessageBase DeSerializeMessage(byte[] source)
+        public NetworkMessage DeSerializeMessage(byte[] source)
         {
             using (var memst = new MemoryStream(source))
             {
-                NetDataContractSerializer formatter = GetSerializer<MessageBase>();
-                var deserialize = (MessageBase)formatter.Deserialize(memst);
+                NetDataContractSerializer formatter = GetSerializer<NetworkMessage>();
+                var deserialize = (NetworkMessage)formatter.Deserialize(memst);
                 return deserialize;
             }
         }

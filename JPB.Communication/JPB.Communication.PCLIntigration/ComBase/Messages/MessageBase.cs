@@ -44,31 +44,31 @@ namespace JPB.Communication.ComBase.Messages
     [System.Serializable]
 #endif
     [ClassInterfaceAttribute(ClassInterfaceType.None)]
-    public class MessageBase
+    public class NetworkMessage
     {
         private object _infoState;
         private object _message;
         
-        public MessageBase()
+        public NetworkMessage()
         {
             Message = new object();
             Id = Guid.NewGuid();
         }
 
-        public MessageBase(object mess)
+        public NetworkMessage(object mess)
             : this(Guid.NewGuid())
         {
             Message = mess ?? new object();
         }
 
-        public MessageBase(object mess, object infoState)
+        public NetworkMessage(object mess, object infoState)
             : this(Guid.NewGuid())
         {
             InfoState = infoState ?? new object();
             Message = mess ?? new object();
         }
 
-        public MessageBase(Guid guid)
+        public NetworkMessage(Guid guid)
         {
             Id = guid;
         }      
@@ -129,13 +129,13 @@ namespace JPB.Communication.ComBase.Messages
 
         public object Clone()
         {
-            var obje = MemberwiseClone() as MessageBase;
+            var obje = MemberwiseClone() as NetworkMessage;
             if (obje != null)
             {
                 obje.Id = Guid.NewGuid();
                 return obje;
             }
-            return new MessageBase(Message)
+            return new NetworkMessage(Message)
             {
                 InfoState = InfoState
             };

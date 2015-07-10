@@ -387,12 +387,12 @@ namespace JPB.Communication.Shared
 
         private void RegisterCallbacks()
         {
-            TCPNetworkReceiver.RegisterMessageBaseInbound(pPullAddMessage, NetworkCollectionProtocol.CollectionAdd);
-            TCPNetworkReceiver.RegisterMessageBaseInbound(pPullClearMessage, NetworkCollectionProtocol.CollectionReset);
-            TCPNetworkReceiver.RegisterMessageBaseInbound(pPullRemoveMessage, NetworkCollectionProtocol.CollectionRemove);
-            TCPNetworkReceiver.RegisterMessageBaseInbound(PullRegisterMessage,
+            TCPNetworkReceiver.RegisterNetworkMessageInbound(pPullAddMessage, NetworkCollectionProtocol.CollectionAdd);
+            TCPNetworkReceiver.RegisterNetworkMessageInbound(pPullClearMessage, NetworkCollectionProtocol.CollectionReset);
+            TCPNetworkReceiver.RegisterNetworkMessageInbound(pPullRemoveMessage, NetworkCollectionProtocol.CollectionRemove);
+            TCPNetworkReceiver.RegisterNetworkMessageInbound(PullRegisterMessage,
                 NetworkCollectionProtocol.CollectionRegisterUser);
-            TCPNetworkReceiver.RegisterMessageBaseInbound(PullUnRegisterMessage,
+            TCPNetworkReceiver.RegisterNetworkMessageInbound(PullUnRegisterMessage,
                 NetworkCollectionProtocol.CollectionUnRegisterUser);
             TCPNetworkReceiver.RegisterRequstHandler(PullGetCollectionMessage,
                 NetworkCollectionProtocol.CollectionGetCollection);
@@ -464,7 +464,7 @@ namespace JPB.Communication.Shared
 #pragma warning disable 4014
             TcpNetworkSernder.SendMultiMessageAsync(
 #pragma warning restore 4014
-new MessageBase { InfoState = NetworkCollectionProtocol.CollectionRegisterUser }, users);
+new NetworkMessage { InfoState = NetworkCollectionProtocol.CollectionRegisterUser }, users);
             Registerd = true;
 
             foreach (T item in await collection)
@@ -491,7 +491,7 @@ new MessageBase { InfoState = NetworkCollectionProtocol.CollectionRegisterUser }
             }
         }
 
-        protected void PullRegisterMessage(MessageBase obj)
+        protected void PullRegisterMessage(NetworkMessage obj)
         {
             lock (SyncRoot)
             {
@@ -500,7 +500,7 @@ new MessageBase { InfoState = NetworkCollectionProtocol.CollectionRegisterUser }
             }
         }
 
-        protected void PullUnRegisterMessage(MessageBase obj)
+        protected void PullUnRegisterMessage(NetworkMessage obj)
         {
             lock (SyncRoot)
             {
@@ -526,26 +526,26 @@ new MessageBase { InfoState = NetworkCollectionProtocol.CollectionRegisterUser }
             lock (SyncRoot)
             {
                 Registerd = false;
-                TcpNetworkSernder.SendMultiMessageAsync(new MessageBase(new object()), CollectionRecievers.ToArray());
+                TcpNetworkSernder.SendMultiMessageAsync(new NetworkMessage(new object()), CollectionRecievers.ToArray());
             }
         }
 
-        private void pPullAddMessage(MessageBase obj)
+        private void pPullAddMessage(NetworkMessage obj)
         {
             PullAddMessage(obj);
         }
 
-        private void pPullClearMessage(MessageBase obj)
+        private void pPullClearMessage(NetworkMessage obj)
         {
             PullClearMessage(obj);
         }
 
-        private void pPullRemoveMessage(MessageBase obj)
+        private void pPullRemoveMessage(NetworkMessage obj)
         {
             PullRemoveMessage(obj);
         }
 
-        protected virtual void PullAddMessage(MessageBase obj)
+        protected virtual void PullAddMessage(NetworkMessage obj)
         {
             if (obj.Message is NetworkCollectionMessage)
             {
@@ -561,7 +561,7 @@ new MessageBase { InfoState = NetworkCollectionProtocol.CollectionRegisterUser }
             }
         }
 
-        protected virtual void PullClearMessage(MessageBase obj)
+        protected virtual void PullClearMessage(NetworkMessage obj)
         {
             if (obj.Message is NetworkCollectionMessage)
             {
@@ -577,7 +577,7 @@ new MessageBase { InfoState = NetworkCollectionProtocol.CollectionRegisterUser }
             }
         }
 
-        protected virtual void PullRemoveMessage(MessageBase obj)
+        protected virtual void PullRemoveMessage(NetworkMessage obj)
         {
             if (obj.Message is NetworkCollectionMessage)
             {
@@ -598,7 +598,7 @@ new MessageBase { InfoState = NetworkCollectionProtocol.CollectionRegisterUser }
 
         protected async Task SendPessage(string id, object value)
         {
-            var mess = new MessageBase(new NetworkCollectionMessage(value)
+            var mess = new NetworkMessage(new NetworkCollectionMessage(value)
             {
                 Guid = Guid
             })

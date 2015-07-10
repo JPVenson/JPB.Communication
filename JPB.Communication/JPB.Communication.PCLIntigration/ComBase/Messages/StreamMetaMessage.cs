@@ -34,7 +34,7 @@ namespace JPB.Communication.ComBase.Messages
 #endif
     [ClassInterfaceAttribute(ClassInterfaceType.None)]
 
-    public class StreamMetaMessage : MessageBase
+    public class StreamMetaMessage : NetworkMessage
     {
         public StreamMetaMessage()
         {

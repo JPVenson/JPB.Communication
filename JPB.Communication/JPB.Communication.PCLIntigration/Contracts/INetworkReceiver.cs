@@ -37,34 +37,34 @@ namespace JPB.Communication.Contracts
         ///     Removes a delegate from the Handler list
         /// </summary>
         /// <param name="action"></param>
-        void UnregisterChanged(Action<MessageBase> action, object state);
+        void UnregisterChanged(Action<NetworkMessage> action, object state);
 
         /// <summary>
         ///     Removes a delegate from the Handler list
         /// </summary>
         /// <param name="action"></param>
-        void UnregisterChanged(Action<MessageBase> action);
+        void UnregisterChanged(Action<NetworkMessage> action);
 
         /// <summary>
         ///     Register a Callback localy that will be used when a new message is inbound that has state in its InfoState
         /// </summary>
         /// <param name="action">Callback</param>
         /// <param name="state">Maybe an Enum?</param>
-        void RegisterMessageBaseInbound(Action<MessageBase> action, object state);
+        void RegisterNetworkMessageInbound(Action<NetworkMessage> action, object state);
 
         /// <summary>
         ///     Register a Callback localy that will be used when a new Large message is inbound that has state in its InfoState
         /// </summary>
         /// <param name="action">Callback</param>
         /// <param name="state">Maybe an Enum?</param>
-        void RegisterMessageBaseInbound(Action<LargeMessage> action, object state);
+        void RegisterNetworkMessageInbound(Action<LargeMessage> action, object state);
 
         /// <summary>
         ///     Register a Callback localy that will be used when a message contains a given Guid
         /// </summary>
         /// <param name="action"></param>
         /// <param name="guid"></param>
-        void RegisterOneTimeMessage(Action<MessageBase> action, Guid guid);
+        void RegisterOneTimeMessage(Action<NetworkMessage> action, Guid guid);
 
         /// <summary>
         ///     Register a Callback localy that will be used when a Requst is inbound that has state in its InfoState

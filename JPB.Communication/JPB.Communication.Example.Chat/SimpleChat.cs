@@ -37,7 +37,7 @@ namespace JPB.Communication.Example.Chat
         public static void Main2()
         {
             Networkbase.DefaultMessageSerializer = new NetContractSerializer();
-            //NetworkFactory.Create(new WinRTFactory());
+            NetworkFactory.Create(new WinRTFactory());
 
             //Define a Contract that is not used by others
             var messageContract = "CC1AAD01-501C-46F6-A885-1C93946C79F8";
@@ -46,9 +46,9 @@ namespace JPB.Communication.Example.Chat
             ushort port = 1337;
 
             //Register a callback for this Contract
-            NetworkFactory.Instance.GetReceiver(port).RegisterMessageBaseInbound(s =>
+            NetworkFactory.Instance.GetReceiver(port).RegisterNetworkMessageInbound(s =>
             {
-                Console.WriteLine("> {0}", s.Message);
+                Console.WriteLine("SEND: {0}", s.Message);
             }, messageContract);
 
             var input = "";
@@ -56,7 +56,7 @@ namespace JPB.Communication.Example.Chat
             while (true)
             {
                 input = Console.ReadLine();
-                sender.SendMessage(new MessageBase(input) { InfoState = messageContract }, NetworkInfoBase.IpAddress.ToString());
+                sender.SendMessage(new NetworkMessage(input) { InfoState = messageContract }, NetworkInfoBase.IpAddress.ToString());
             }
         }
     }

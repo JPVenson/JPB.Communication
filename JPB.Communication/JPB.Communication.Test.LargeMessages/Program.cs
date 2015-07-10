@@ -27,7 +27,7 @@ namespace JPB.Communication.Test.LargeMessages
 
             NetworkFactory.Instance.InitCommonSenderAndReciver(1337, 1337);
             NetworkFactory.Instance.Reciever.LargeMessageSupport = true;
-            NetworkFactory.Instance.Reciever.RegisterMessageBaseInbound(OnAction, "T");
+            NetworkFactory.Instance.Reciever.RegisterNetworkMessageInbound(OnAction, "T");
             var fileStream = new FileStream(@"C:\Windows\explorer.exe", FileMode.Open, FileAccess.Read, FileShare.Read);
 
             NetworkFactory.Instance.Sender.SendStreamDataAsync(fileStream,

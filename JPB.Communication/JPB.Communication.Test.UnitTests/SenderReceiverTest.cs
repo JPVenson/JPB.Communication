@@ -37,9 +37,9 @@ namespace JPB.Communication.Test.UnitTests
             receiver.CheckCredentials = true;
             NetworkAuthentificator.Instance.DefaultLoginBevavior = DefaultLoginBevavior.IpNameCheckOnly;
 
-            receiver.RegisterMessageBaseInbound(MessageInbound, TestInfoState);
+            receiver.RegisterNetworkMessageInbound(MessageInbound, TestInfoState);
 
-            var result = sender.SendMessage(new MessageBase()
+            var result = sender.SendMessage(new NetworkMessage()
             {
                 Message = TestMessageObject,
                 InfoState = TestInfoState
@@ -58,9 +58,9 @@ namespace JPB.Communication.Test.UnitTests
             var sender = NetworkFactory.Instance.GetSender(1337);
             var receiver = NetworkFactory.Instance.GetReceiver(1337);
 
-            receiver.RegisterMessageBaseInbound(MessageInbound, TestInfoState);
+            receiver.RegisterNetworkMessageInbound(MessageInbound, TestInfoState);
 
-            var result = sender.SendMessage(new ComBase.Messages.MessageBase()
+            var result = sender.SendMessage(new ComBase.Messages.NetworkMessage()
             {
                 Message = TestMessageObject,
                 InfoState = TestInfoState
@@ -104,9 +104,9 @@ namespace JPB.Communication.Test.UnitTests
             var receiver = NetworkFactory.Instance.GetReceiver(1337);
             await sender.InitSharedConnection(currentIp);
 
-            receiver.RegisterMessageBaseInbound(MessageInbound, TestInfoState);
+            receiver.RegisterNetworkMessageInbound(MessageInbound, TestInfoState);
 
-            var result = sender.SendMessage(new ComBase.Messages.MessageBase()
+            var result = sender.SendMessage(new ComBase.Messages.NetworkMessage()
             {
                 Message = TestMessageObject,
                 InfoState = TestInfoState
@@ -117,7 +117,7 @@ namespace JPB.Communication.Test.UnitTests
             Assert.IsTrue(handel);
             TestMessageObject = "";
 
-            var realMessageWithoutContent = new ComBase.Messages.MessageBase()
+            var realMessageWithoutContent = new ComBase.Messages.NetworkMessage()
             {
                 Message = TestMessageObject,
                 InfoState = TestInfoState
@@ -142,7 +142,7 @@ namespace JPB.Communication.Test.UnitTests
             Assert.IsTrue(handel);
         }
 
-        private int calcSize(Networkbase baseS, MessageBase makeup)
+        private int calcSize(Networkbase baseS, NetworkMessage makeup)
         {
             var messSeri = baseS.Serialize(makeup);
             return messSeri.Length;
@@ -157,7 +157,7 @@ namespace JPB.Communication.Test.UnitTests
             return TestMessageObject;
         }
 
-        private void MessageInbound(ComBase.Messages.MessageBase obj)
+        private void MessageInbound(ComBase.Messages.NetworkMessage obj)
         {
             Assert.AreEqual(obj.InfoState, TestInfoState);
             Assert.AreEqual(obj.Message, TestMessageObject);

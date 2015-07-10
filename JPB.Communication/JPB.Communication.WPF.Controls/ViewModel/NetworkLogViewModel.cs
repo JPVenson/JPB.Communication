@@ -117,7 +117,7 @@ namespace JPB.Communication.NativeWin.ViewModel
             TcpNetworkActionLog.Add(new TcpNetworkAction(TcpNetworkActionType.LoadLargeSuccess, new { Port = port, Message = mess }));
         }
 
-        void Networkbase_OnNewItemLoadedSuccess(MessageBase mess, ushort port)
+        void Networkbase_OnNewItemLoadedSuccess(NetworkMessage mess, ushort port)
         {
             TcpNetworkActionLog.Add(new TcpNetworkAction(TcpNetworkActionType.LoadSuccess, new { Port = port, Message = mess }));
         }
@@ -127,12 +127,12 @@ namespace JPB.Communication.NativeWin.ViewModel
             TcpNetworkActionLog.Add(new TcpNetworkAction(TcpNetworkActionType.LoadFail, new { (sender as Networkbase).Port, Message = e }));
         }
 
-        void Networkbase_OnMessageSend(MessageBase mess, ushort port)
+        void Networkbase_OnMessageSend(NetworkMessage mess, ushort port)
         {
             TcpNetworkActionLog.Add(new TcpNetworkAction(TcpNetworkActionType.Send, new { Port = port, Message = mess }));
         }
 
-        void Networkbase_OnIncommingMessage(object sender, MessageBase e)
+        void Networkbase_OnIncommingMessage(object sender, NetworkMessage e)
         {
             TcpNetworkActionLog.Add(new TcpNetworkAction(TcpNetworkActionType.Incomming, new { (sender as Networkbase).Port, Message = e }));
         }

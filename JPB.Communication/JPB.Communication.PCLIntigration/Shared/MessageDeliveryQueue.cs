@@ -76,16 +76,16 @@ namespace JPB.Communication.Shared
             get { return (Receivers as ICollection).IsSynchronized; }
         }
 
-        public new event Action<MessageDeliveryQueue, MessageBase, string[]> OnMessageSend;
+        public new event Action<MessageDeliveryQueue, NetworkMessage, string[]> OnMessageSend;
 
-        protected virtual void RaiseMessageSend(MessageBase mess, string[] unreacheble)
+        protected virtual void RaiseMessageSend(NetworkMessage mess, string[] unreacheble)
         {
-            Action<MessageDeliveryQueue, MessageBase, string[]> handler = OnMessageSend;
+            Action<MessageDeliveryQueue, NetworkMessage, string[]> handler = OnMessageSend;
             if (handler != null)
                 handler(this, mess, unreacheble);
         }
 
-        public void Enqueue(MessageBase mess)
+        public void Enqueue(NetworkMessage mess)
         {
             _internal.Add(() => ForceSendMessage(mess));
         }
@@ -97,13 +97,13 @@ namespace JPB.Communication.Shared
             if (infoState == null)
                 throw new ArgumentNullException("infoState");
 
-            ForceSendMessage(new MessageBase(message)
+            ForceSendMessage(new NetworkMessage(message)
             {
                 InfoState = infoState
             });
         }
 
-        public void ForceSendMessage(MessageBase mess)
+        public void ForceSendMessage(NetworkMessage mess)
         {
             if (mess == null)
                 throw new ArgumentNullException("mess");

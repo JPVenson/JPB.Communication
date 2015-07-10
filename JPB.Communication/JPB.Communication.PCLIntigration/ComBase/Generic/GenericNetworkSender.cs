@@ -75,10 +75,10 @@ namespace JPB.Communication.ComBase.Generic
         public bool UseNetworkCredentials { get; private set; }
         public byte[] PreCompiledLogin { get; private set; }
 
-        public void ChangeNetworkCredentials(bool mode, LoginMessage mess)
+        public void ChangeNetworkCredentials(bool set, LoginMessage mess)
         {
-            UseNetworkCredentials = mode;
-            if (mode)
+            UseNetworkCredentials = set;
+            if (set)
             {
                 PreCompiledLogin = SerializeLogin(mess);
             }
@@ -133,7 +133,7 @@ namespace JPB.Communication.ComBase.Generic
         /// <param name="port">Port of sock pc</param>
         /// <returns></returns>
         /// <exception cref="TimeoutException"></exception>
-        public static async Task SendMessage(MessageBase message, string ip, ushort port)
+        public static async Task SendMessage(NetworkMessage message, string ip, ushort port)
         {
             await SendMessageAsync(message, ip, port);
         }
@@ -146,7 +146,7 @@ namespace JPB.Communication.ComBase.Generic
         /// <param name="port">Port of sock pc</param>
         /// <returns></returns>
         /// <exception cref="TimeoutException"></exception>
-        public static Task SendMessageAsync(MessageBase message, string ip, ushort port)
+        public static Task SendMessageAsync(NetworkMessage message, string ip, ushort port)
         {
             GenericNetworkSender sender = NetworkFactory.Instance.GetSender(port);
             return sender.SendMessageAsync(message, ip);
@@ -156,7 +156,7 @@ namespace JPB.Communication.ComBase.Generic
         ///     Sends a message to multible Hosts
         /// </summary>
         /// <returns>all non reached hosts</returns>
-        public Task<IEnumerable<string>> SendMultiMessageAsync(MessageBase message, params string[] ips)
+        public Task<IEnumerable<string>> SendMultiMessageAsync(NetworkMessage message, params string[] ips)
         {
             var gentask = new Task<IEnumerable<string>>(() =>
             {
@@ -168,7 +168,7 @@ namespace JPB.Communication.ComBase.Generic
                 var failedMessages = new List<string>();
 
                 Task<bool>[] runningMessages =
-                    ips.Select(ip => SendMessageAsync(message.Clone() as MessageBase, ip)).ToArray();
+                    ips.Select(ip => SendMessageAsync(message.Clone() as NetworkMessage, ip)).ToArray();
 
                 for (int i = 0; i < runningMessages.Length; i++)
                 {
@@ -197,7 +197,7 @@ namespace JPB.Communication.ComBase.Generic
         ///     Sends a message to multible Hosts
         /// </summary>
         /// <returns>all non reached hosts</returns>
-        public IEnumerable<string> SendMultiMessage(MessageBase message, params string[] ips)
+        public IEnumerable<string> SendMultiMessage(NetworkMessage message, params string[] ips)
         {
             Task<IEnumerable<string>> send = SendMultiMessageAsync(message, ips);
             send.Wait();
@@ -211,7 +211,7 @@ namespace JPB.Communication.ComBase.Generic
         /// <param name="ip">Ip of sock</param>
         /// <returns>frue if message was successful delivered otherwise false</returns>
         /// <exception cref="TimeoutException"></exception>
-        public bool SendMessage(MessageBase message, string ip)
+        public bool SendMessage(NetworkMessage message, string ip)
         {
             Task<bool> sendMessageAsync = SendMessageAsync(message, ip);
             sendMessageAsync.Wait();
@@ -225,7 +225,7 @@ namespace JPB.Communication.ComBase.Generic
         /// <param name="message">Message object or inherted object</param>
         /// <param name="ip">Ip of sock</param>
         /// <returns>frue if message was successful delivered otherwise false</returns>
-        public Task<bool> SendMessageAsync(MessageBase message, string ip)
+        public Task<bool> SendMessageAsync(NetworkMessage message, string ip)
         {
             //var callee = Thread.CurrentContext;
             var task = new Task<bool>(() =>
@@ -233,7 +233,7 @@ namespace JPB.Communication.ComBase.Generic
                 try
                 {
                     Task<ISocket> client = CreateClientSockAsync(ip);
-                    MessageBase tcpMessage = PrepareMessage(message, ip);
+                    NetworkMessage tcpMessage = PrepareMessage(message, ip);
                     client.Wait();
                     var result = client.Result;
                     if (result == null)
@@ -474,7 +474,7 @@ namespace JPB.Communication.ComBase.Generic
             return await CreateClientSockAsync(ip);
         }
 
-        private MessageBase PrepareMessage(MessageBase message, string ip)
+        private NetworkMessage PrepareMessage(NetworkMessage message, string ip)
         {
             message.SendAt = DateTime.Now;
             if (string.IsNullOrEmpty(message.Sender) || !UseExternalIpAsSender)
@@ -571,7 +571,7 @@ namespace JPB.Communication.ComBase.Generic
             } while (true);
         }
 
-        private void SendBaseAsync(MessageBase message, ISocket openNetwork)
+        private void SendBaseAsync(NetworkMessage message, ISocket openNetwork)
         {
             byte[] serialize = Serialize(message);
             if (!serialize.Any())

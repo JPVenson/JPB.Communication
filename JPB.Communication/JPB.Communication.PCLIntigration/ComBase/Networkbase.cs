@@ -38,7 +38,7 @@ namespace JPB.Communication.ComBase
     /// </summary>
     /// <param name="mess"></param>
     /// <param name="port"></param>
-    public delegate void MessageDelegate(MessageBase mess, ushort port);
+    public delegate void MessageDelegate(NetworkMessage mess, ushort port);
 
     /// <summary>
     ///     Delegate for Incomming or Outging messages
@@ -128,11 +128,11 @@ namespace JPB.Communication.ComBase
 
         public static event MessageDelegate OnNewItemLoadedSuccess;
         public static event EventHandler<string> OnNewItemLoadedFail;
-        public static event EventHandler<MessageBase> OnIncommingMessage;
+        public static event EventHandler<NetworkMessage> OnIncommingMessage;
         public static event MessageDelegate OnMessageSend;
         public static event LargeMessageDelegate OnNewLargeItemLoadedSuccess;
 
-        protected EventHandler<MessageBase> IncommingMessageHandler()
+        protected EventHandler<NetworkMessage> IncommingMessageHandler()
         {
             return OnIncommingMessage;
         }
@@ -141,7 +141,7 @@ namespace JPB.Communication.ComBase
         /// </summary>
         /// <param name="metaData"></param>
         /// <param name="contendLoaded"></param>
-        protected virtual LargeMessage RaiseNewLargeItemLoadedSuccess(MessageBase metaData, Func<Stream> contendLoaded)
+        protected virtual LargeMessage RaiseNewLargeItemLoadedSuccess(NetworkMessage metaData, Func<Stream> contendLoaded)
         {
             try
             {
@@ -158,7 +158,7 @@ namespace JPB.Communication.ComBase
             }
         }
 
-        protected virtual void RaiseMessageSended(MessageBase message)
+        protected virtual void RaiseMessageSended(NetworkMessage message)
         {
             try
             {
@@ -172,7 +172,7 @@ namespace JPB.Communication.ComBase
             }
         }
 
-        protected virtual void RaiseIncommingMessage(MessageBase strReceived)
+        protected virtual void RaiseIncommingMessage(NetworkMessage strReceived)
         {
             try
             {
@@ -200,13 +200,13 @@ namespace JPB.Communication.ComBase
             }
         }
 
-        protected virtual void RaiseNewItemLoadedSuccess(MessageBase loadMessageBaseFromBinary)
+        protected virtual void RaiseNewItemLoadedSuccess(NetworkMessage loadNetworkMessageFromBinary)
         {
             try
             {
                 MessageDelegate handler = OnNewItemLoadedSuccess;
                 if (handler != null)
-                    handler(loadMessageBaseFromBinary, Port);
+                    handler(loadNetworkMessageFromBinary, Port);
             }
             catch (Exception e)
             {
@@ -215,7 +215,7 @@ namespace JPB.Communication.ComBase
         }
 
 
-        public MessageBase DeSerialize(byte[] source)
+        public NetworkMessage DeSerialize(byte[] source)
         {
             try
             {
@@ -233,7 +233,7 @@ namespace JPB.Communication.ComBase
             }
         }
 
-        public byte[] Serialize(MessageBase networkMessage)
+        public byte[] Serialize(NetworkMessage networkMessage)
         {
             try
             {

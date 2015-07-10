@@ -34,9 +34,7 @@ namespace JPB.Communication
         public static IPlatformFactory PlatformFactory { get; private set; }
 
         static NetworkFactory()
-        {
-
-        }
+        { }
 
         internal readonly object _mutex;
         private GenericNetworkReceiver _commonReciever;
@@ -77,7 +75,6 @@ namespace JPB.Communication
             {
                 if (_instance == null)
                     throw new InvalidOperationException("Must call create 1 time");
-
                 return _instance;
             }
         }

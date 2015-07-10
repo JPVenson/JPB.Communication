@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using JPB.Communication.Contracts.Intigration;
 using JPB.Communication.PCLIntigration.ComBase.Messages;
+using JPB.Communication.ComBase.Messages;
 
 namespace JPB.Communication.PCLIntigration.ComBase
 {
@@ -20,6 +21,14 @@ namespace JPB.Communication.PCLIntigration.ComBase
         public string Host { get; private set; }
         public ushort Port { get; private set; }
     }
+    public class NetworkAttackMessage
+    {
+        public string OriginalIp { get; set; }
+        public ushort OriginalPort { get; set; }
+        public NetworkMessage OriginalMessage { get; set; }
+        public DateTime Date { get; set; }
+    }
+
     public enum AuditState
     {
         AccessAllowed,
@@ -33,6 +42,7 @@ namespace JPB.Communication.PCLIntigration.ComBase
     {
         AllowAllways,
         DenyAllways,
+        //check the transmitted username to be uniq
         IpNameCheckOnly
     }
 
@@ -64,16 +74,20 @@ namespace JPB.Communication.PCLIntigration.ComBase
         internal static readonly int SessionBufferSize;
         public DefaultLoginBevavior DefaultLoginBevavior { get; set; }
 
+        /// <summary>
+        /// not implimented
+        /// </summary>
         public bool ShouldCacheResults { get; set; }
 
         private List<LoginMessageEx> _logins;
         public event Func<object, LoginMessage, AuditState> OnValidateUnknownLogin;
+        public static event Action<NetworkAttackMessage> OnNetworkAttack;
         public event Action<object, LoginMessage> OnLoginInbound;
         public event Func<LoginMessage, LoginMessage, bool> OnValidateUserPassword;
 
         public IEnumerable<LoginMessageEx> GetLogins()
         {
-            return _logins;
+            return _logins.ToArray();
         }
 
         public static NetworkAuthentificator Instance
@@ -84,6 +98,17 @@ namespace JPB.Communication.PCLIntigration.ComBase
             }
         }
 
+        /// <summary>
+        /// Adds a User as an Optimistic one
+        /// Only allows a user to connect from one host:port
+        /// Specifys Username and maybe hashed password
+        /// Can also be used to Disable a user by setting it to Disallow
+        /// </summary>
+        /// <param name="host"></param>
+        /// <param name="port"></param>
+        /// <param name="username"></param>
+        /// <param name="password"></param>
+        /// <param name="state"></param>
         public void AddUser(string host, ushort port, string username, string password, AuditState state)
         {
             var login = new LoginMessageEx(host, port)
@@ -95,6 +120,22 @@ namespace JPB.Communication.PCLIntigration.ComBase
             _logins.Add(login);
         }
 
+        private static void RaiseOnNetworkAttack(NetworkAttackMessage report)
+        {
+            var handler = OnNetworkAttack;
+            if (handler != null)
+            {
+                try
+                {
+                    //When a handler is defined call them
+                    handler(report);
+                }
+                catch (Exception)
+                {
+                }
+            }
+        }
+
         private LoginMessageEx RaiseOnValidateUnknownLogin(LoginMessage message, string host, ushort port)
         {
             var handler = OnValidateUnknownLogin;
@@ -103,6 +144,7 @@ namespace JPB.Communication.PCLIntigration.ComBase
             {
                 try
                 {
+                    //When a handler is defined call them
                     state = handler(this, message);
                 }
                 catch (Exception)
@@ -112,6 +154,7 @@ namespace JPB.Communication.PCLIntigration.ComBase
             }
             else
             {
+                //when no handler is defined we switch to the default behavior
                 switch (DefaultLoginBevavior)
                 {
                     case DefaultLoginBevavior.AllowAllways:
@@ -121,7 +164,9 @@ namespace JPB.Communication.PCLIntigration.ComBase
                         state = AuditState.AccessDenyed;
                         break;
                     case DefaultLoginBevavior.IpNameCheckOnly:
+                        //no password should be provided. Check only Anonymos user login
                         var fod = _logins.FirstOrDefault(s => s.Username == message.Username);
+                        //only uniq singel logins supported
                         state = fod == null ? AuditState.AccessAllowed : AuditState.AccessDenyed;
                         if (fod != null)
                             return fod;
@@ -141,6 +186,36 @@ namespace JPB.Communication.PCLIntigration.ComBase
             };
             _logins.Add(login);
             return login;
+        }
+
+        public static bool ValidateSessionId(NetworkMessage mess, string senderIp, ushort senderPort)
+        {
+            var submittedUser = _instance._logins.FirstOrDefault(s => s.SessionID == mess.Session);
+            var message = new NetworkAttackMessage();
+            message.Date = DateTime.Now;
+            message.OriginalIp = senderIp;
+            message.OriginalPort = senderPort;
+            message.OriginalMessage = mess;
+
+            if (submittedUser == null)
+            {
+                RaiseOnNetworkAttack(message);
+                return false;
+            }
+
+            if (submittedUser.Port != senderPort)
+            {
+                RaiseOnNetworkAttack(message);
+                return false;
+            }
+
+            if (submittedUser.Host != senderIp)
+            {
+                RaiseOnNetworkAttack(message);
+                return false;
+            }
+
+            return true;
         }
 
         private void RaiseOnLogin(LoginMessage message)

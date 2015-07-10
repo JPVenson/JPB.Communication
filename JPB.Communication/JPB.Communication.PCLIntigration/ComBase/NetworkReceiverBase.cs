@@ -15,12 +15,12 @@ namespace JPB.Communication.ComBase
         protected NetworkReceiverBase()
         {
             _largeMessages = new List<Tuple<Action<LargeMessage>, object>>();
-            _onetimeupdated = new List<Tuple<Action<MessageBase>, Guid>>();
+            _onetimeupdated = new List<Tuple<Action<NetworkMessage>, Guid>>();
             _pendingrequests = new List<Tuple<Action<RequstMessage>, Guid>>();
             _requestHandler = new List<Tuple<Func<RequstMessage, object>, object>>();
-            _updated = new List<Tuple<Action<MessageBase>, object>>();
+            _updated = new List<Tuple<Action<NetworkMessage>, object>>();
             _typeCallbacks = new Dictionary<Type, Action<object>>();
-            _typeCallbacks.Add(typeof(MessageBase), WorkOn_MessageBase);
+            _typeCallbacks.Add(typeof(NetworkMessage), WorkOn_NetworkMessage);
             _typeCallbacks.Add(typeof(LargeMessage), WorkOn_LargeMessage);
         }
 
@@ -35,11 +35,9 @@ namespace JPB.Communication.ComBase
             }
         }
 
-
-
-        private void WorkOn_MessageBase(object message)
+        private void WorkOn_NetworkMessage(object message)
         {
-            var messCopy = message as MessageBase;
+            var messCopy = message as NetworkMessage;
 
             var updateCallbacks = _updated.Where(action => messCopy != null && (action.Item2 == null || action.Item2.Equals(messCopy.InfoState))).ToArray();
             foreach (var action in updateCallbacks)
@@ -65,7 +63,7 @@ namespace JPB.Communication.ComBase
         /// Removes a delegate from the Handler list
         /// </summary>
         /// <param name="action"></param>
-        public void UnregisterChanged(Action<MessageBase> action, object state)
+        public void UnregisterChanged(Action<NetworkMessage> action, object state)
         {
             var enumerable = _updated.FirstOrDefault(s => s.Item1 == action && s.Item2 == state);
             if (enumerable != null)
@@ -78,7 +76,7 @@ namespace JPB.Communication.ComBase
         /// Removes a delegate from the Handler list
         /// </summary>
         /// <param name="action"></param>
-        public void UnregisterChanged(Action<MessageBase> action)
+        public void UnregisterChanged(Action<NetworkMessage> action)
         {
             var enumerable = _updated.FirstOrDefault(s => s.Item1 == action);
             if (enumerable != null)
@@ -92,9 +90,9 @@ namespace JPB.Communication.ComBase
         /// </summary>
         /// <param name="action">Callback</param>
         /// <param name="state">Maybe an Enum?</param>
-        public void RegisterMessageBaseInbound(Action<MessageBase> action, object state)
+        public void RegisterNetworkMessageInbound(Action<NetworkMessage> action, object state)
         {
-            _updated.Add(new Tuple<Action<MessageBase>, object>(action, state));
+            _updated.Add(new Tuple<Action<NetworkMessage>, object>(action, state));
         }
 
         /// <summary>
@@ -102,7 +100,7 @@ namespace JPB.Communication.ComBase
         /// </summary>
         /// <param name="action">Callback</param>
         /// <param name="state">Maybe an Enum?</param>
-        public void RegisterMessageBaseInbound(Action<LargeMessage> action, object state)
+        public void RegisterNetworkMessageInbound(Action<LargeMessage> action, object state)
         {
             _largeMessages.Add(new Tuple<Action<LargeMessage>, object>(action, state));
         }
@@ -112,9 +110,9 @@ namespace JPB.Communication.ComBase
         /// </summary>
         /// <param name="action"></param>
         /// <param name="guid"></param>
-        public void RegisterOneTimeMessage(Action<MessageBase> action, Guid guid)
+        public void RegisterOneTimeMessage(Action<NetworkMessage> action, Guid guid)
         {
-            _onetimeupdated.Add(new Tuple<Action<MessageBase>, Guid>(action, guid));
+            _onetimeupdated.Add(new Tuple<Action<NetworkMessage>, Guid>(action, guid));
         }
 
         /// <summary>
@@ -176,9 +174,9 @@ namespace JPB.Communication.ComBase
 
         internal Dictionary<Type, Action<object>> _typeCallbacks;
         private readonly List<Tuple<Action<LargeMessage>, object>> _largeMessages;
-        private readonly List<Tuple<Action<MessageBase>, Guid>> _onetimeupdated;
+        private readonly List<Tuple<Action<NetworkMessage>, Guid>> _onetimeupdated;
         protected readonly List<Tuple<Action<RequstMessage>, Guid>> _pendingrequests;
         protected readonly List<Tuple<Func<RequstMessage, object>, object>> _requestHandler;
-        private readonly List<Tuple<Action<MessageBase>, object>> _updated;
+        private readonly List<Tuple<Action<NetworkMessage>, object>> _updated;
     }
 }

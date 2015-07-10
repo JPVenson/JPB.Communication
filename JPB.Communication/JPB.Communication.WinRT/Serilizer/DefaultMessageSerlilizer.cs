@@ -55,7 +55,7 @@ namespace JPB.Communication.NativeWin.Serilizer
         public bool IlMergeSupport { get; set; }
         public bool PrevendDiscPageing { get; set; }
 
-        public byte[] SerializeMessage(MessageBase mess)
+        public byte[] SerializeMessage(NetworkMessage mess)
         {
             if (IlMergeSupport)
             {
@@ -73,13 +73,13 @@ namespace JPB.Communication.NativeWin.Serilizer
         }
 
 
-        public MessageBase DeSerializeMessage(byte[] source)
+        public NetworkMessage DeSerializeMessage(byte[] source)
         {
             try
             {
                 using (var memst = new MemoryStream(source))
                 {
-                    var deserialize = (MessageBase)CreateFormatter().ReadObject(memst);
+                    var deserialize = (NetworkMessage)CreateFormatter().ReadObject(memst);
                     return deserialize;
                 }
             }
@@ -129,7 +129,7 @@ namespace JPB.Communication.NativeWin.Serilizer
             settings.IgnoreExtensionDataObject = false;
             settings.PreserveObjectReferences = true;
             settings.SerializeReadOnlyTypes = false; 
-            var formartter = new DataContractSerializer(typeof(MessageBase), settings);           
+            var formartter = new DataContractSerializer(typeof(NetworkMessage), settings);           
             
             return formartter;
         }
@@ -154,13 +154,13 @@ namespace JPB.Communication.NativeWin.Serilizer
 
         internal sealed class IlMergeBinder : SerializationBinder
         {
-            private static readonly string MessageBaseTypeName;
+            private static readonly string NetworkMessageTypeName;
             private static readonly List<AssemblyName> AdditionalLookups;
 
             static IlMergeBinder()
             {
                 TypnameToType = new Dictionary<string, Type>();
-                MessageBaseTypeName = typeof (MessageBase).FullName;
+                NetworkMessageTypeName = typeof (NetworkMessage).FullName;
                 AdditionalLookups = new List<AssemblyName>();
             }
 
@@ -173,10 +173,10 @@ namespace JPB.Communication.NativeWin.Serilizer
 
             public override Type BindToType(string assemblyName, string typeName)
             {
-                //Native support for MessageBase
-                if (MessageBaseTypeName == typeName)
+                //Native support for NetworkMessage
+                if (NetworkMessageTypeName == typeName)
                 {
-                    return typeof (MessageBase);
+                    return typeof (NetworkMessage);
                 }
 
                 //Optimistic Serach

@@ -73,8 +73,6 @@ namespace JPB.Communication.Example.ChatOverNetworkCollection
                 "AnyUniqValidStringLikeAGuid: 46801E06-AB14-4910-BA95-7E13F58F4186");
 
             SyncRoot = networkValueCollection.SyncRoot;
-
-
             Console.WriteLine("Connect to a server(y) or be the first(n)? y/n");
 
             var consoleKeyInfo = Console.ReadKey();

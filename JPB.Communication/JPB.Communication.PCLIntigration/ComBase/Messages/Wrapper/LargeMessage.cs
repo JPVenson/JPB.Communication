@@ -49,7 +49,7 @@ namespace JPB.Communication.ComBase.Messages.Wrapper
         /// <summary>
         ///     Provieds a Full instance of your MetaData
         /// </summary>
-        public MessageBase MetaData { get; private set; }
+        public NetworkMessage MetaData { get; private set; }
 
         public bool DataComplete { get; set; }
 

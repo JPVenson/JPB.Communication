@@ -47,13 +47,13 @@ namespace JPB.Communication.NativeWin.Serilizer
 
         public static DefaultMessageSerlilizer DefaultMessageSerlilizer { get; set; }
 
-        public byte[] SerializeMessage(MessageBase a)
+        public byte[] SerializeMessage(NetworkMessage a)
         {
             byte[] mess = DefaultMessageSerlilizer.SerializeMessage(a);
             return Compress(mess);
         }
 
-        public MessageBase DeSerializeMessage(byte[] source)
+        public NetworkMessage DeSerializeMessage(byte[] source)
         {
             source = DeCompress(source);
             return DefaultMessageSerlilizer.DeSerializeMessage(source);
