@@ -21,9 +21,7 @@
 using System;
 using JPB.Communication.ComBase;
 using JPB.Communication.ComBase.Messages;
-using JPB.Communication.ComBase.Serializer;
-using JPB.Communication.NativeWin.Serilizer;
-using JPB.Communication.NativeWin.WinRT;
+using JPB.Communication.WinRT.Serilizer;
 
 namespace JPB.Communication.Example.Chat
 {
@@ -40,10 +38,10 @@ namespace JPB.Communication.Example.Chat
             //NetworkFactory.Create(new WinRTFactory());
 
             //Define a Contract that is not used by others
-            var messageContract = "CC1AAD01-501C-46F6-A885-1C93946C79F8";
+            const string messageContract = "CC1AAD01-501C-46F6-A885-1C93946C79F8";
 
             //the port we are using
-            ushort port = 1337;
+            const ushort port = 1337;
 
             //Register a callback for this Contract
             NetworkFactory.Instance.GetReceiver(port).RegisterMessageBaseInbound(s =>
