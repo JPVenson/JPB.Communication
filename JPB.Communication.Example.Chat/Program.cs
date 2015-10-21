@@ -141,12 +141,19 @@ namespace JPB.Communication.Example.Chat
 
         public Program()
         {
-            Run();
+            try
+            {
+                Run().Wait();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Ex: {0}", e);
+            }
         }
 
-        public async void Run()
+        public async Task Run()
         {
-            Networkbase.DefaultMessageSerializer = new FullXmlSerilizer(typeof(MessageBase), typeof(ChatMessage));
+            Networkbase.DefaultMessageSerializer = new NetContractSerializer(new[] { typeof(MessageBase), typeof(ChatMessage) });
             NetworkFactory.Create(new WinRTFactory());
 
             //Maybe multible network Adapters ... on what do we want to Recieve?
@@ -171,10 +178,17 @@ namespace JPB.Communication.Example.Chat
             //Lets submit and Await the Credentials buffer at the very first of our messages
             tcpNetworkReceiver.CheckCredentials = true;
 
+
+            //default bevior
+            //If set to True the Authentificator will lookup in its list if the new connection provide us a Valid session from the Known origin
+            NetworkAuthentificator.Instance.ShouldCacheResults = false;
+
             //attach some more or less self explaining event handler to the Authentificator to handle logins
             NetworkAuthentificator.Instance.OnLoginInbound += (s, e) =>
             {
-                WriteLoginMessage(string.Format("Login Inbound '{0}'", e.Username));
+                var user = NetworkAuthentificator.Instance.GetLogins().FirstOrDefault(f => f.SessionID == e.SessionID);
+                if (user == null)
+                    WriteLoginMessage(string.Format("Login Inbound '{0}'", e.Username));
             };
 
             NetworkAuthentificator.Instance.OnValidateUnknownLogin += (s, e) =>
@@ -183,13 +197,15 @@ namespace JPB.Communication.Example.Chat
                 var good = domain == Environment.UserDomainName ? AuditState.AccessAllowed : AuditState.AccessDenyed;
                 WriteLoginMessage(string.Format("Validate Username '{0}' -> {1}", e.Username, good));
                 if (good == AuditState.AccessAllowed)
-                    return AuditState.CheckPassword;
+                    return AuditState.AccessAllowed; //allow this user to skip password check and simply transphering the MessageBases Session
                 return good;
             };
 
             NetworkAuthentificator.Instance.OnValidateUserPassword += (s, e) =>
             {
-                WriteLoginMessage(string.Format("Validate Password '{0}' -> {1}", e.Password, AuditState.AccessAllowed));
+                var user = NetworkAuthentificator.Instance.GetLogins().FirstOrDefault(f => f.SessionID == e.SessionID);
+                if (user == null)
+                    WriteLoginMessage(string.Format("Validate Password '{0}' -> {1}", e.Password, AuditState.AccessAllowed));
                 //Allow anonymus login
                 return true;
             };
@@ -233,7 +249,6 @@ namespace JPB.Communication.Example.Chat
             WriteSystemMessage("Server IP or Hostname:");
             bool serverOnline = false;
 
-
 #if DEBUG
             server = NetworkInfoBase.IpAddress.ToString();
             serverOnline = true;
@@ -259,23 +274,31 @@ namespace JPB.Communication.Example.Chat
             Console.Title = string.Format("{0} , That : {1}", Console.Title, null);
             WriteSystemMessage("Server Found");
             //Test it with send HelloWorld
-            InitUser(Environment.UserName);
+            var success = await InitUser(Environment.UserName);
 
-            //Setup our shared connection that will keep the connection open as long as we need it
-            //this will also allow us to bypass our local NAT
-            //The return value is not interesing for us at this moment
-
-            if (NetworkFactory.PlatformFactory.SocketFactory.SupportsSharedState == Contracts.Factorys.SharedStateSupport.Full)
+            if (success)
             {
-                tcpNetworkSender.InitSharedConnection((string)null);
-                tcpNetworkSender.SharedConnection = true;
-            }
+                //Setup our shared connection that will keep the connection open as long as we need it
+                //this will also allow us to bypass our local NAT
+                //The return value is not interesing for this showcase
 
-            PermColor = ConsoleColor.Gray;
-            RunHumanInput();
+                //in real usage it will wrap all incoming data and provides you some kind of Simple access to the Port the Remote maschine is using
+
+                if (server != NetworkInfoBase.IpAddress.AddressContent) //shared connections on same Maschine is buggy and also pointless!
+                    if (NetworkFactory.PlatformFactory.SocketFactory.SupportsSharedState == Contracts.Factorys.SharedStateSupport.Full)
+                    {
+                        tcpNetworkSender.InitSharedConnection((string)null);
+                        tcpNetworkSender.SharedConnection = true;
+                    }
+
+                PermColor = ConsoleColor.Gray;
+                await RunHumanInput();
+            }
+            Console.WriteLine("Client Shutdown");
+            Console.ReadKey();
         }
 
-        private async void RunHumanInput()
+        private async Task RunHumanInput()
         {
             InputWrapper input;
             //now, send as long as the user want to
@@ -308,12 +331,12 @@ namespace JPB.Communication.Example.Chat
             } while (true);
         }
 
-        private async void InitUser(string username)
+        private async Task<bool> InitUser(string username)
         {
             var helloWorldMessage = new ChatMessage();
             helloWorldMessage.Message = string.Format("Hello world from {0}", username);
             helloWorldMessage.Color = ConsoleColor.Blue;
-            await tcpNetworkSender.SendMessageAsync(helloWorldMessage, server);
+            return await tcpNetworkSender.SendMessageAsync(helloWorldMessage, server);
         }
 
         //int chatBotNr = 0;
@@ -371,8 +394,13 @@ namespace JPB.Communication.Example.Chat
         {
             var inputwrapper = new InputWrapper();
 
+            ConsoleColor? messageColor = PermColor;
+
             if (PermColor != null)
                 Console.ForegroundColor = PermColor.Value;
+
+            if (Console.ForegroundColor == ConsoleColor.Black)
+                Console.ForegroundColor = ConsoleColor.White;
 
             var firstInput = ReadLine(bottomLine);
 
@@ -413,9 +441,8 @@ namespace JPB.Communication.Example.Chat
             if (findConsoleColor != default(ConsoleColor) && isColor)
             {
                 _line--;
-                inputwrapper.Color = findConsoleColor;
-                Console.ForegroundColor = inputwrapper.Color;
-                _defaultColor = inputwrapper.Color;
+                messageColor = findConsoleColor;
+                Console.ForegroundColor = messageColor.Value;
                 inputwrapper.Text = ReadLine(bottomLine);
 
                 empty = "";
@@ -426,15 +453,15 @@ namespace JPB.Communication.Example.Chat
                 WriteLine(empty, bottomLine);
 
                 if (perm)
-                    PermColor = inputwrapper.Color;
+                    PermColor = messageColor;
 
                 Console.ResetColor();
             }
             else
             {
-                inputwrapper.Color = _defaultColor;
                 inputwrapper.Text = firstInput;
             }
+            inputwrapper.Color = messageColor.Value;
 
             return inputwrapper;
         }
