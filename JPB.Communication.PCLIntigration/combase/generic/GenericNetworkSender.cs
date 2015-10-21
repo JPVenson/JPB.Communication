@@ -74,7 +74,7 @@ namespace JPB.Communication.ComBase.Generic
         public bool UseNetworkCredentials { get; private set; }
         public byte[] PreCompiledLogin { get; private set; }
 
-        public void ChangeNetworkCredentials(bool mode, LoginMessage mess)
+        public void ChangeNetworkCredentials(bool mode, LoginMessage mess = null)
         {
             UseNetworkCredentials = mode;
             if (mode)
@@ -263,7 +263,6 @@ namespace JPB.Communication.ComBase.Generic
             SendMessageAsync(mess, ip);
         }
 
-
         /// <summary>
         ///     Sends a message an awaits a response from the other side
         /// </summary>
@@ -284,7 +283,7 @@ namespace JPB.Communication.ComBase.Generic
                 AutoResetEvent waitForResponsive;
                 using (waitForResponsive = new AutoResetEvent(false))
                 {
-                    GenericNetworkReceiver reciever = NetworkFactory.Instance.GetReceiver(mess.ExpectedResult);
+                    var reciever = NetworkFactory.Instance.GetReceiver(mess.ExpectedResult);
 
                     long moreTime = 0L;
                     //register a callback that is filtered by the Guid we send inside our requst

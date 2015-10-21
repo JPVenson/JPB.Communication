@@ -88,6 +88,7 @@ namespace JPB.Communication.ComBase.Generic
                 catch (Exception)
                 {
                     Sock.Send(0x00);
+                    RaiseEndReceiveInternal();
                     return false;
                 }
             }

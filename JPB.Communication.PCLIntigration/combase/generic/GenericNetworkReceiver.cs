@@ -339,6 +339,7 @@ namespace JPB.Communication.ComBase.Generic
             }
             catch (Exception)
             {
+                IncommingMessage = false;
                 //Fatal error clear connection
                 sock.Dispose();
             }
