@@ -34,7 +34,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;PCL</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -52,6 +52,11 @@
     <None Include="JPB.Communication.licenseheader" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ComBase\Generic\DefaultGenericConnection.cs" />
+    <Compile Include="ComBase\Generic\LargeMessageHandler.cs" />
+    <Compile Include="ComBase\Generic\GenericNetworkReceiver.cs" />
+    <Compile Include="ComBase\Generic\GenericNetworkSender.cs" />
+    <Compile Include="ComBase\Messages\Wrapper\MessageBaseInfo.cs" />
     <Compile Include="ComBase\Security\NetworkAuthentificator.cs" />
     <Compile Include="ComBase\ConnectionBase.cs" />
     <Compile Include="ComBase\ConnectionPool.cs" />
@@ -73,11 +78,7 @@
     <Compile Include="ComBase\NetworkReceiverBase.cs" />
     <Compile Include="ComBase\StreamBuffer.cs" />
     <Compile Include="ComBase\Generic\ConnectionWrapper.cs" />
-    <Compile Include="ComBase\Generic\GenericConnectionHandler.cs" />
-    <Compile Include="ComBase\Generic\LargeMessageHandler.cs" />
-    <Compile Include="ComBase\Generic\TcpConnectionBase.cs" />
-    <Compile Include="ComBase\Generic\GenericNetworkReceiver.cs" />
-    <Compile Include="ComBase\Generic\GenericNetworkSender.cs" />
+    <Compile Include="ComBase\Generic\GenericConnectionBase.cs" />
     <Compile Include="Contracts\INetworkReceiver.cs" />
     <Compile Include="Contracts\Intigration\IPEndPoint.cs" />
     <Compile Include="Contracts\Intigration\IPHostEntry.cs" />
@@ -97,6 +98,7 @@
     <Compile Include="Shared\NetworkCollectionProtocol.cs" />
     <Compile Include="Shared\NetworkListControler.cs" />
     <Compile Include="Shared\NetworkValueBag.cs" />
+    <Compile Include="Shared\RelayServer.cs" />
     <Compile Include="Shared\SeriellTaskFactory.cs" />
     <Compile Include="Shared\SynchronizedCollection.cs" />
   </ItemGroup>

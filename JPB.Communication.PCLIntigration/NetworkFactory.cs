@@ -22,7 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
-using JPB.Communication.ComBase.TCP;
+using JPB.Communication.ComBase.Generic;
 using JPB.Communication.Contracts;
 using JPB.Communication.Contracts.Factorys;
 

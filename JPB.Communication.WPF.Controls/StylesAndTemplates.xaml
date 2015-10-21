@@ -2,9 +2,9 @@
 	x:Class="JPB.Communication.WPF.Controls.StylesAndTemplates"
 	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
 	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-	xmlns:viewModel="clr-namespace:JPB.Communication.NativeWin.ViewModel"
-	xmlns:controls="clr-namespace:JPB.Communication.WPF.Controls"
-	xmlns:comBase="clr-namespace:JPB.Communication.ComBase;assembly=JPB.Communication">
+    xmlns:controls="clr-namespace:JPB.Communication.WPF.Controls"
+	xmlns:comBase="clr-namespace:JPB.Communication.ComBase;assembly=JPB.Communication"
+	xmlns:viewModel="clr-namespace:JPB.Communication.WPF.Controls.ViewModel">
 	
 	<BooleanToVisibilityConverter x:Key="BooleanToVisibility" />
 	<controls:HasValueToVisibiltyConverter x:Key="HasValueToVisibiltyConverter" />
