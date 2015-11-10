@@ -65,7 +65,8 @@ namespace JPB.Communication.WinRT.Serilizer
             using (Stream stream = GetStream(mess))
             {
                 CreateFormatter().WriteObject(stream, mess);
-                return getInfo(stream);
+                var info = getInfo(stream);
+                return info;
             }
         }
 
@@ -127,7 +128,7 @@ namespace JPB.Communication.WinRT.Serilizer
             settings.PreserveObjectReferences = true;
             settings.SerializeReadOnlyTypes = false;
             var formartter = new DataContractSerializer(typeof(MessageBase), settings);
-
+           
             return formartter;
         }
 
@@ -143,8 +144,16 @@ namespace JPB.Communication.WinRT.Serilizer
                 return @base.BindToType(declaredType.Assembly.FullName, typeName);
             }
 
-            public override bool TryResolveType(Type type, Type declaredType, DataContractResolver knownTypeResolver, out XmlDictionaryString typeName, out XmlDictionaryString typeNamespace)
+            public override bool TryResolveType(Type type,
+                Type declaredType, 
+                DataContractResolver knownTypeResolver,
+                out XmlDictionaryString typeName, 
+                out XmlDictionaryString typeNamespace)
             {
+                if(type.IsArray)
+                {
+                    type = type.GetElementType();
+                }
                 var name = type.Name;
                 var namesp = type.Namespace;
                 typeName = new XmlDictionaryString(XmlDictionary.Empty, name, 0);
@@ -154,7 +163,7 @@ namespace JPB.Communication.WinRT.Serilizer
             }
         }
 
-        internal sealed class IlMergeBinder : SerializationBinder
+        public sealed class IlMergeBinder : SerializationBinder
         {
             private static readonly string MessageBaseTypeName;
             private static readonly List<AssemblyName> AdditionalLookups;
@@ -165,6 +174,11 @@ namespace JPB.Communication.WinRT.Serilizer
                 TypnameToType = new ConcurrentDictionary<string, Type>();
                 MessageBaseTypeName = typeof(MessageBase).FullName;
                 AdditionalLookups = new List<AssemblyName>();
+            }
+
+            internal IlMergeBinder()
+            {
+
             }
 
             public static Dictionary<string, Type> GetOptimistics()
@@ -194,6 +208,8 @@ namespace JPB.Communication.WinRT.Serilizer
                 {
                     return TypnameToType[typeName];
                 }
+
+                var collectionType = false;
 
                 Type foundType = null;
 
@@ -232,7 +248,18 @@ namespace JPB.Communication.WinRT.Serilizer
                     current.GetName(),
                     callingAssembly.GetName()
                 })
-                    .Select(Assembly.Load)
+                    .Select((f) => 
+                    {
+                        try
+                        {
+                            return Assembly.Load(f);
+                        }
+                        catch (Exception)
+                        {
+                            return null;
+                        }
+                    })
+                    .Where(s => s != null)
                     .Select(assembly => assembly.GetType(typeName)).FirstOrDefault(type => type != null);
 
                 if (foundType != null)
@@ -244,7 +271,7 @@ namespace JPB.Communication.WinRT.Serilizer
 
             public void AddOptimistic(Type type)
             {
-                AddOptimistic(type);
+                GlobalAddOptimistic(type);
             }
 
             public static void GlobalAddOptimistic(Type type)

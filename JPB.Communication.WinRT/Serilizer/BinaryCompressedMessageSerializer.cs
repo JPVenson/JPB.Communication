@@ -23,6 +23,7 @@ using System.IO.Compression;
 using System.Text;
 using JPB.Communication.ComBase.Messages;
 using JPB.Communication.Contracts;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace JPB.Communication.WinRT.Serilizer
 {
@@ -33,23 +34,30 @@ namespace JPB.Communication.WinRT.Serilizer
     {
         private bool _ilMergeSupport;
 
-        static BinaryCompressedMessageSerializer()
+        public BinaryCompressedMessageSerializer()
         {
-            DefaultMessageSerlilizer = new DefaultMessageSerlilizer();
-        }
-              
-        public static IMessageSerializer DefaultMessageSerlilizer { get; set; }
+        }             
 
         public byte[] SerializeMessage(object a)
         {
-            byte[] mess = DefaultMessageSerlilizer.SerializeMessage(a);
-            return Compress(mess);
+            var serilizer = new BinaryFormatter();
+            serilizer.Binder = new DefaultMessageSerlilizer.IlMergeBinder();
+            using (var memstream = new MemoryStream())
+            {
+                serilizer.Serialize(memstream, a);
+                return Compress(memstream.ToArray());
+            }
         }
 
         public object DeSerializeMessage(byte[] source)
         {
             source = DeCompress(source);
-            return DefaultMessageSerlilizer.DeSerializeMessage(source);
+            var serilizer = new BinaryFormatter();
+            serilizer.Binder = new DefaultMessageSerlilizer.IlMergeBinder();
+            using (var memstream = new MemoryStream(source))
+            {
+                return serilizer.Deserialize(memstream);
+            }
         }
 
         public string ResolveStringContent(byte[] message)

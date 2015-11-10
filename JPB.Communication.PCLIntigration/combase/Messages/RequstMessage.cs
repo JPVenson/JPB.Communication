@@ -27,9 +27,9 @@ using JPB.Communication.Contracts.Intigration;
 namespace JPB.Communication.ComBase.Messages
 {
     [DebuggerStepThrough]
+    [DataContract()]
 #if PCL    
     [Serializable]
-    [DataContract]
 #else
     [System.Serializable]
 #endif
@@ -45,17 +45,20 @@ namespace JPB.Communication.ComBase.Messages
         /// <summary>
         ///     The ID of an Requestmessage for this is an Awsner
         /// </summary>
+        [DataMember]
         public Guid ResponseFor { get; set; }
 
         /// <summary>
         ///     If set, we defining a Port we expecting an awnser
         /// </summary>
+        [DataMember]
         public ushort ExpectedResult { get; set; }
 
         /// <summary>
         ///     If set and this object is an Awnser to a Requst message,
         ///     The client will wait time specifiyed
         /// </summary>
+        [DataMember]
         public long NeedMoreTime { get; set; }
     }
 }

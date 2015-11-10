@@ -38,7 +38,7 @@ namespace JPB.Communication.ComBase.Messages
     ///     To ensure a valid Serliazion every inherited class should impliment its own ISerializable Implimentation
     /// </summary>
     [DebuggerStepThrough]
-    [DataContract]
+    [DataContract()]
 #if PCL    
     [Serializable]
 #else
@@ -51,9 +51,13 @@ namespace JPB.Communication.ComBase.Messages
 #endif
     IComparable, IComparable<MessageBase>
     {
+        [IgnoreDataMember]
         private object _infoState;
+        [IgnoreDataMember]
         private object _message;
+        [IgnoreDataMember]
         private string _session;
+        [IgnoreDataMember]
         private Guid _id;
 
         public MessageBase()
@@ -82,7 +86,8 @@ namespace JPB.Communication.ComBase.Messages
 
         /// <summary>
         ///     The Content we want to send
-        /// </summary>
+        /// </summary>   
+        [DataMember(Order=0, IsRequired = true)]
         public object Message
         {
             get { return _message; }
@@ -97,6 +102,8 @@ namespace JPB.Communication.ComBase.Messages
         /// <summary>
         ///     The Contract to identify this message on the Distent PC
         /// </summary>
+
+        [DataMember(Order = 1, IsRequired = true)]
         public object InfoState
         {
             get { return _infoState; }
@@ -108,6 +115,7 @@ namespace JPB.Communication.ComBase.Messages
             }
         }
 
+        [DataMember(Order = 2, IsRequired = true)]
         public string Session { get { return _session; } set { _session = value; } }
 
         /// <summary>
@@ -115,6 +123,8 @@ namespace JPB.Communication.ComBase.Messages
         ///     Is used to clearly identify this message over the network
         ///     Readonly
         /// </summary>
+        /// 
+        [DataMember(Order = 3, IsRequired = true)]
         public Guid Id { get { return _id; } set { _id = value; } }
 
         public object Clone()

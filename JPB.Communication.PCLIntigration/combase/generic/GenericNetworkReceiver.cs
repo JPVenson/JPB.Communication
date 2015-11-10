@@ -211,7 +211,8 @@ namespace JPB.Communication.ComBase.Generic
 
                                 sender.SendNeedMoreTimeBackAsync(new RequstMessage
                                 {
-                                    ResponseFor = requstInbound.Id
+                                    ResponseFor = requstInbound.Id,
+                                    ExpectedResult = Port
                                 }, senderName);
                             }, null, 10000, 10000);
                         }
@@ -241,7 +242,8 @@ namespace JPB.Communication.ComBase.Generic
                 {
                     Message = result,
                     ResponseFor = requstInbound.Id,
-                    InfoState = requstInbound.InfoState
+                    InfoState = requstInbound.InfoState,
+                    ExpectedResult = Port
                 }, senderName);
             }
             else
@@ -261,7 +263,8 @@ namespace JPB.Communication.ComBase.Generic
                     await sender.SendMessageAsync(new RequstMessage
                     {
                         Message = new object(),
-                        ResponseFor = requstInbound.Id
+                        ResponseFor = requstInbound.Id,
+                        ExpectedResult = Port
                     }, senderName);
                 }
             }

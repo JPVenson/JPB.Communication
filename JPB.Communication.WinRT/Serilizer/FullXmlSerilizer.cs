@@ -13,15 +13,8 @@ namespace JPB.Communication.WinRT.Serilizer
 {
     public class FullXmlSerilizer : IMessageSerializer
     {
-        private DefaultMessageSerlilizer.IlMergeBinder Binder;
-
-        public FullXmlSerilizer(params Type[] extraInfo)
-        { 
-            Binder = new DefaultMessageSerlilizer.IlMergeBinder();
-            foreach (var item in extraInfo)
-            {
-                Binder.AddOptimistic(item);
-            }
+        public FullXmlSerilizer()
+        {
         }
 
         public bool IlMergeSupport { get; set; }
@@ -75,7 +68,7 @@ namespace JPB.Communication.WinRT.Serilizer
         {
             var types = DefaultMessageSerlilizer.IlMergeBinder.GetOptimistics().Select(s => s.Value).ToArray();
 
-            var formatter = new XmlSerializer(main, types);
+            var formatter = new XmlSerializer(null, types);
             formatter.UnknownElement += Formatter_UnknownElement;
             formatter.UnreferencedObject += Formatter_UnreferencedObject;
             formatter.UnknownNode += Formatter_UnknownNode;

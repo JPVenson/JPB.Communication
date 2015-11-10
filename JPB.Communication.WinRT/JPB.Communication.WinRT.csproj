@@ -181,6 +181,7 @@
     <Compile Include="..\JPB.Communication.PCLIntigration\Shared\SynchronizedCollection.cs">
       <Link>PCLNative\Shared\SynchronizedCollection.cs</Link>
     </Compile>
+    <Compile Include="Serilizer\CompressedMessageSerializer.cs" />
     <Compile Include="Serilizer\BinaryCompressedMessageSerializer.cs" />
     <Compile Include="Serilizer\DefaultMessageSerlilizer.cs" />
     <Compile Include="Serilizer\FullXmlSerilizer.cs" />

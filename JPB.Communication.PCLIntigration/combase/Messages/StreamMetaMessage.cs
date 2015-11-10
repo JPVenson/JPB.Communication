@@ -27,9 +27,9 @@ using JPB.Communication.Contracts.Intigration;
 namespace JPB.Communication.ComBase.Messages
 {
     [DebuggerStepThrough]
+    [DataContract()]
 #if PCL    
     [Serializable]
-    [DataContract]
 #else
     [System.Serializable]
 #endif
