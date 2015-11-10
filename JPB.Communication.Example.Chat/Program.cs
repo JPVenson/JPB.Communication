@@ -181,7 +181,7 @@ namespace JPB.Communication.Example.Chat
 
             //default bevior
             //If set to True the Authentificator will lookup in its list if the new connection provide us a Valid session from the Known origin
-            NetworkAuthentificator.Instance.ShouldCacheResults = false;
+            NetworkAuthentificator.Instance.ShouldCacheResults = true;
 
             //attach some more or less self explaining event handler to the Authentificator to handle logins
             NetworkAuthentificator.Instance.OnLoginInbound += (s, e) =>

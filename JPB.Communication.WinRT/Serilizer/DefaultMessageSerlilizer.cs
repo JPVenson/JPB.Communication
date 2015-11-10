@@ -37,7 +37,7 @@ namespace JPB.Communication.WinRT.Serilizer
     /// <summary>
     ///     Contains a Mixed Message Serlilizer that Converts the Message as XML and the Content to Binary
     ///     Is able to work with objects that are in the same namespace but in diferent Assemablys like when using ILMerge
-    ///     After 20 mb of message size the content of the message will be paged to the disc
+    ///     After 20 mb of message size the content of the message will be paged to the disc if PreventDiscPageing is not set to true
     /// </summary>
     public class DefaultMessageSerlilizer : IMessageSerializer
     {
