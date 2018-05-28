@@ -21,9 +21,8 @@
 using System.IO;
 using System.IO.Compression;
 using System.Text;
-using JPB.Communication.ComBase.Messages;
-using JPB.Communication.Contracts;
 using System.Runtime.Serialization.Formatters.Binary;
+using JPB.Communication.WinRT.Contracts;
 
 namespace JPB.Communication.WinRT.Serilizer
 {

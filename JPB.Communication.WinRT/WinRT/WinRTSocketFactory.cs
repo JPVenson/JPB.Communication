@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
-using JPB.Communication.Contracts.Factorys;
-using JPB.Communication.Contracts.Intigration;
+using JPB.Communication.WinRT.Contracts.Factorys;
+using JPB.Communication.WinRT.Contracts.Intigration;
 
 namespace JPB.Communication.WinRT.WinRT
 {

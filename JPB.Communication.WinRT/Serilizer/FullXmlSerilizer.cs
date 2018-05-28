@@ -5,9 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
-using JPB.Communication.ComBase;
-using JPB.Communication.ComBase.Messages;
-using JPB.Communication.Contracts;
+using JPB.Communication.WinRT.combase.Messages;
+using JPB.Communication.WinRT.Contracts;
 
 namespace JPB.Communication.WinRT.Serilizer
 {

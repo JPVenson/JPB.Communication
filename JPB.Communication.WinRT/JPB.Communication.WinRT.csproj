@@ -40,161 +40,81 @@
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\JPB.Communication.PCLIntigration\ComBase\ConnectionBase.cs">
-      <Link>PCLNative\ComBase\ConnectionBase.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\ComBase\ConnectionPool.cs">
-      <Link>PCLNative\ComBase\ConnectionPool.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\ComBase\Generic\ConnectionWrapper.cs">
-      <Link>PCLNative\ComBase\Generic\ConnectionWrapper.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\ComBase\Generic\DefaultGenericConnection.cs">
-      <Link>PCLNative\ComBase\Generic\DefaultGenericConnection.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\ComBase\Generic\GenericConnectionBase.cs">
-      <Link>PCLNative\ComBase\Generic\GenericConnectionBase.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\ComBase\Generic\GenericNetworkReceiver.cs">
-      <Link>PCLNative\ComBase\Generic\GenericNetworkReceiver.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\ComBase\Generic\GenericNetworkSender.cs">
-      <Link>PCLNative\ComBase\Generic\GenericNetworkSender.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\ComBase\Generic\LargeMessageHandler.cs">
-      <Link>PCLNative\ComBase\Generic\LargeMessageHandler.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\ComBase\InternalMemoryHolder.cs">
-      <Link>PCLNative\ComBase\InternalMemoryHolder.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\ComBase\Messages\LoginMessage.cs">
-      <Link>PCLNative\ComBase\Messages\LoginMessage.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\ComBase\Messages\MessageBase.cs">
-      <Link>PCLNative\ComBase\Messages\MessageBase.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\ComBase\Messages\RequstMessage.cs">
-      <Link>PCLNative\ComBase\Messages\RequstMessage.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\ComBase\Messages\StreamMetaMessage.cs">
-      <Link>PCLNative\ComBase\Messages\StreamMetaMessage.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\ComBase\Messages\Wrapper\LargeMessage.cs">
-      <Link>PCLNative\ComBase\Messages\Wrapper\LargeMessage.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\ComBase\Messages\Wrapper\MessageBaseInfo.cs">
-      <Link>PCLNative\ComBase\Messages\Wrapper\MessageBaseInfo.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\ComBase\Networkbase.cs">
-      <Link>PCLNative\ComBase\Networkbase.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\ComBase\NetworkInfoBase.cs">
-      <Link>PCLNative\ComBase\NetworkInfoBase.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\ComBase\NetworkReceiverBase.cs">
-      <Link>PCLNative\ComBase\NetworkReceiverBase.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\ComBase\Security\NetworkAuthentificator.cs">
-      <Link>PCLNative\ComBase\Security\NetworkAuthentificator.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\ComBase\Security\ReceiverSession.cs">
-      <Link>PCLNative\ComBase\Security\ReceiverSession.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\ComBase\StreamBuffer.cs">
-      <Link>PCLNative\ComBase\StreamBuffer.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\Contracts\Dns.cs">
-      <Link>PCLNative\Contracts\Dns.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\Contracts\Factorys\IDNSFactory.cs">
-      <Link>PCLNative\Contracts\Factorys\IDNSFactory.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\Contracts\Factorys\IIPaddressFactory.cs">
-      <Link>PCLNative\Contracts\Factorys\IIPaddressFactory.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\Contracts\Factorys\IPlatformFactory.cs">
-      <Link>PCLNative\Contracts\Factorys\IPlatformFactory.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\Contracts\Factorys\ISocketFactory.cs">
-      <Link>PCLNative\Contracts\Factorys\ISocketFactory.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\Contracts\Factorys\SharedStateSupport.cs">
-      <Link>PCLNative\Contracts\Factorys\SharedStateSupport.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\Contracts\IMessageSerializer.cs">
-      <Link>PCLNative\Contracts\IMessageSerializer.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\Contracts\INetworkReceiver.cs">
-      <Link>PCLNative\Contracts\INetworkReceiver.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\Contracts\Intigration\IPAddress.cs">
-      <Link>PCLNative\Contracts\Intigration\IPAddress.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\Contracts\Intigration\IPEndPoint.cs">
-      <Link>PCLNative\Contracts\Intigration\IPEndPoint.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\Contracts\Intigration\IPHostEntry.cs">
-      <Link>PCLNative\Contracts\Intigration\IPHostEntry.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\Contracts\Intigration\ISocket.cs">
-      <Link>PCLNative\Contracts\Intigration\ISocket.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\Contracts\Intigration\SerializableAttribute.cs">
-      <Link>PCLNative\Contracts\Intigration\SerializableAttribute.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\Contracts\Security\ISecureMessageProvider.cs">
-      <Link>PCLNative\Contracts\Security\ISecureMessageProvider.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\GlobalSuppressions.cs">
-      <Link>PCLNative\GlobalSuppressions.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\NetworkFactory.cs">
-      <Link>PCLNative\NetworkFactory.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\Shared\CrossPlatform\PCLTimer.cs">
-      <Link>PCLNative\Shared\CrossPlatform\PCLTimer.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\Shared\CrossPlatform\PclTrace.cs">
-      <Link>PCLNative\Shared\CrossPlatform\PclTrace.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\Shared\CrossPlatform\UnsuportedNetworkFeatureException.cs">
-      <Link>PCLNative\Shared\CrossPlatform\UnsuportedNetworkFeatureException.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\Shared\MessageDeliveryQueue.cs">
-      <Link>PCLNative\Shared\MessageDeliveryQueue.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\Shared\NetworkCollectionMessage.cs">
-      <Link>PCLNative\Shared\NetworkCollectionMessage.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\Shared\NetworkCollectionProtocol.cs">
-      <Link>PCLNative\Shared\NetworkCollectionProtocol.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\Shared\NetworkListControler.cs">
-      <Link>PCLNative\Shared\NetworkListControler.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\Shared\NetworkValueBag.cs">
-      <Link>PCLNative\Shared\NetworkValueBag.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\Shared\SeriellTaskFactory.cs">
-      <Link>PCLNative\Shared\SeriellTaskFactory.cs</Link>
-    </Compile>
-    <Compile Include="..\JPB.Communication.PCLIntigration\Shared\SynchronizedCollection.cs">
-      <Link>PCLNative\Shared\SynchronizedCollection.cs</Link>
-    </Compile>
-    <Compile Include="Serilizer\CompressedMessageSerializer.cs" />
+    <Compile Include="Combase\ConnectionBase.cs" />
+    <Compile Include="Combase\ConnectionPool.cs" />
+    <Compile Include="Combase\Generic\ConnectionWrapper.cs" />
+    <Compile Include="Combase\Generic\DefaultGenericConnection.cs" />
+    <Compile Include="Combase\Generic\GenericConnectionBase.cs" />
+    <Compile Include="Combase\Generic\GenericNetworkReceiver.cs" />
+    <Compile Include="Combase\Generic\GenericNetworkSender.cs" />
+    <Compile Include="Combase\Generic\MessageHandlers\IMessageHandler.cs" />
+    <Compile Include="Combase\Generic\MessageHandlers\MessageHandler.cs" />
+    <Compile Include="Combase\Generic\MessageHandlers\StreamHandler.cs" />
+    <Compile Include="Combase\InternalMemoryHolder.cs" />
+    <Compile Include="Combase\LargeMessageDelegate.cs" />
+    <Compile Include="Combase\MessageDelegate.cs" />
+    <Compile Include="Combase\MessageMeta.cs" />
+    <Compile Include="Combase\Messages\LoginMessage.cs" />
+    <Compile Include="Combase\Messages\MessageBase.cs" />
+    <Compile Include="Combase\Messages\MessageMetaData.cs" />
+    <Compile Include="Combase\Messages\RequestMessage.cs" />
+    <Compile Include="Combase\Messages\StreamMetaMessage.cs" />
+    <Compile Include="Combase\Messages\Wrapper\LargeMessage.cs" />
+    <Compile Include="Combase\Messages\Wrapper\MessageBaseInfo.cs" />
+    <Compile Include="Combase\Networkbase.cs" />
+    <Compile Include="Combase\NetworkInfoBase.cs" />
+    <Compile Include="Combase\NetworkReceiverBase.cs" />
+    <Compile Include="Combase\Security\AuditState.cs" />
+    <Compile Include="Combase\Security\DefaultLoginBevavior.cs" />
+    <Compile Include="Combase\Security\LoginMessageEx.cs" />
+    <Compile Include="Combase\Security\NetworkAuthentificator.cs" />
+    <Compile Include="Combase\Security\ReceiverSession.cs" />
+    <Compile Include="Combase\StreamBuffer.cs" />
+    <Compile Include="Combase\UnkownMessageDelegate.cs" />
+    <Compile Include="Contracts\DnsAdapter.cs" />
+    <Compile Include="Contracts\Factorys\IDNSFactory.cs" />
+    <Compile Include="Contracts\Factorys\IIPaddressFactory.cs" />
+    <Compile Include="Contracts\Factorys\IPlatformFactory.cs" />
+    <Compile Include="Contracts\Factorys\ISocketFactory.cs" />
+    <Compile Include="Contracts\Factorys\SharedStateSupport.cs" />
+    <Compile Include="Contracts\IMessageSerializer.cs" />
+    <Compile Include="Contracts\INetworkReceiver.cs" />
+    <Compile Include="Contracts\Intigration\IPAddress.cs" />
+    <Compile Include="Contracts\Intigration\IPEndPoint.cs" />
+    <Compile Include="Contracts\Intigration\IPHostEntry.cs" />
+    <Compile Include="Contracts\Intigration\ISocket.cs" />
+    <Compile Include="Contracts\Intigration\SerializableAttribute.cs" />
+    <Compile Include="Contracts\Security\ISecureMessageProvider.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="NetworkFactory.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Serilizer\BinaryCompressedMessageSerializer.cs" />
     <Compile Include="Serilizer\DefaultMessageSerlilizer.cs" />
     <Compile Include="Serilizer\FullXmlSerilizer.cs" />
     <Compile Include="Serilizer\NetContractSerializer.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Serilizer\Serilizer.cs" />
+    <Compile Include="Serilizer\SoapSerializer.cs" />
+    <Compile Include="Shared\CrossPlatform\PCLTimer.cs" />
+    <Compile Include="Shared\CrossPlatform\PclTrace.cs" />
+    <Compile Include="Shared\CrossPlatform\PclTraceWriteEventArgs.cs" />
+    <Compile Include="Shared\CrossPlatform\TimerCallback.cs" />
+    <Compile Include="Shared\CrossPlatform\UnsuportedNetworkFeatureException.cs" />
+    <Compile Include="Shared\MessageDeliveryQueue.cs" />
+    <Compile Include="Shared\NetworkCollectionMessage.cs" />
+    <Compile Include="Shared\NetworkCollectionProtocol.cs" />
+    <Compile Include="Shared\NetworkListControler.cs" />
+    <Compile Include="Shared\NetworkValueBag.cs" />
+    <Compile Include="Shared\Broadcaster.cs" />
+    <Compile Include="Shared\SeriellTaskFactory.cs" />
+    <Compile Include="Shared\SynchronizedCollection.cs" />
     <Compile Include="WinRT\DnsFactory.cs" />
-    <Compile Include="WinRT\WinRTExtentions.cs" />
-    <Compile Include="WinRT\WinRTSocket.cs" />
+    <Compile Include="WinRT\WinRtExtentions.cs" />
     <Compile Include="WinRT\WinRTFactory.cs" />
+    <Compile Include="WinRT\WinRtSocket.cs" />
     <Compile Include="WinRT\WinRTSocketFactory.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Shared\" />
+    <Folder Include="Contracts\Serializer\" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -203,6 +123,10 @@
     <Reference Include="System.XML" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Xml.Serialization" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="JPB.Communication.licenseheader" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

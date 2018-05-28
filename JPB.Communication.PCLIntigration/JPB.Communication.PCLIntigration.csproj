@@ -47,64 +47,9 @@
     </AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
-    <!-- A reference to the entire .NET Framework is automatically included -->
-    <None Include="app.config" />
-    <None Include="JPB.Communication.licenseheader" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="ComBase\Generic\DefaultGenericConnection.cs" />
-    <Compile Include="ComBase\Generic\LargeMessageHandler.cs" />
-    <Compile Include="ComBase\Generic\GenericNetworkReceiver.cs" />
-    <Compile Include="ComBase\Generic\GenericNetworkSender.cs" />
-    <Compile Include="ComBase\Messages\Wrapper\MessageBaseInfo.cs" />
-    <Compile Include="ComBase\Security\NetworkAuthentificator.cs" />
-    <Compile Include="ComBase\ConnectionBase.cs" />
-    <Compile Include="ComBase\ConnectionPool.cs" />
-    <Compile Include="ComBase\InternalMemoryHolder.cs" />
-    <Compile Include="ComBase\Messages\LoginMessage.cs" />
-    <Compile Include="ComBase\Security\ReceiverSession.cs" />
-    <Compile Include="Contracts\Dns.cs" />
-    <Compile Include="Contracts\Factorys\IDNSFactory.cs" />
-    <Compile Include="Contracts\Factorys\IIPaddressFactory.cs" />
-    <Compile Include="Contracts\Factorys\SharedStateSupport.cs" />
-    <Compile Include="Contracts\IMessageSerializer.cs" />
-    <Compile Include="Contracts\Intigration\IPAddress.cs" />
-    <Compile Include="ComBase\Messages\MessageBase.cs" />
-    <Compile Include="ComBase\Messages\RequstMessage.cs" />
-    <Compile Include="ComBase\Messages\StreamMetaMessage.cs" />
-    <Compile Include="ComBase\Messages\Wrapper\LargeMessage.cs" />
-    <Compile Include="ComBase\Networkbase.cs" />
-    <Compile Include="ComBase\NetworkInfoBase.cs" />
-    <Compile Include="ComBase\NetworkReceiverBase.cs" />
-    <Compile Include="ComBase\StreamBuffer.cs" />
-    <Compile Include="ComBase\Generic\ConnectionWrapper.cs" />
-    <Compile Include="ComBase\Generic\GenericConnectionBase.cs" />
-    <Compile Include="Contracts\INetworkReceiver.cs" />
-    <Compile Include="Contracts\Intigration\IPEndPoint.cs" />
-    <Compile Include="Contracts\Intigration\IPHostEntry.cs" />
-    <Compile Include="Contracts\Factorys\IPlatformFactory.cs" />
-    <Compile Include="Contracts\Intigration\ISocket.cs" />
-    <Compile Include="Contracts\Factorys\ISocketFactory.cs" />
-    <Compile Include="Contracts\Intigration\SerializableAttribute.cs" />
-    <Compile Include="Contracts\Security\ISecureMessageProvider.cs" />
-    <Compile Include="GlobalSuppressions.cs" />
-    <Compile Include="NetworkFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Shared\CrossPlatform\PclTimer.cs" />
-    <Compile Include="Shared\CrossPlatform\PclTrace.cs" />
-    <Compile Include="Shared\CrossPlatform\UnsuportedNetworkFeatureException.cs" />
-    <Compile Include="Shared\MessageDeliveryQueue.cs" />
-    <Compile Include="Shared\NetworkCollectionMessage.cs" />
-    <Compile Include="Shared\NetworkCollectionProtocol.cs" />
-    <Compile Include="Shared\NetworkListControler.cs" />
-    <Compile Include="Shared\NetworkValueBag.cs" />
-    <Compile Include="Shared\RelayServer.cs" />
-    <Compile Include="Shared\SeriellTaskFactory.cs" />
-    <Compile Include="Shared\SynchronizedCollection.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Contracts\Serializer\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

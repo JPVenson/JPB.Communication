@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
-using JPB.Communication.Contracts.Factorys;
-using JPB.Communication.Shared.CrossPlatform;
+using JPB.Communication.WinRT.Contracts.Factorys;
+using JPB.Communication.WinRT.Shared.CrossPlatform;
 
 namespace JPB.Communication.WinRT.WinRT
 {

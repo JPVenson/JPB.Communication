@@ -20,16 +20,18 @@
 
 using System;
 using System.Linq;
-using JPB.Communication.ComBase;
-using JPB.Communication.ComBase.Generic;
-using JPB.Communication.ComBase.Messages;
 using System.Runtime.Serialization;
-using JPB.Communication.ComBase.Security;
-using JPB.Communication.Contracts.Intigration;
 using JPB.Communication.WinRT.Serilizer;
 using JPB.Communication.WinRT.WinRT;
 using System.Threading.Tasks;
 using System.Threading;
+using JPB.Communication.WinRT;
+using JPB.Communication.WinRT.combase;
+using JPB.Communication.WinRT.Combase.Generic;
+using JPB.Communication.WinRT.combase.Messages;
+using JPB.Communication.WinRT.combase.Security;
+using JPB.Communication.WinRT.Contracts.Factorys;
+using JPB.Communication.WinRT.Contracts.Intigration;
 
 namespace JPB.Communication.Example.Chat
 {
@@ -172,7 +174,7 @@ namespace JPB.Communication.Example.Chat
                 .GetReceiver(port);
 
             //Check for the platform relevant shared connection that allows us to bypass NAT restrictions
-            if (NetworkFactory.PlatformFactory.SocketFactory.SupportsSharedState == Contracts.Factorys.SharedStateSupport.Full)
+            if (NetworkFactory.PlatformFactory.SocketFactory.SupportsSharedState == SharedStateSupport.Full)
                 tcpNetworkReceiver.SharedConnection = true;
 
             //Lets submit and Await the Credentials buffer at the very first of our messages
@@ -228,7 +230,7 @@ namespace JPB.Communication.Example.Chat
             //create a Sender on the same port the same way we did on the Receiver
             tcpNetworkSender = NetworkFactory.Instance.GetSender(port);
 
-            var login = new ComBase.Messages.LoginMessage()
+            var login = new LoginMessage()
             {
                 Username = Environment.UserDomainName + "@" + Environment.UserName,
                 Password = "Nothing"
@@ -285,7 +287,7 @@ namespace JPB.Communication.Example.Chat
                 //in real usage it will wrap all incoming data and provides you some kind of Simple access to the Port the Remote maschine is using
 
                 if (server != NetworkInfoBase.IpAddress.AddressContent) //shared connections on same Maschine is buggy and also pointless!
-                    if (NetworkFactory.PlatformFactory.SocketFactory.SupportsSharedState == Contracts.Factorys.SharedStateSupport.Full)
+                    if (NetworkFactory.PlatformFactory.SocketFactory.SupportsSharedState == SharedStateSupport.Full)
                     {
                         tcpNetworkSender.InitSharedConnection((string)null);
                         tcpNetworkSender.SharedConnection = true;
@@ -321,7 +323,7 @@ namespace JPB.Communication.Example.Chat
                 };
 
                 //Send the object over the network
-                var sendMessage = await tcpNetworkSender.SendMessageAsync(chatMess, server);
+                var sendMessage = await tcpNetworkSender.SendMessageAsync(chatMess,true, server);
                 if (!sendMessage)
                 {
                     WriteLine("Server may be offline ... message was not send ... stop program");
@@ -336,7 +338,7 @@ namespace JPB.Communication.Example.Chat
             var helloWorldMessage = new ChatMessage();
             helloWorldMessage.Message = string.Format("Hello world from {0}", username);
             helloWorldMessage.Color = ConsoleColor.Blue;
-            return await tcpNetworkSender.SendMessageAsync(helloWorldMessage, server);
+            return await tcpNetworkSender.SendMessageAsync(helloWorldMessage, true, server);
         }
 
         //int chatBotNr = 0;
@@ -390,7 +392,7 @@ namespace JPB.Communication.Example.Chat
             .Cast<ConsoleColor>()
             .ToArray();
 
-        public InputWrapper ParseInput()
+        public static InputWrapper ParseInput()
         {
             var inputwrapper = new InputWrapper();
 
@@ -461,7 +463,7 @@ namespace JPB.Communication.Example.Chat
             {
                 inputwrapper.Text = firstInput;
             }
-            inputwrapper.Color = messageColor.Value;
+            inputwrapper.Color = messageColor.GetValueOrDefault();
 
             return inputwrapper;
         }

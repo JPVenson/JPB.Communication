@@ -27,10 +27,10 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Xml;
-using JPB.Communication.ComBase;
-using JPB.Communication.ComBase.Messages;
-using JPB.Communication.Contracts;
-using JPB.Communication.Shared.CrossPlatform;
+using JPB.Communication.WinRT.combase;
+using JPB.Communication.WinRT.combase.Messages;
+using JPB.Communication.WinRT.Contracts;
+using JPB.Communication.WinRT.Shared.CrossPlatform;
 
 namespace JPB.Communication.WinRT.Serilizer
 {

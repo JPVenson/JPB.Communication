@@ -19,8 +19,9 @@
  */
 
 using System;
-using JPB.Communication.ComBase;
-using JPB.Communication.ComBase.Messages;
+using JPB.Communication.WinRT;
+using JPB.Communication.WinRT.combase;
+using JPB.Communication.WinRT.combase.Messages;
 using JPB.Communication.WinRT.Serilizer;
 
 namespace JPB.Communication.Example.Chat
@@ -54,7 +55,10 @@ namespace JPB.Communication.Example.Chat
             while (true)
             {
                 input = Console.ReadLine();
-                sender.SendMessage(new MessageBase(input) { InfoState = messageContract }, NetworkInfoBase.IpAddress.ToString());
+                sender.SendMessage(new MessageBase(input)
+                {
+		                InfoState = messageContract
+                }, true, NetworkInfoBase.IpAddress.ToString());
             }
         }
     }

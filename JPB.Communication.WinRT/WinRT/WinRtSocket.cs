@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Net.Sockets;
 using System.Threading.Tasks;
-using JPB.Communication.Contracts.Factorys;
-using JPB.Communication.Contracts.Intigration;
+using JPB.Communication.WinRT.Contracts.Factorys;
+using JPB.Communication.WinRT.Contracts.Intigration;
 
 namespace JPB.Communication.WinRT.WinRT
 {
@@ -23,7 +23,9 @@ namespace JPB.Communication.WinRT.WinRT
                 if (sock == null)
                     sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 sock.NoDelay = false;
-                sock.LingerState = new LingerOption(true, 30);
+	            sock.Blocking = true;
+
+				sock.LingerState = new LingerOption(true, 30);
                 sock.SetIPProtectionLevel(IPProtectionLevel.Unrestricted);
                 var rtSock = new WinRtSocket(sock);
                 return rtSock;

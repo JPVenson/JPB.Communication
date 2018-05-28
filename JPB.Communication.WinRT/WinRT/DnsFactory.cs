@@ -1,8 +1,8 @@
 ﻿using System.Linq;
 using System.Net;
-using JPB.Communication.Contracts.Factorys;
-using IPAddress = JPB.Communication.Contracts.Intigration.IPAddress;
-using IPHostEntry = JPB.Communication.Contracts.Intigration.IPHostEntry;
+using JPB.Communication.WinRT.Contracts.Factorys;
+using IPAddress = JPB.Communication.WinRT.Contracts.Intigration.IPAddress;
+using IPHostEntry = JPB.Communication.WinRT.Contracts.Intigration.IPHostEntry;
 
 namespace JPB.Communication.WinRT.WinRT
 {

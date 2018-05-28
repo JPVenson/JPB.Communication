@@ -1,5 +1,5 @@
 ﻿using System.Linq;
-using JPB.Communication.Contracts.Intigration;
+using JPB.Communication.WinRT.Contracts.Intigration;
 
 namespace JPB.Communication.WinRT.WinRT
 {

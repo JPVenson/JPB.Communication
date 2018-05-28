@@ -1,9 +1,8 @@
 using System.IO;
 using System.Runtime.Serialization;
 using System.Text;
-using JPB.Communication.ComBase.Messages;
-using JPB.Communication.Contracts;
 using System;
+using JPB.Communication.WinRT.Contracts;
 
 namespace JPB.Communication.WinRT.Serilizer
 {
